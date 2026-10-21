@@ -1,0 +1,3 @@
+cine scene "neg:missing":
+    timeline:
+        add cine marker at 2 seconds

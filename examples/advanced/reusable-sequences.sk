@@ -1,0 +1,47 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: reusable animation sequences
+#  /sk reload reusable-sequences   then   /reveal
+#
+#  A `cine sequence` is a reusable building block. `play cine sequence` inlines
+#  it into the current scene at a time offset; it sees the caller's local
+#  variables, which act as parameters. Sequences can nest (depth-limited).
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Parameters: {_at} (location), {_colour} (color)
+cine sequence "fx:pillar-rise":
+    at 0 seconds:
+        play cine sound "block.beacon.power_select"
+        start a cine emitter drawing a helix of "dust" at {_at} with radius 0.8 and height 3 and 30 points spinning at 12 degrees per tick lasting 2 seconds with colour {_colour}
+    at 2 seconds:
+        flash cine screen with colour {_colour} over 8 ticks
+        play cine preset "shockwave" at {_at} with colour {_colour}
+
+# Parameters: {_at}
+cine sequence "cam:focus":
+    add cine camera keyframe at {_at} ~ vector(0, 3, -6) at 0 seconds looking at {_at}
+    add cine camera keyframe at {_at} ~ vector(0, 1.8, -3) at 2 seconds with easing "ease-out-cubic" looking at {_at} ~ vector(0, 1, 0)
+
+# A composite built from smaller sequences.
+cine sequence "fx:triple-reveal":
+    set {_base} to {_at}
+    set {_at} to {_base} ~ vector(-3, 0, 0)
+    play cine sequence "fx:pillar-rise" at 0 seconds
+    set {_at} to {_base}
+    play cine sequence "fx:pillar-rise" at 1 second
+    set {_at} to {_base} ~ vector(3, 0, 0)
+    play cine sequence "fx:pillar-rise" at 2 seconds
+    set {_at} to {_base}
+
+cine scene "examples:sequences":
+    duration: 8 seconds
+    timeline:
+        set {_at} to (location of event-player) ~ vector(0, 0, 6)
+        set {_colour} to light blue
+        play cine sequence "cam:focus"
+        play cine sequence "fx:triple-reveal" at 1 second
+        set {_colour} to orange
+        play cine sequence "fx:pillar-rise" at 5 seconds
+
+command /reveal:
+    trigger:
+        play cine scene "examples:sequences" for player

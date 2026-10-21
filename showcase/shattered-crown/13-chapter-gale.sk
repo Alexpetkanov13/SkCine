@@ -1,0 +1,368 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   13-chapter-gale.sk  —  Chapter III · The Gale
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Kestrel was the last of Aurelion's sky riders. When the Gale Shard fell
+#   into the storm above the Windspire, it tore her wings away. She has been
+#   hunting it ever since — and the storm has been hunting her.
+#
+#   crown:gale-intro   the Windspire, Kestrel's plea, the storm takes her
+#                      → Trial of the Storm → the Storm Sovereign
+#   crown:gale-outro   Kestrel falls out of the sky; the player catches her.
+#                      CHOICE  Trust Kestrel with the shard  (+15, gale = trust)
+#                              Take it and leave her          (-10, gale = take)
+#   A "trust" choice comes back in the finale: Kestrel returns the shard.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Intro
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "crown:gale-intro":
+    duration: 54 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_w} to {_stage} ~ vector(0, 0, 9)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        # ── The Windspire ───────────────────────────────────────────────────
+        set {_spire1} to a new cine block display of calcite at {_w} ~ vector(-0.5, 0, 3)
+        set {_spire2} to a new cine block display of calcite at {_w} ~ vector(-0.5, 1, 3)
+        set {_spire3} to a new cine block display of calcite at {_w} ~ vector(-0.5, 2, 3)
+        set {_spire4} to a new cine block display of smooth quartz at {_w} ~ vector(-0.5, 3, 3)
+        set {_spire5} to a new cine block display of lightning rod at {_w} ~ vector(-0.5, 4, 3)
+        set {_cloud1} to a new cine block display of white wool at {_w} ~ vector(-7, 6, 6)
+        set {_cloud2} to a new cine block display of white wool at {_w} ~ vector(-6, 6, 6)
+        set {_cloud3} to a new cine block display of white wool at {_w} ~ vector(-6, 7, 6)
+        set {_cloud4} to a new cine block display of white wool at {_w} ~ vector(5, 7, 8)
+        set {_cloud5} to a new cine block display of white wool at {_w} ~ vector(6, 7, 8)
+        set {_cloud6} to a new cine block display of light gray wool at {_w} ~ vector(6, 8, 8)
+        set {_banner} to a new cine item display of light blue banner at {_w} ~ vector(-0.5, 5.5, 3)
+        set {_feather1} to a new cine item display of feather at {_w} ~ vector(-2, 2, 0)
+        set {_feather2} to a new cine item display of feather at {_w} ~ vector(2, 2.5, -1)
+        set {_feather3} to a new cine item display of feather at {_w} ~ vector(0, 3, -2)
+        set {_wings} to a new cine item display of elytra at {_w} ~ vector(1.5, 1, 1) named "wings"
+        add {_cloud1}, {_cloud2}, {_cloud3}, {_cloud4}, {_cloud5} and {_cloud6} to {_clouds::*}
+
+        set {_kestrel} to a new cine player actor at {_w} ~ vector(0, 0, 0) named "kestrel" with name tag "<aqua>Kestrel"
+        set {_archivist} to a new cine player actor at {_stage} ~ vector(-2.5, 0, 2) named "archivist" with name tag "<gold>The Archivist <gray>(projection)"
+        hide cine actor {_archivist}
+
+        # ── Camera ──────────────────────────────────────────────────────────
+        set {_focus} to {_w} ~ vector(0, 3, 3)
+        play cine sequence "cam:establish" at 0 seconds
+        make the cine camera watch {_kestrel} from {_w} ~ vector(-2, 2, -3.5) between 8 seconds and 20 seconds blending over 1 second
+        set {_a} to {_kestrel}
+        set {_b} to {_archivist}
+        play cine sequence "cam:dialogue" at 20 seconds
+        set {_focus} to {_kestrel}
+        set {_r} to 6
+        play cine sequence "cam:orbit-fast" at 32 seconds
+        set {_focus} to {_w} ~ vector(0, 10, 0)
+        play cine sequence "cam:sky-up" at 36 seconds
+        add cine camera keyframe at {_w} ~ vector(0, 4, -12) at 45 seconds with easing "ease-in-out-sine" looking at {_w} ~ vector(0, 16, 0)
+        add cine camera keyframe at {_w} ~ vector(0, 8, -16) at 53 seconds with easing "ease-out-sine" looking at {_w} ~ vector(0, 20, 0)
+
+        at 0 seconds:
+            fade the cine screen out with colour white over 1 tick
+            play cine sound "weather.rain" with volume 0.4 and pitch 1.2
+            make cine actor {_kestrel} look at {_eye}
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+            set {_at} to {_w}
+            set {_len} to 50 seconds
+            play cine sequence "fx:sky-drift"
+            spin cine displays {_feather1}, {_feather2} and {_feather3} around vector(0, 0, 1) continuously at 45 degrees per second
+            rotate cine actors {_clouds::*} around {_w} by 90 degrees over 50 seconds with easing "linear"
+        at 1 second:
+            set {_title} to "%crownChapterTag(4)%<bold>CHAPTER III"
+            set {_subtitle} to "<aqua>The Gale"
+            set {_tone} to 0.9
+            play cine sequence "fx:title-card"
+            play cine sound "entity.phantom.flap" with volume 0.6 and pitch 0.8
+        at 5 seconds:
+            set {_who} to "narrator"
+            set {_line} to "The Windspire. Where Aurelion's riders once leapt into the sky."
+            play cine sequence "say"
+        at 8 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "Don't come closer. Well, come closer. But slowly. The wind's been jumpy."
+            play cine sequence "say"
+        at 12 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "You're the one chasing shards. Good. So am I. That one up there took my wings."
+            play cine sequence "say"
+            make cine actor {_kestrel} look at {_w} ~ vector(0, 20, 10) for 3 seconds
+        at 16 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "Last of the sky riders, and I haven't flown in nine hundred years. Pathetic, right?"
+            play cine sequence "say"
+            make cine actor {_kestrel} look at {_wings}
+        at 20 seconds:
+            show cine actor {_archivist}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            play cine sequence "fx:appear"
+            make cine actor {_archivist} look at {_kestrel}
+            make cine actor {_kestrel} look at {_archivist}
+        at 21 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Kestrel. You shouldn't still be alive. None of the riders should."
+            play cine sequence "say"
+        at 24 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "Funny, the storm keeps saying the same thing. It wants me back. I keep saying no."
+            play cine sequence "say"
+        at 27 seconds:
+            set {_who} to "archivist"
+            set {_line} to "The Gale keeps what it touches. If it calls you, you're already half of it."
+            play cine sequence "say"
+        at 30 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "...it's calling now. Oh no. Not now. NOT NOW—"
+            play cine sequence "say"
+            play cine sound "entity.lightning_bolt.thunder" with volume 0.6 and pitch 0.7
+        at 32 seconds:
+            set {_at} to {_kestrel}
+            set {_from} to {_w} ~ vector(2, 20, 4)
+            play cine sequence "fx:strike"
+            delete {_from}
+            set {_colour} to light blue
+            set {_len} to 20 seconds
+            play cine sequence "fx:aura"
+            add cine actor keyframe for {_kestrel} at {_w} at 32 seconds
+            add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 3, 0) at 35 seconds with easing "ease-out-sine"
+        at 34 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "THE STORM REMEMBERS ITS RIDER."
+            play cine sequence "shout"
+            set {_at} to {_w}
+            play cine sequence "fx:gale-spiral"
+        at 36 seconds:
+            add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 3, 0) at 36 seconds
+            add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 24, 4) at 42 seconds with easing "ease-in-cubic"
+            set {_at} to {_archivist}
+            play cine sequence "fx:vanish"
+            hide cine actor {_archivist}
+        at 38 seconds:
+            set {_who} to "archivist"
+            set {_line} to "The storm is coming down for you. Whatever's left of her is inside it. Fight it, not her."
+            play cine sequence "say"
+        at 42 seconds:
+            set {_at} to {_w} ~ vector(0, 24, 4)
+            play cine sequence "fx:strike"
+            hide cine actor {_kestrel}
+        at 44 seconds:
+            set {_title} to "<gradient:white:aqua><bold>TRIAL OF THE STORM</bold></gradient>"
+            set {_subtitle} to "<gray>Weather it"
+            set {_tone} to 1.2
+            play cine sequence "fx:title-card"
+        at 46 seconds:
+            set {_at} to {_w}
+            play cine sequence "fx:starfall"
+        at 51 seconds:
+            fade the cine screen out with colour white over 2 seconds
+        at 53 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterIntro({_v::*}, 4, cine variable "stage", crownIsReplay(cine variable "replay"))
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    crownUnlockCodex(loop-value, "windspire")
+                    crownUnlockCodex(loop-value, "kestrel")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Outro
+# ─────────────────────────────────────────────────────────────────────────────
+#  Timeline
+#     0 – 20   Kestrel falls; is caught; wakes
+#    20        CHOICE (pausing)
+#    22 – 33   marker "trust"     35 – 46 marker "take"
+#    48 – 62   marker "after"
+
+cine scene "crown:gale-outro":
+    duration: 62 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set {_w} to {_stage} ~ vector(0, 0, 6)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        add cine marker "trust" at 22 seconds
+        add cine marker "take" at 35 seconds
+        add cine marker "after" at 48 seconds
+
+        set {_kestrel} to a new cine player actor at {_w} ~ vector(0, 25, 0) named "kestrel" with name tag "<aqua>Kestrel"
+        set {_shard} to a new cine item display of feather at {_w} ~ vector(0, 25, 0) named "gale-shard"
+        set {_shardLabel} to a new cine text display with text "<aqua>✦ Gale Shard ✦" at {_w} ~ vector(0, 26, 0)
+        attach cine actor {_shardLabel} to {_shard} with offset vector(0, 0.7, 0)
+        set {_wings} to a new cine item display of elytra at {_w} ~ vector(2, 1, 1) named "wings"
+        set {_echo} to a new cine player actor at {_w} ~ vector(-4, 0, 3) named "echo" with skin of event-player with name tag "<aqua>Your Echo"
+        hide cine actors {_echo} and {_wings}
+
+        # Kestrel falls from the sky, slows, lands softly in front of the player.
+        add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 25, 0) at 0 seconds
+        add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 6, 0) at 3 seconds with easing "ease-in-quad"
+        add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 0, 0) at 6 seconds with easing "ease-out-cubic"
+        add cine actor keyframe for {_shard} at {_w} ~ vector(0, 25, 0) at 0 seconds
+        add cine actor keyframe for {_shard} at {_w} ~ vector(0, 8, 0) at 3 seconds with easing "ease-in-quad"
+        add cine actor keyframe for {_shard} at {_w} ~ vector(0, 2.2, 1.5) at 7 seconds with easing "ease-out-back"
+
+        # Camera
+        set {_focus} to {_w} ~ vector(0, 12, 0)
+        play cine sequence "cam:sky-down" at 0 seconds
+        make the cine camera watch {_kestrel} from {_w} ~ vector(-1.5, 1.8, -2.5) between 6 seconds and 20 seconds blending over 1 second
+        make the cine camera hold at {_stage} ~ vector(0, 2.5, -3) between 20 seconds and 22 seconds blending over 15 ticks
+        make the cine camera orbit around {_kestrel} between 22 seconds and 33 seconds with radius 4 and height 1.5 sweeping 200 degrees blending over 1 second
+        make the cine camera watch {_kestrel} from {_w} ~ vector(3, 2, -2) between 35 seconds and 46 seconds blending over 1 second
+        make the cine camera watch {_echo} from {_w} ~ vector(-1.5, 2, -1) between 49 seconds and 57 seconds blending over 1 second
+        set {_focus} to {_w}
+        play cine sequence "cam:pull-back" at 57 seconds
+
+        at 0 seconds:
+            fade the cine screen out with colour white over 1 tick
+            rotate cine actor {_kestrel} to yaw 180 and pitch 60 over 1 tick
+        at 5 ticks:
+            fade the cine screen in over 1.5 seconds
+            play cine sound "entity.phantom.death" with volume 0.6 and pitch 0.6
+            set {_at} to {_w}
+            set {_len} to 60 seconds
+            play cine sequence "fx:sky-drift"
+        at 3 seconds:
+            set {_at} to {_w} ~ vector(0, 6, 0)
+            set {_colour} to white
+            play cine sequence "fx:ring-wave"
+            play cine sound "entity.breeze.wind_burst" with volume 1 and pitch 1.2
+        at 6 seconds:
+            set {_at} to {_w}
+            play cine preset "smoke-cloud" at {_w} lasting 1 second
+            play cine sound "entity.player.small_fall" with volume 1
+            spin cine display {_shard} around vector(0, 1, 0) continuously at 70 degrees per second
+        at 8 seconds:
+            rotate cine actor {_kestrel} to yaw 180 and pitch 20 over 3 seconds with easing "ease-in-out-sine"
+            set {_who} to "kestrel"
+            set {_line} to "...ow. Okay. That's what the ground feels like. I'd forgotten."
+            play cine sequence "say"
+        at 12 seconds:
+            make cine actor {_kestrel} look at {_eye}
+            set {_who} to "kestrel"
+            set {_line} to "You fought the storm without hurting me. Nobody's ever... thank you."
+            play cine sequence "say"
+        at 16 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "That shard is the only thing that could ever give me my wings back. Even for a day."
+            play cine sequence "say"
+            make cine actor {_kestrel} look at {_shard}
+        at 20 seconds:
+            present cine choice "<aqua>Kestrel looks at the shard, then at you." to cine viewers with options "Trust her with the shard" and "Take it and leave" with timeout 30 seconds defaulting to "Trust her with the shard" as a vote using a menu pausing the scene:
+                if cine choice is "Trust her with the shard":
+                    set cine variable "gale" to "trust"
+                    if crownIsReplay(cine variable "replay") is false:
+                        crownChooseAll(cine viewers, "gale", "trust", 15, "Trusted Kestrel")
+                    jump the cine scene to marker "trust"
+                else:
+                    set cine variable "gale" to "take"
+                    if crownIsReplay(cine variable "replay") is false:
+                        crownChooseAll(cine viewers, "gale", "take", -10, "Left Kestrel grounded")
+                    jump the cine scene to marker "take"
+
+        # ── Trust ───────────────────────────────────────────────────────────
+        at marker "trust":
+            show cine actor {_wings}
+            add cine actor keyframe for {_shard} at {_w} ~ vector(0, 2.2, 1.5) at 22 seconds
+            add cine actor keyframe for {_shard} at {_w} ~ vector(0, 1.2, 0) at 24 seconds with easing "ease-in-out-sine"
+            set {_who} to "kestrel"
+            set {_line} to "...really? You're really letting me— okay. Okay! One day. I promise."
+            play cine sequence "say"
+        at 24 seconds:
+            set {_at} to {_kestrel}
+            set {_colour} to light blue
+            play cine sequence "fx:shard-absorb"
+            hide cine actors {_shard} and {_shardLabel}
+            attach cine actor {_wings} to {_kestrel} with offset vector(0, 1.1, -0.3) and rotate with it
+        at 26 seconds:
+            add cine actor keyframe for {_kestrel} at {_w} at 26 seconds
+            add cine actor keyframe for {_kestrel} at {_w} ~ vector(-6, 10, 8) at 29 seconds with easing "ease-in-out-sine"
+            add cine actor keyframe for {_kestrel} at {_w} ~ vector(6, 14, 12) at 31 seconds with easing "ease-in-out-sine"
+            add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 4, 2) at 33 seconds with easing "ease-out-sine"
+            set {_at} to {_w}
+            play cine sequence "fx:gale-spiral"
+            set {_who} to "kestrel"
+            set {_line} to "<bold>WOOOOOHOOOO!"
+            play cine sequence "shout"
+        at 30 seconds:
+            play cine sound "entity.phantom.flap" with volume 1 and pitch 1.2
+            set {_at} to {_w} ~ vector(0, 12, 8)
+            play cine sequence "fx:starfall"
+        at 32 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "I'll bring it back when you need it. A rider's word is a rider's word."
+            play cine sequence "say"
+        at 33 seconds:
+            jump the cine scene to marker "after"
+
+        # ── Take ────────────────────────────────────────────────────────────
+        at marker "take":
+            add cine actor keyframe for {_shard} at {_w} ~ vector(0, 2.2, 1.5) at 35 seconds
+            add cine actor keyframe for {_shard} at {_eye} ~ vector(0, 0, 1) at 37 seconds with easing "ease-in-out-sine"
+            set {_who} to "kestrel"
+            set {_line} to "Right. Of course. Why would anyone... no, it's fine. It's yours."
+            play cine sequence "say"
+            rotate cine actor {_kestrel} to yaw 0 and pitch 30 over 2 seconds with easing "ease-in-out-sine"
+        at 37 seconds:
+            set {_at} to {_eye} ~ vector(0, -1, 0)
+            set {_colour} to light blue
+            play cine sequence "fx:shard-absorb"
+            hide cine actors {_shard} and {_shardLabel}
+        at 40 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "Go on, then. I'll walk. I'm good at walking now."
+            play cine sequence "say"
+            move cine actor {_kestrel} to {_w} ~ vector(10, 0, 10) over 6 seconds facing the movement
+        at 44 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Somewhere above, the wind sounded almost like someone laughing."
+            play cine sequence "say"
+        at 46 seconds:
+            jump the cine scene to marker "after"
+
+        # ── After ───────────────────────────────────────────────────────────
+        at marker "after":
+            show cine actor {_echo}
+            set {_at} to {_echo}
+            set {_colour} to light blue
+            play cine sequence "fx:appear"
+            make cine actor {_echo} look at {_eye}
+        at 50 seconds:
+            set {_who} to "echo"
+            if cine variable "gale" is "trust":
+                set {_line} to "You gave a shard away. The Archivist will hate that. I think I like you."
+            else:
+                set {_line} to "Three shards. It's getting heavier, isn't it? That's not the shards."
+            play cine sequence "say"
+        at 54 seconds:
+            set {_who} to "echo"
+            set {_line} to "The Colossus is next. It's been dreaming for nine hundred years. Don't wake it angry."
+            play cine sequence "say"
+        at 57 seconds:
+            set {_at} to {_echo}
+            play cine sequence "fx:vanish"
+            hide cine actor {_echo}
+            set {_title} to "<aqua><bold>GALE SHARD RECOVERED"
+            set {_subtitle} to "<gray>3 of 5"
+            set {_tone} to 1.3
+            play cine sequence "fx:title-card"
+        at 60 seconds:
+            fade the cine screen out with colour white over 2 seconds
+        at 61.5 seconds even if skipped:
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    if crownChoice(loop-value, "gale") is "none":
+                        crownChoose(loop-value, "gale", "trust")
+                        crownShiftKarma(loop-value, 15, "Trusted Kestrel")
+                    crownUnlockCodex(loop-value, "gale")
+                crownFinishChapterFor(cine viewers, 4)

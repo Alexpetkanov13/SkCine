@@ -1,0 +1,334 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   06-codex.sk  —  the Codex: lore pages unlocked as the story unfolds
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Entries unlock at story moments (crownUnlockCodex), and a few only from
+#   ambient world events. Read them in chat with /crown codex, or have one
+#   read aloud with /crown codex read <id>: a small cinematic with a floating
+#   book whose page is a text display the words are typed onto.
+#
+#   Unlocking every entry earns the "Scholar" achievement.
+# ═════════════════════════════════════════════════════════════════════════════
+
+function crownCodexIds() :: texts:
+    add "aurelion", "crown", "archivist" and "aspects" to {_ids::*}
+    add "forge", "hadrek" and "ember" to {_ids::*}
+    add "echo" to {_ids::*}
+    add "sanctuary", "nerys" and "tide" to {_ids::*}
+    add "windspire", "kestrel" and "gale" to {_ids::*}
+    add "greyhold", "colossus" and "stone" to {_ids::*}
+    add "court", "malrec", "void" and "truth" to {_ids::*}
+    add "reforged" to {_ids::*}
+    add "comet", "sightings" and "bells" to {_ids::*}
+    return {_ids::*}
+
+function crownCodexTotal() :: number:
+    return size of crownCodexIds()
+
+function crownCodexCategory(id: text) :: text:
+    if {_id} is "aurelion", "crown", "archivist", "aspects", "truth" or "reforged":
+        return "History"
+    if {_id} is "hadrek", "nerys", "kestrel", "colossus", "malrec" or "echo":
+        return "People"
+    if {_id} is "forge", "sanctuary", "windspire", "greyhold" or "court":
+        return "Places"
+    if {_id} is "ember", "tide", "gale", "stone" or "void":
+        return "Shards"
+    return "Rumours"
+
+function crownCodexTitle(id: text) :: text:
+    if {_id} is "aurelion":
+        return "The City of Aurelion"
+    if {_id} is "crown":
+        return "The Crown of Aurelion"
+    if {_id} is "archivist":
+        return "The Last Library"
+    if {_id} is "aspects":
+        return "The Five Aspects"
+    if {_id} is "forge":
+        return "The Last Forge"
+    if {_id} is "hadrek":
+        return "Hadrek, Crownsmith"
+    if {_id} is "ember":
+        return "The Ember Shard"
+    if {_id} is "echo":
+        return "The Echo"
+    if {_id} is "sanctuary":
+        return "The Drowned Sanctuary"
+    if {_id} is "nerys":
+        return "Nerys of the Tide"
+    if {_id} is "tide":
+        return "The Tide Shard"
+    if {_id} is "windspire":
+        return "The Windspire"
+    if {_id} is "kestrel":
+        return "The Sky Riders"
+    if {_id} is "gale":
+        return "The Gale Shard"
+    if {_id} is "greyhold":
+        return "Greyhold"
+    if {_id} is "colossus":
+        return "The Colossus"
+    if {_id} is "stone":
+        return "The Stone Shard"
+    if {_id} is "court":
+        return "The Hollow Court"
+    if {_id} is "malrec":
+        return "Prince Malrec"
+    if {_id} is "void":
+        return "The Void Shard"
+    if {_id} is "truth":
+        return "What the Archivist Is"
+    if {_id} is "reforged":
+        return "The Crown Reforged"
+    if {_id} is "comet":
+        return "The Crown Comet"
+    if {_id} is "sightings":
+        return "Sightings of the Echo"
+    if {_id} is "bells":
+        return "The Bells of Aurelion"
+    return "Unknown Page"
+
+# The text of each entry, one line per element.
+function crownCodexText(id: text) :: texts:
+    if {_id} is "aurelion":
+        add "Aurelion was a city of bells. Every tower had one, and every" to {_t::*}
+        add "bell had a name. On holy days they rang in a pattern so long" to {_t::*}
+        add "that no one alive had ever heard it end. It ended once: on the" to {_t::*}
+        add "day of the last coronation, when all of them rang at once." to {_t::*}
+    else if {_id} is "crown":
+        add "The Crown of Aurelion was forged from 'starlight and stubbornness'," to {_t::*}
+        add "in Hadrek's words. It held five aspects, one for each oath a" to {_t::*}
+        add "ruler swore. It made its wearers wise, and strong, and long-lived." to {_t::*}
+        add "Nobody asked what it took in return. Nobody but Malrec." to {_t::*}
+    else if {_id} is "archivist":
+        add "The Last Library survived the fall because no one remembered it" to {_t::*}
+        add "was there. Its keeper remembers everything: every king, every" to {_t::*}
+        add "law, every recipe for bread. He cannot remember his own name," to {_t::*}
+        add "and he does not like to be asked." to {_t::*}
+    else if {_id} is "aspects":
+        add "Ember is courage, and the forge. Tide is compassion, and memory." to {_t::*}
+        add "Gale is freedom. Stone is endurance. Void is the truth that ends" to {_t::*}
+        add "things. A ruler who held all five was said to be complete." to {_t::*}
+        add "The Archivist uses the word 'whole'. That is not the same thing." to {_t::*}
+    else if {_id} is "forge":
+        add "The Last Forge has burned for nine hundred years without fuel." to {_t::*}
+        add "Smiths still make pilgrimages to light a candle from it, though" to {_t::*}
+        add "few come back. Those who do say the fire speaks, and that it" to {_t::*}
+        add "sounds like an old man who has forgotten how to stop working." to {_t::*}
+    else if {_id} is "hadrek":
+        add "Hadrek forged the crown in forty days, and spent the next forty" to {_t::*}
+        add "years wishing he had not. When it shattered, he caught the Ember" to {_t::*}
+        add "Shard in his bare hands. The fire never let go of him again." to {_t::*}
+    else if {_id} is "ember":
+        add "The Ember Shard is warm to the touch, and warmer when you are" to {_t::*}
+        add "afraid. It does not make you brave. It makes being afraid" to {_t::*}
+        add "matter less." to {_t::*}
+    else if {_id} is "echo":
+        add "Every bearer of the crown sees it eventually: someone wearing" to {_t::*}
+        add "their face, standing just at the edge of things. The crown keeps" to {_t::*}
+        add "a memory of everyone who touches it. Usually the memory is quiet." to {_t::*}
+        add "Yours is not." to {_t::*}
+    else if {_id} is "sanctuary":
+        add "The temple of the sea sank in a single night, with every priest" to {_t::*}
+        add "still inside. Divers say you can hear singing if you put your" to {_t::*}
+        add "ear to the water above it. Divers also stopped going there." to {_t::*}
+    else if {_id} is "nerys":
+        add "Nerys sang the drowned home: a hymn for every sailor lost, so" to {_t::*}
+        add "their families would know they had been heard. When the Tide" to {_t::*}
+        add "Shard fell into her hands, she kept singing. She simply never" to {_t::*}
+        add "reached the last verse." to {_t::*}
+    else if {_id} is "tide":
+        add "The Tide Shard remembers. Hold it and you will hear every" to {_t::*}
+        add "conversation you have ever had near water. Most people put it" to {_t::*}
+        add "down quickly." to {_t::*}
+    else if {_id} is "windspire":
+        add "From the top of the Windspire, Aurelion's riders leapt into the" to {_t::*}
+        add "sky on borrowed wings. The tower is still there. The wind still" to {_t::*}
+        add "waits for someone to jump." to {_t::*}
+    else if {_id} is "kestrel":
+        add "There were two hundred sky riders. Kestrel was the youngest, the" to {_t::*}
+        add "fastest, and by every account the most insufferable. She is the" to {_t::*}
+        add "only one left, which she will tell you, at length." to {_t::*}
+    else if {_id} is "gale":
+        add "The Gale Shard never stays where it is put. Leave it on a table" to {_t::*}
+        add "and it will be on the windowsill by morning. Some say it is" to {_t::*}
+        add "trying to get home. Others say it has no home, and that is the point." to {_t::*}
+    else if {_id} is "greyhold":
+        add "Greyhold used to be a mountain. Maps from before the fall show" to {_t::*}
+        add "a peak where the pass now runs. Shepherds say the mountain got up" to {_t::*}
+        add "one night and lay down a little further along." to {_t::*}
+    else if {_id} is "colossus":
+        add "No one built the Colossus. The Stone Shard fell into a mountain" to {_t::*}
+        add "and the mountain began, very slowly, to think. Its first thought" to {_t::*}
+        add "took a hundred years. It was: 'heavy'." to {_t::*}
+    else if {_id} is "stone":
+        add "The Stone Shard does not move. If you drop it, it waits for you" to {_t::*}
+        add "to pick it up again. It has all the patience in the world, and" to {_t::*}
+        add "some of the patience of several others." to {_t::*}
+    else if {_id} is "court":
+        add "When Malrec broke the crown, the throne room broke with it and" to {_t::*}
+        add "folded into the space between places. It can be reached from" to {_t::*}
+        add "anywhere, if you are carrying enough of the crown." to {_t::*}
+    else if {_id} is "malrec":
+        add "History calls him a traitor. His sister called him the only" to {_t::*}
+        add "person who ever told her the truth. Both are correct." to {_t::*}
+    else if {_id} is "void":
+        add "The Void Shard is cold and weighs nothing at all. It ends things:" to {_t::*}
+        add "arguments, songs, reigns. In the right hands, it ends the right ones." to {_t::*}
+    else if {_id} is "truth":
+        add "The crown keeps every wearer. Their memories, pressed together" to {_t::*}
+        add "for centuries, became someone: a keeper of a library, kind and" to {_t::*}
+        add "patient and very, very hungry for a head to sit on." to {_t::*}
+        add "He did not choose to be what he is. Neither did you." to {_t::*}
+    else if {_id} is "reforged":
+        add "Five shards, one crown. What happened next depends on who you ask," to {_t::*}
+        add "and every version of the story is true somewhere." to {_t::*}
+    else if {_id} is "comet":
+        add "On clear nights a comet crosses the sky above old Aurelion. It is" to {_t::*}
+        add "not a comet. It is the light of the crown's breaking, still" to {_t::*}
+        add "travelling, nine hundred years later, looking for somewhere to land." to {_t::*}
+    else if {_id} is "sightings":
+        add "Travellers report a figure that looks exactly like them, standing" to {_t::*}
+        add "at a distance, watching. It never speaks first. If you speak to it," to {_t::*}
+        add "it sometimes answers with the thing you were about to say." to {_t::*}
+    else if {_id} is "bells":
+        add "When a story about the crown ends, somewhere a bell rings that" to {_t::*}
+        add "has not rung for nine hundred years. Nobody knows which one." to {_t::*}
+    else:
+        add "This page is blank." to {_t::*}
+    return {_t::*}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Unlocking
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownHasCodex(p: player, id: text) :: boolean:
+    return crownFlag({_p}, "codex::%{_id}%")
+
+function crownCodexCount(p: player) :: number:
+    set {_n} to 0
+    loop crownCodexIds():
+        if crownHasCodex({_p}, loop-value) is true:
+            add 1 to {_n}
+    return {_n}
+
+function crownUnlockCodex(p: player, id: text):
+    if crownHasCodex({_p}, {_id}) is true:
+        stop
+    crownSetFlag({_p}, "codex::%{_id}%")
+    crownChime({_p}, "codex")
+    crownMsg({_p}, "&8📖 &7Codex: &f%crownCodexTitle({_id})% &8(/crown codex read %{_id}%)")
+    if crownCodexCount({_p}) >= crownCodexTotal():
+        crownGrantAchievement({_p}, "scholar")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Reading
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownCodexList(p: player):
+    crownRule({_p}, "Codex %crownCodexCount({_p})%/%crownCodexTotal()%")
+    loop "History", "People", "Places", "Shards" and "Rumours":
+        set {_line} to "&6%loop-value-1%&8: "
+        set {_any} to false
+        loop crownCodexIds():
+            if crownCodexCategory(loop-value-2) is loop-value-1:
+                if crownHasCodex({_p}, loop-value-2) is true:
+                    set {_line} to "%{_line}%&f%loop-value-2% "
+                else:
+                    set {_line} to "%{_line}%&8??? "
+                set {_any} to true
+        if {_any} is true:
+            send {_line} to {_p}
+    send "&7Read in chat: &f/crown codex <id> &7· aloud: &f/crown codex read <id>" to {_p}
+
+function crownCodexShow(p: player, id: text):
+    if crownCodexIds() does not contain {_id}:
+        crownMsg({_p}, "&cThere is no codex entry called '%{_id}%'.")
+        stop
+    if crownHasCodex({_p}, {_id}) is false:
+        crownMsg({_p}, "&8This page hasn't been written for you yet.")
+        stop
+    crownRule({_p}, crownCodexTitle({_id}))
+    send "&8%crownCodexCategory({_id})%" to {_p}
+    loop crownCodexText({_id}):
+        send "&7%loop-value%" to {_p}
+    crownChime({_p}, "codex")
+
+# Reads an entry aloud as a small cinematic in front of the player.
+function crownCodexReadAloud(p: player, id: text):
+    if crownCodexIds() does not contain {_id}:
+        crownMsg({_p}, "&cThere is no codex entry called '%{_id}%'.")
+        stop
+    if crownHasCodex({_p}, {_id}) is false:
+        crownMsg({_p}, "&8This page hasn't been written for you yet.")
+        stop
+    if {_p} is watching a cine scene:
+        crownMsg({_p}, "&cYou're already watching something.")
+        stop
+    set {_stage} to location of {_p}
+    set pitch of {_stage} to 0
+    set yaw of {_stage} to 0
+    set {_entry} to {_id}
+    play cine scene "crown:codex-reader" for {_p}
+
+# Caller locals: {_stage}, {_entry}
+cine scene "crown:codex-reader":
+    duration: 40 seconds
+    skippable: true
+    timeline:
+        set {_c} to {_stage} ~ vector(0, 1.6, 3)
+        set {_lines::*} to crownCodexText({_entry})
+        set {_n} to size of {_lines::*}
+        set cine duration to "%{_n} * 5 + 6% seconds" parsed as timespan
+
+        set {_book} to a new cine item display of written book at {_c} ~ vector(0, -0.4, 0) named "book"
+        set {_title} to a new cine text display with text "<gold><bold>%crownCodexTitle({_entry})%" at {_c} ~ vector(0, 0.9, 0.2) named "title"
+        set {_page} to a new cine text display with text " " at {_c} ~ vector(0, 0.2, 0.2) named "page"
+        set {_cat} to a new cine text display with text "<dark_gray>%crownCodexCategory({_entry})%" at {_c} ~ vector(0, 1.3, 0.2)
+        animate cine display {_book} to scale 1.2 and rotation vector(-60, 0, 0) over 1 second with easing "ease-out-back"
+
+        add cine camera keyframe at {_c} ~ vector(0, 0.4, -3.2) at 0 seconds looking at {_c} ~ vector(0, 0.4, 0)
+        add cine camera keyframe at {_c} ~ vector(0, 0.45, -2.8) at 40 seconds with easing "linear" looking at {_c} ~ vector(0, 0.45, 0)
+
+        at 0 seconds:
+            play cine sound "item.book.page_turn" with volume 1
+            set {_at} to {_c} ~ vector(0, -1.6, 0)
+            set {_len} to 40 seconds
+            play cine sequence "fx:fireflies"
+            start a cine emitter drawing a ring of "enchant" at {_c} ~ vector(0, -0.6, 0) with radius 0.8 and 16 points spinning at 4 degrees per tick every 3 ticks lasting 40 seconds
+        set {_i} to 0
+        loop {_lines::*}:
+            add 1 to {_i}
+            set {_when} to "%({_i} - 1) * 5 + 1.5% seconds" parsed as timespan
+            set {_text} to loop-value
+            at {_when}:
+                show cine dialogue "<white>%{_text}%" in text display on {_page} with typewriter at 40 characters per second for 3.5 seconds with typing sound "item.book.page_turn"
+        at 1 second:
+            play cine sound "block.enchantment_table.use" with volume 0.4 and pitch 1.4
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The Characters page (from 04-dialogue.sk bios)
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownCharacters(p: player):
+    crownRule({_p}, "Characters")
+    loop "archivist", "echo", "warden", "matriarch", "kestrel", "colossus", "king" and "aurelion":
+        set {_known} to true
+        if loop-value is "warden":
+            set {_known} to crownHasCodex({_p}, "hadrek")
+        else if loop-value is "matriarch":
+            set {_known} to crownHasCodex({_p}, "nerys")
+        else if loop-value is "kestrel":
+            set {_known} to crownHasCodex({_p}, "kestrel")
+        else if loop-value is "colossus":
+            set {_known} to crownHasCodex({_p}, "colossus")
+        else if loop-value is "king":
+            set {_known} to crownHasCodex({_p}, "malrec")
+        else if loop-value is "echo":
+            set {_known} to crownHasCodex({_p}, "echo")
+        if {_known} is true:
+            send "&6• &f%loop-value% &8— &7%crownSpeakerBio(loop-value)%" to {_p}
+        else:
+            send "&6• &8??? &8— &8not yet met" to {_p}

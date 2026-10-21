@@ -1,0 +1,16 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: orbiting camera around a moving target
+#  /sk reload camera-orbit   then   /orbitme
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:orbit":
+    duration: 8 seconds
+    timeline:
+        # Orbit the viewer themselves; the orbit follows the target if it moves.
+        make the cine camera orbit around event-player between 0 seconds and 8 seconds with radius 7 and height 3 sweeping 540 degrees
+        at 0 seconds:
+            show cine title "<aqua>Orbit" for 2 seconds
+
+command /orbitme:
+    trigger:
+        play cine scene "examples:orbit" for player

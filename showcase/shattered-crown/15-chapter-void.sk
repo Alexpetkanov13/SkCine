@@ -1,0 +1,373 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   15-chapter-void.sk  —  Chapter V · The Void
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   The Hollow Court: what is left of Aurelion's throne room, folded into the
+#   space between places. The Hollow King waits there — Prince Malrec, who
+#   shattered the crown nine hundred years ago. He has a secret about the
+#   Archivist, and he will only tell it to someone who beats him.
+#
+#   crown:void-intro   the Hollow Court, Malrec on his throne, the warning
+#                      → Trial of Nothing → The Hollow King
+#   crown:void-outro   the truth: the Archivist IS the crown's memory.
+#                      CHOICE  Forgive Malrec   (+20, void = forgive)
+#                              Condemn him      (-20, void = condemn)
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Intro
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "crown:void-intro":
+    duration: 56 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_h} to {_stage} ~ vector(0, 0, 11)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        # ── The Hollow Court ────────────────────────────────────────────────
+        set {_dais1} to a new cine block display of crying obsidian at {_h} ~ vector(-1.5, 0, 1)
+        set {_dais2} to a new cine block display of obsidian at {_h} ~ vector(-0.5, 0, 1)
+        set {_dais3} to a new cine block display of crying obsidian at {_h} ~ vector(0.5, 0, 1)
+        set {_throne} to a new cine block display of blackstone stairs at {_h} ~ vector(-0.5, 1, 1)
+        set {_back1} to a new cine block display of polished blackstone at {_h} ~ vector(-0.5, 2, 2)
+        set {_back2} to a new cine block display of polished blackstone at {_h} ~ vector(-0.5, 3, 2)
+        set {_back3} to a new cine block display of chiseled polished blackstone at {_h} ~ vector(-0.5, 4, 2)
+        set {_glass1} to a new cine block display of black stained glass at {_h} ~ vector(-6, 0, 0)
+        set {_glass2} to a new cine block display of black stained glass at {_h} ~ vector(-6, 1, 0)
+        set {_glass3} to a new cine block display of purple stained glass at {_h} ~ vector(-6, 2, 0)
+        set {_glass4} to a new cine block display of black stained glass at {_h} ~ vector(5, 0, 0)
+        set {_glass5} to a new cine block display of black stained glass at {_h} ~ vector(5, 1, 0)
+        set {_glass6} to a new cine block display of purple stained glass at {_h} ~ vector(5, 2, 0)
+        set {_float1} to a new cine block display of end stone bricks at {_h} ~ vector(-7, 5, 6)
+        set {_float2} to a new cine block display of purpur block at {_h} ~ vector(6, 6, 7)
+        set {_float3} to a new cine block display of obsidian at {_h} ~ vector(-3, 8, 9)
+        set {_float4} to a new cine block display of crying obsidian at {_h} ~ vector(4, 9, 4)
+        set {_shard} to a new cine item display of echo shard at {_h} ~ vector(0, 4, 1.5) named "void-shard"
+        add {_float1}, {_float2}, {_float3} and {_float4} to {_debris::*}
+
+        set {_king} to a new cine player actor at {_h} ~ vector(0, 1.5, 1.4) named "king" with name tag "<dark_purple>The Hollow King"
+        set {_archivist} to a new cine player actor at {_stage} ~ vector(-2.5, 0, 2) named "archivist" with name tag "<gold>The Archivist <gray>(projection)"
+        hide cine actor {_archivist}
+
+        # ── Camera ──────────────────────────────────────────────────────────
+        set {_focus} to {_h} ~ vector(0, 2, 1)
+        set {_path::1} to {_h} ~ vector(-10, 6, -12)
+        set {_path::2} to {_h} ~ vector(-4, 4, -10)
+        set {_path::3} to {_h} ~ vector(0, 3, -8)
+        set {_path::4} to {_h} ~ vector(0, 2.6, -5)
+        play cine sequence "cam:fly-path" at 0 seconds
+        make the cine camera watch {_king} from {_h} ~ vector(0, 2.4, -3) between 9 seconds and 22 seconds blending over 1 second
+        set {_a} to {_archivist}
+        set {_b} to {_king}
+        play cine sequence "cam:dialogue" at 22 seconds
+        set {_focus} to {_king}
+        play cine sequence "cam:push" at 34 seconds
+        set {_r} to 9
+        set {_focus} to {_h}
+        play cine sequence "cam:orbit-fast" at 37 seconds
+        play cine sequence "cam:pull-back" at 42 seconds
+        add cine camera keyframe at {_h} ~ vector(0, 18, -26) at 54 seconds with easing "ease-in-out-sine" looking at {_h}
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            play cine sound "ambient.soul_sand_valley.mood" with volume 0.8 and pitch 0.5
+            make cine actor {_king} look at {_eye}
+        at 5 ticks:
+            fade the cine screen in over 3 seconds
+            set {_at} to {_h}
+            set {_len} to 52 seconds
+            play cine sequence "fx:void-tendrils"
+            spin cine display {_shard} around vector(0, 1, 0) continuously at 25 degrees per second
+            rotate cine actors {_debris::*} around {_h} by 60 degrees over 52 seconds with easing "linear"
+            spin cine displays {_debris::*} around vector(1, 1, 0) continuously at 8 degrees per second
+        at 1 second:
+            set {_title} to "%crownChapterTag(6)%<bold>CHAPTER V"
+            set {_subtitle} to "<dark_purple>The Void"
+            set {_tone} to 0.5
+            play cine sequence "fx:title-card"
+        at 5 seconds:
+            set {_who} to "narrator"
+            set {_line} to "The Hollow Court. The throne room of Aurelion, folded into the space between places."
+            play cine sequence "say"
+        at 9 seconds:
+            set {_who} to "king"
+            set {_line} to "Four shards. You've been busy. And every one of them a little heavier than the last."
+            play cine sequence "say"
+        at 13 seconds:
+            set {_who} to "king"
+            set {_line} to "I was called Malrec, once. I am the one who broke the crown. Did he tell you why?"
+            play cine sequence "say"
+        at 17 seconds:
+            set {_who} to "king"
+            set {_line} to "No. Of course not. He doesn't remember his own name, does he? Ask him what it is."
+            play cine sequence "say"
+            play cine sound "entity.warden.heartbeat" with volume 0.8 and pitch 0.6
+        at 21 seconds:
+            show cine actor {_archivist}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            play cine sequence "fx:appear"
+            make cine actor {_archivist} look at {_king}
+        at 22 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Don't listen to him. He murdered his own sister to get at that crown."
+            play cine sequence "say"
+        at 25 seconds:
+            set {_who} to "king"
+            set {_line} to "I SAVED her. From you. From what you were doing to her."
+            play cine sequence "say"
+        at 28 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Bearer. End this. Take the last shard and we can finally put everything right."
+            play cine sequence "say"
+        at 31 seconds:
+            set {_who} to "king"
+            set {_line} to "'We'. Did you hear that? He said 'we'."
+            play cine sequence "say"
+            set {_at} to {_archivist}
+            play cine sequence "fx:vanish"
+            hide cine actor {_archivist}
+        at 34 seconds:
+            set {_who} to "king"
+            set {_line} to "Very well. If you want the truth, you'll have to take it from me. Like everything else."
+            play cine sequence "say"
+            add cine actor keyframe for {_king} at {_h} ~ vector(0, 1.5, 1.4) at 34 seconds
+            add cine actor keyframe for {_king} at {_h} ~ vector(0, 3, -1) at 37 seconds with easing "ease-in-out-sine"
+        at 37 seconds:
+            set {_at} to {_h}
+            play cine sequence "fx:void-rift"
+            shake the cine camera with intensity 1 for 2 seconds
+        at 39 seconds:
+            set {_at} to {_king}
+            set {_colour} to purple
+            play cine sequence "fx:dark-pulse"
+            set {_who} to "king"
+            set {_line} to "COME, BEARER. BE HOLLOW WITH ME."
+            play cine sequence "shout"
+        at 42 seconds:
+            hide cine actor {_king}
+            set {_at} to {_h} ~ vector(0, 3, -1)
+            play cine sequence "fx:vanish"
+        at 44 seconds:
+            set {_title} to "<gradient:dark_purple:light_purple><bold>TRIAL OF NOTHING</bold></gradient>"
+            set {_subtitle} to "<gray>Four waves of the hollowed, then the King"
+            set {_tone} to 0.4
+            play cine sequence "fx:title-card"
+            play cine sound "entity.wither.spawn" with volume 0.3 and pitch 1.4
+        at 53 seconds:
+            fade the cine screen out over 2 seconds
+        at 55 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterIntro({_v::*}, 6, cine variable "stage", crownIsReplay(cine variable "replay"))
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    crownUnlockCodex(loop-value, "court")
+                    crownUnlockCodex(loop-value, "malrec")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Outro
+# ─────────────────────────────────────────────────────────────────────────────
+#  Timeline
+#     0 – 30   Malrec, dying, tells the truth; the Archivist confesses
+#    30        CHOICE (pausing)
+#    32 – 44   marker "forgive"   46 – 58 marker "condemn"
+#    60 – 76   marker "after"
+
+cine scene "crown:void-outro":
+    duration: 76 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set {_h} to {_stage} ~ vector(0, 0, 8)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        add cine marker "forgive" at 32 seconds
+        add cine marker "condemn" at 46 seconds
+        add cine marker "after" at 60 seconds
+
+        set {_malrec} to a new cine player actor at {_h} ~ vector(0, 0, 1) named "malrec" with name tag "<dark_purple>Malrec"
+        set {_shard} to a new cine item display of echo shard at {_h} ~ vector(0, 1.2, 0) named "void-shard"
+        set {_shardLabel} to a new cine text display with text "<dark_purple>✦ Void Shard ✦" at {_h} ~ vector(0, 2, 0)
+        attach cine actor {_shardLabel} to {_shard} with offset vector(0, 0.7, 0)
+        set {_archivist} to a new cine player actor at {_h} ~ vector(-4, 0, 3) named "archivist" with name tag "<gold>The Archivist"
+        set {_aurelion} to a new cine player actor at {_h} ~ vector(0, 0, 4) named "aurelion" with name tag "<yellow>Aurelion"
+        set {_echo} to a new cine player actor at {_stage} ~ vector(3, 0, 3) named "echo" with skin of event-player with name tag "<aqua>Your Echo"
+        hide cine actors {_archivist}, {_aurelion} and {_echo}
+
+        # Camera
+        add cine camera keyframe at {_h} ~ vector(-6, 6, -9) at 0 seconds looking at {_h}
+        add cine camera keyframe at {_h} ~ vector(-1.5, 1.8, -2.5) at 5 seconds with easing "ease-in-out-sine" looking at {_malrec}
+        make the cine camera watch {_malrec} from {_h} ~ vector(-1, 1.6, -2) between 6 seconds and 18 seconds blending over 1 second
+        make the cine camera watch {_archivist} from {_h} ~ vector(-1.5, 2, -1) between 18 seconds and 30 seconds blending over 1 second
+        make the cine camera hold at {_stage} ~ vector(0, 2.5, -3) between 30 seconds and 32 seconds blending over 15 ticks
+        make the cine camera watch {_aurelion} from {_h} ~ vector(1.5, 2, -1) between 33 seconds and 44 seconds blending over 1 second
+        make the cine camera watch {_malrec} from {_h} ~ vector(2, 3, -3) between 46 seconds and 58 seconds blending over 1 second
+        make the cine camera watch {_echo} from {_stage} ~ vector(1, 2, 0) between 61 seconds and 71 seconds blending over 1 second
+        set {_focus} to {_h}
+        play cine sequence "cam:pull-back" at 71 seconds
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            make cine actor {_malrec} look at {_eye}
+            rotate cine actor {_malrec} to yaw 180 and pitch 30 over 1 tick
+        at 5 ticks:
+            fade the cine screen in over 2.5 seconds
+            set {_at} to {_h}
+            set {_len} to 70 seconds
+            play cine sequence "fx:void-tendrils"
+            spin cine display {_shard} around vector(0, 1, 0) continuously at 40 degrees per second
+        at 6 seconds:
+            set {_who} to "malrec"
+            set {_line} to "Listen. I don't have long. The crown remembers everyone who ever wore it."
+            play cine sequence "say"
+        at 10 seconds:
+            set {_who} to "malrec"
+            set {_line} to "Every king. Every queen. Their memories, pressed together until they forgot their names."
+            play cine sequence "say"
+        at 14 seconds:
+            set {_who} to "malrec"
+            set {_line} to "That's what your Archivist is. Not a librarian. The crown's memory, wearing a man's shape."
+            play cine sequence "say"
+            make cine actor {_malrec} look at {_archivist}
+        at 18 seconds:
+            show cine actor {_archivist}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            play cine sequence "fx:appear"
+            make cine actor {_archivist} look at {_eye}
+            set {_who} to "archivist"
+            set {_line} to "...He isn't lying. I'm sorry. I didn't know, at first. Then I didn't want to know."
+            play cine sequence "say"
+        at 22 seconds:
+            set {_who} to "archivist"
+            set {_line} to "I need a bearer to be whole. Aurelion was the last. When Malrec broke us, he broke me."
+            play cine sequence "say"
+        at 26 seconds:
+            set {_who} to "archivist"
+            set {_line} to "But I'm not what he says. Not only that. I kept your library. I kept you alive."
+            play cine sequence "say"
+        at 29 seconds:
+            set {_who} to "malrec"
+            set {_line} to "...the shard is yours. Do what you want with me."
+            play cine sequence "say"
+        at 30 seconds:
+            present cine choice "<dark_purple>Malrec bows his head." to cine viewers with options "Forgive him" and "Condemn him" with timeout 30 seconds defaulting to "Forgive him" as a vote using a menu pausing the scene:
+                if cine choice is "Forgive him":
+                    set cine variable "void" to "forgive"
+                    if crownIsReplay(cine variable "replay") is false:
+                        crownChooseAll(cine viewers, "void", "forgive", 20, "Forgave Malrec")
+                    jump the cine scene to marker "forgive"
+                else:
+                    set cine variable "void" to "condemn"
+                    if crownIsReplay(cine variable "replay") is false:
+                        crownChooseAll(cine viewers, "void", "condemn", -20, "Condemned Malrec")
+                    jump the cine scene to marker "condemn"
+
+        # ── Forgive ─────────────────────────────────────────────────────────
+        at marker "forgive":
+            show cine actor {_aurelion}
+            set {_at} to {_aurelion}
+            set {_colour} to yellow
+            play cine sequence "fx:appear"
+            make cine actor {_aurelion} look at {_malrec}
+            make cine actor {_malrec} look at {_aurelion}
+            set {_who} to "aurelion"
+            set {_line} to "Brother. You can stop guarding me now."
+            play cine sequence "say"
+        at 36 seconds:
+            set {_who} to "malrec"
+            set {_line} to "...Sister? I'm sorry. I'm so sorry. It was the only way I knew."
+            play cine sequence "say"
+            rotate cine actor {_malrec} to yaw 0 and pitch 0 over 2 seconds with easing "ease-in-out-sine"
+        at 40 seconds:
+            set {_at} to {_malrec}
+            play cine sequence "fx:blessing"
+            set {_at} to {_aurelion}
+            play cine sequence "fx:blessing"
+            set {_who} to "aurelion"
+            set {_line} to "I know. Come home."
+            play cine sequence "say"
+        at 42 seconds:
+            move cine actors {_malrec} and {_aurelion} to {_h} ~ vector(0, 10, 6) over 3 seconds with easing "ease-in-sine"
+        at 44 seconds:
+            hide cine actors {_malrec} and {_aurelion}
+            jump the cine scene to marker "after"
+
+        # ── Condemn ─────────────────────────────────────────────────────────
+        at marker "condemn":
+            set {_at} to {_malrec}
+            play cine sequence "fx:dark-pulse"
+            set {_who} to "malrec"
+            set {_line} to "Of course. The crown always chooses the same way. I hoped you might be different."
+            play cine sequence "say"
+        at 50 seconds:
+            start a cine emitter drawing a vortex of "squid_ink" at {_malrec} with radius 1.5 and height 2.5 and 30 points spinning at -10 degrees per tick expanding by -0.03 per tick lasting 4 seconds
+            play cine sound "entity.wither.death" with volume 0.3 and pitch 0.6
+            set {_who} to "archivist"
+            set {_line} to "It's done. It had to be done. You'll see."
+            play cine sequence "say"
+        at 54 seconds:
+            set {_at} to {_malrec}
+            play cine sequence "fx:vanish"
+            hide cine actor {_malrec}
+        at 56 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Nobody sang for Malrec. Nobody was left who remembered how."
+            play cine sequence "say"
+        at 58 seconds:
+            jump the cine scene to marker "after"
+
+        # ── After ───────────────────────────────────────────────────────────
+        at marker "after":
+            add cine actor keyframe for {_shard} at {_h} ~ vector(0, 1.2, 0) at 60 seconds
+            add cine actor keyframe for {_shard} at {_eye} ~ vector(0, 0, 1.5) at 63 seconds with easing "ease-in-out-sine"
+            set {_at} to {_archivist}
+            play cine sequence "fx:vanish"
+            hide cine actor {_archivist}
+        at 61 seconds:
+            show cine actor {_echo}
+            set {_at} to {_echo}
+            set {_colour} to light blue
+            play cine sequence "fx:appear"
+            make cine actor {_echo} look at {_eye}
+        at 63 seconds:
+            set {_at} to {_eye} ~ vector(0, -1, 0)
+            set {_colour} to purple
+            play cine sequence "fx:shard-absorb"
+            hide cine actors {_shard} and {_shardLabel}
+        at 64 seconds:
+            set {_who} to "echo"
+            set {_line} to "Now you know what I am, too. Whatever the crown remembers of you... that's me."
+            play cine sequence "say"
+        at 68 seconds:
+            set {_who} to "echo"
+            if cine variable "void" is "condemn":
+                set {_line} to "Five shards. One crown. And a choice I already know you'll make. Prove me wrong."
+            else:
+                set {_line} to "Five shards. One crown. And a choice. I'll be there when you make it."
+            play cine sequence "say"
+        at 71 seconds:
+            set {_at} to {_echo}
+            play cine sequence "fx:vanish"
+            hide cine actor {_echo}
+            set {_title} to "<dark_purple><bold>VOID SHARD RECOVERED"
+            set {_subtitle} to "<gray>5 of 5 · the crown can be reforged"
+            set {_tone} to 0.6
+            play cine sequence "fx:title-card"
+        at 74 seconds:
+            fade the cine screen out over 2 seconds
+        at 75.5 seconds even if skipped:
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    if crownChoice(loop-value, "void") is "none":
+                        crownChoose(loop-value, "void", "forgive")
+                        crownShiftKarma(loop-value, 20, "Forgave Malrec")
+                    crownUnlockCodex(loop-value, "void")
+                    crownUnlockCodex(loop-value, "truth")
+                crownFinishChapterFor(cine viewers, 6)

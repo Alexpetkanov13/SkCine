@@ -1,0 +1,55 @@
+# SkCine technical settings.
+# Scenes are NOT configured here — write them in your Skript files (plugins/Skript/scripts/*.sk).
+
+debug: false
+
+performance:
+  # LOW, MEDIUM, HIGH, CINEMATIC or AUTO (adapts particle density to server tick time).
+  # Quality only affects cosmetic particles; gameplay events are never skipped.
+  quality: AUTO
+  # Players further than this (blocks) from a particle do not receive it.
+  particle-view-distance: 96
+  max-particles-per-player-per-tick: 600
+
+camera:
+  # Client-side smoothing of the camera rig, in ticks (0-10). 2 is smooth with ~1 tick of latency.
+  smoothing-ticks: 2
+  # Ticks to wait before spectating the rig so the client has received it.
+  attach-delay-ticks: 2
+
+input:
+  # Viewers press sneak to skip skippable scenes.
+  sneak-to-skip: true
+
+scripts:
+  # What happens to playing scenes when their script is unloaded or reloaded: STOP (restore viewers) or KEEP.
+  reload-policy: STOP
+
+safety:
+  # Write small per-player recovery files so viewers are restored after a crash or disconnect.
+  recovery-files: true
+  # End a scene when one of its timeline sections throws an error (otherwise the error is logged and playback continues).
+  end-scene-on-error: false
+
+limits:
+  max-playing-scenes: 200
+  max-viewers-per-scene: 100
+  max-actors: 1000
+  max-actors-per-scene: 128
+  max-effects: 300
+  max-effects-per-scene: 48
+  max-animations: 2000
+  max-dialogue-lines: 500
+  max-active-choices: 200
+  max-nested-sequences: 8
+  max-scene-duration-seconds: 1800
+  max-timeline-events: 2000
+  max-events-per-tick: 64
+  max-speed: 10
+
+dialogue:
+  # Minimum ticks between text updates while a typewriter is running.
+  title-update-interval: 2
+  action-bar-update-interval: 2
+  boss-bar-update-interval: 2
+  typing-sound-interval: 2

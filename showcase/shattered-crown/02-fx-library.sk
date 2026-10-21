@@ -1,0 +1,430 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   02-fx-library.sk  —  reusable visual effects (cine sequences)
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Every effect here is a `cine sequence`. A sequence is inlined into the
+#   scene that plays it, at the time it is played, and it sees the caller's
+#   local variables. Those locals are the parameters:
+#
+#     {_at}      location   where the effect happens               (required)
+#     {_colour}  color      main colour                            (optional)
+#     {_accent}  color      secondary colour                       (optional)
+#     {_size}    number     scale multiplier, 1 = normal           (optional)
+#     {_from}    location   start point for beams and strikes      (some)
+#
+#   Usage inside a scene timeline:
+#       set {_at} to {_stage} ~ vector(0, 1, 6)
+#       set {_colour} to orange
+#       play cine sequence "fx:sigil" at 4 seconds
+#
+#   All particles, presets and emitters belong to the scene that plays them,
+#   so they are cleaned up automatically when it ends or is skipped.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Runes and sigils
+# ─────────────────────────────────────────────────────────────────────────────
+
+# A rune circle that draws itself, spins and flares. ~3 s.
+cine sequence "fx:sigil":
+    at 0 seconds:
+        set {_c1} to {_colour} ? purple
+        set {_r} to 2.5 * ({_size} ? 1)
+        play cine sound "block.enchantment_table.use" at {_at} with volume 1 and pitch 0.8
+        start a cine emitter drawing a ring of "dust" at {_at} ~ vector(0, 0.05, 0) with radius {_r} and 48 points spinning at 3 degrees per tick lasting 3 seconds with colour {_c1}
+        start a cine emitter drawing a star of "enchant" at {_at} ~ vector(0, 0.1, 0) with radius {_r} - 0.4 and 40 points spinning at -2 degrees per tick every 3 ticks lasting 3 seconds
+    at 1 second:
+        draw a cine polygon of "end_rod" at {_at} ~ vector(0, 0.1, 0) with radius {_r} * 0.6 and 6 points rotated by 30 degrees
+        play cine sound "block.amethyst_block.chime" at {_at} with pitch 0.7
+    at 2 seconds:
+        draw a cine circle of "electric_spark" at {_at} ~ vector(0, 0.1, 0) with radius {_r} and 64 points
+        play cine preset "runes" at {_at} with colour {_c1} lasting 1 second
+
+# A single expanding shockwave ring along the ground. ~1 s.
+cine sequence "fx:ring-wave":
+    at 0 seconds:
+        set {_c1} to {_colour} ? white
+        start a cine emitter drawing a ring of "dust" at {_at} ~ vector(0, 0.1, 0) with radius 0.3 and 50 points expanding by 0.25 per tick lasting 1 second with colour {_c1}
+        play cine sound "entity.warden.sonic_boom" at {_at} with volume 0.4 and pitch 1.6
+
+# Floating runes rising from the ground in a column. ~4 s.
+cine sequence "fx:rune-column":
+    at 0 seconds:
+        set {_c1} to {_colour} ? light blue
+        start a cine emitter drawing a cylinder of "enchant" at {_at} with radius 1.2 and height 4 and 50 points spinning at 2 degrees per tick every 2 ticks lasting 4 seconds
+        start a cine emitter drawing a helix of "dust" at {_at} with radius 1.4 and height 4 and 40 points spinning at 5 degrees per tick lasting 4 seconds with colour {_c1}
+        play cine sound "block.beacon.activate" at {_at} with volume 0.8 and pitch 1.2
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The Crown
+# ─────────────────────────────────────────────────────────────────────────────
+
+# The crown's golden glow: an aura, a halo and soft chimes. ~4 s.
+cine sequence "fx:crown-glow":
+    at 0 seconds:
+        play cine preset "golden-aura" at {_at} with colour gold and accent yellow lasting 4 seconds
+        start a cine emitter drawing a ring of "end_rod" at {_at} ~ vector(0, 0.9, 0) with radius 0.7 and 18 points spinning at 6 degrees per tick every 2 ticks lasting 4 seconds
+        play cine sound "block.amethyst_block.resonate" at {_at} with volume 1 and pitch 1.2
+    at 2 seconds:
+        play cine sound "block.bell.resonate" at {_at} with volume 0.6 and pitch 1.5
+
+# The crown breaking: a flash, five coloured beams shooting outwards,
+# a shockwave and falling sparks. ~3 s.
+cine sequence "fx:crown-shatter":
+    at 0 seconds:
+        flash the cine screen with colour white over 8 ticks
+        play cine sound "block.glass.break" at {_at} with volume 1.5 and pitch 0.5
+        play cine sound "entity.generic.explode" at {_at} with volume 0.8 and pitch 0.7
+        play cine preset "shockwave" at {_at} with colour gold
+        draw a cine line of "dust" from {_at} to {_at} ~ vector(14, 10, 0) with spacing 0.3 with colour orange
+        draw a cine line of "dust" from {_at} to {_at} ~ vector(-12, 11, 6) with spacing 0.3 with colour cyan
+        draw a cine line of "dust" from {_at} to {_at} ~ vector(4, 12, 13) with spacing 0.3 with colour light blue
+        draw a cine line of "dust" from {_at} to {_at} ~ vector(-6, 10, -12) with spacing 0.3 with colour light grey
+        draw a cine line of "dust" from {_at} to {_at} ~ vector(9, 13, -10) with spacing 0.3 with colour purple
+    at 4 ticks:
+        draw a cine sphere of "firework" at {_at} with radius 1.5 and 60 points
+    at 10 ticks:
+        start a cine emitter drawing a sphere of "end_rod" at {_at} with radius 0.5 and 30 points expanding by 0.2 per tick lasting 1 second
+    at 1 second:
+        play cine sound "block.amethyst_cluster.break" at {_at} with volume 1 and pitch 0.6
+        draw a cine hemisphere of "white_ash" at {_at} with radius 4 and 80 points
+    at 2 seconds:
+        draw a cine circle of "dust" at {_at} with radius 3 and 40 points with colour gold
+
+# All five shards converging back into one point. ~5 s.
+cine sequence "fx:crown-reforge":
+    at 0 seconds:
+        play cine sound "block.beacon.power_select" at {_at} with volume 1 and pitch 0.6
+        draw a cine line of "dust" from {_at} ~ vector(10, 8, 0) to {_at} with spacing 0.25 with colour orange
+        draw a cine line of "dust" from {_at} ~ vector(-10, 8, 0) to {_at} with spacing 0.25 with colour cyan
+    at 1 second:
+        draw a cine line of "dust" from {_at} ~ vector(0, 8, 10) to {_at} with spacing 0.25 with colour light blue
+        draw a cine line of "dust" from {_at} ~ vector(0, 8, -10) to {_at} with spacing 0.25 with colour light grey
+        play cine sound "block.beacon.power_select" at {_at} with volume 1 and pitch 0.8
+    at 2 seconds:
+        draw a cine line of "dust" from {_at} ~ vector(0, 14, 0) to {_at} with spacing 0.25 with colour purple
+        play cine sound "block.beacon.power_select" at {_at} with volume 1 and pitch 1
+        start a cine emitter drawing a double helix of "end_rod" at {_at} ~ vector(0, -1, 0) with radius 1 and height 3 and 40 points spinning at 9 degrees per tick lasting 3 seconds
+    at 3 seconds:
+        play cine preset "legendary-reveal" at {_at} with colour gold and accent white lasting 2 seconds
+        play cine sound "block.end_portal.spawn" at {_at} with volume 0.7 and pitch 1.2
+    at 4 seconds:
+        flash the cine screen with colour yellow over 12 ticks
+        play cine preset "shockwave" at {_at} with colour gold
+        shake the cine camera with intensity 0.8 for 1 second
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Shards
+# ─────────────────────────────────────────────────────────────────────────────
+
+# A shard calling out: a coloured beam to the sky and a helix. ~4 s.
+cine sequence "fx:shard-call":
+    at 0 seconds:
+        set {_c1} to {_colour} ? white
+        draw a cine beam of "dust" from {_at} to {_at} ~ vector(0, 30, 0) with spacing 0.4 with colour {_c1}
+        play cine sound "block.beacon.activate" at {_at} with volume 1 and pitch 1.4
+        start a cine emitter drawing a helix of "dust" at {_at} ~ vector(0, -0.5, 0) with radius 0.8 and height 3 and 30 points spinning at 8 degrees per tick lasting 4 seconds with colour {_c1}
+    at 2 seconds:
+        draw a cine beam of "end_rod" from {_at} to {_at} ~ vector(0, 30, 0) with spacing 0.6
+        play cine sound "block.amethyst_block.resonate" at {_at} with volume 1 and pitch 0.9
+
+# A shard flowing into its new bearer: a spiral that closes in. ~3 s.
+cine sequence "fx:shard-absorb":
+    at 0 seconds:
+        set {_c1} to {_colour} ? white
+        start a cine emitter drawing a vortex of "dust" at {_at} with radius 2 and height 3 and 40 points spinning at 10 degrees per tick expanding by -0.03 per tick lasting 3 seconds with colour {_c1}
+        play cine sound "block.respawn_anchor.charge" at {_at} with volume 1 and pitch 1
+    at 2 seconds:
+        play cine preset "power-up" at {_at} with colour {_c1} and accent white
+        play cine sound "entity.player.levelup" at {_at} with volume 0.8 and pitch 0.8
+    at 3 seconds:
+        flash the cine screen with colour {_c1} over 6 ticks
+
+# A shard bursting out of a defeated guardian. ~2 s.
+cine sequence "fx:shard-release":
+    at 0 seconds:
+        set {_c1} to {_colour} ? white
+        play cine preset "explosion" at {_at} with colour {_c1}
+        play cine sound "entity.generic.explode" at {_at} with volume 0.6 and pitch 1.4
+        draw a cine sphere of "end_rod" at {_at} with radius 1.2 and 50 points
+    at 10 ticks:
+        start a cine emitter drawing a star of "dust" at {_at} with radius 1.5 and 30 points spinning at 12 degrees per tick lasting 1.5 seconds with colour {_c1}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Elements
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Embers drifting upward around a point. Lasts {_len} (default 6 s).
+cine sequence "fx:embers":
+    at 0 seconds:
+        set {_l} to {_len} ? 6 seconds
+        start a cine emitter drawing a cylinder of "small_flame" at {_at} with radius 3 and height 0.5 and 14 points every 4 ticks lasting {_l}
+        start a cine emitter drawing a cylinder of "lava" at {_at} with radius 2 and height 0.2 and 3 points every 10 ticks lasting {_l}
+        start a cine emitter drawing a vortex of "flame" at {_at} with radius 0.6 and height 2.5 and 20 points spinning at 6 degrees per tick every 3 ticks lasting {_l}
+        play cine sound "block.fire.ambient" at {_at} with volume 1 and pitch 0.8
+
+# A wall of fire in a ring. ~3 s.
+cine sequence "fx:fire-ring":
+    at 0 seconds:
+        start a cine emitter drawing a cylinder of "flame" at {_at} with radius 4 and height 2 and 60 points every 2 ticks lasting 3 seconds
+        play cine sound "item.firecharge.use" at {_at} with volume 1 and pitch 0.7
+        play cine sound "entity.blaze.shoot" at {_at} with volume 0.8 and pitch 0.6
+    at 1 second:
+        play cine preset "fire-burst" at {_at} with colour orange and accent red
+
+# Water rings and bubbles, like a calm sanctuary pool. Lasts {_len} (default 6 s).
+cine sequence "fx:tide-pool":
+    at 0 seconds:
+        set {_l} to {_len} ? 6 seconds
+        start a cine emitter drawing a ring of "bubble_pop" at {_at} with radius 2 and 30 points spinning at 2 degrees per tick every 4 ticks lasting {_l}
+        start a cine emitter drawing a ring of "dust" at {_at} ~ vector(0, 0.05, 0) with radius 0.4 and 30 points expanding by 0.06 per tick pulsing every 2 ticks lasting {_l} with colour cyan
+        start a cine emitter drawing a cylinder of "dripping_water" at {_at} ~ vector(0, 3, 0) with radius 2.5 and height 0.2 and 6 points every 6 ticks lasting {_l}
+        play cine sound "block.bubble_column.upwards_ambient" at {_at} with volume 1
+
+# A rising tidal wave of particles. ~3 s.
+cine sequence "fx:tidal-wave":
+    at 0 seconds:
+        draw a cine wave of "splash" at {_at} with radius 6 and height 1 and 80 points
+        draw a cine wave of "dust" at {_at} ~ vector(0, 0.5, 0) with radius 6 and height 1.5 and 60 points with colour cyan
+        play cine sound "item.trident.riptide_3" at {_at} with volume 1 and pitch 0.7
+    at 1 second:
+        draw a cine wave of "nautilus" at {_at} ~ vector(0, 1, 0) with radius 6 and height 2 and 60 points
+        play cine sound "entity.dolphin.splash" at {_at} with volume 1 and pitch 0.6
+    at 2 seconds:
+        play cine preset "ice-storm" at {_at} with colour cyan and accent white lasting 1 second
+
+# A spiralling wind column with clouds. ~4 s.
+cine sequence "fx:gale-spiral":
+    at 0 seconds:
+        start a cine emitter drawing a vortex of "cloud" at {_at} with radius 2 and height 6 and 50 points spinning at 12 degrees per tick lasting 4 seconds
+        start a cine emitter drawing a helix of "dust" at {_at} with radius 1 and height 6 and 30 points spinning at -10 degrees per tick lasting 4 seconds with colour light blue
+        play cine sound "entity.breeze.wind_burst" at {_at} with volume 1 and pitch 0.8
+    at 2 seconds:
+        play cine sound "entity.phantom.flap" at {_at} with volume 1 and pitch 0.6
+        draw a cine spiral of "white_ash" at {_at} with radius 3 and height 6 and 80 points
+
+# Feathers and gusts drifting past. Lasts {_len} (default 5 s).
+cine sequence "fx:sky-drift":
+    at 0 seconds:
+        set {_l} to {_len} ? 5 seconds
+        start a cine emitter drawing a cylinder of "white_ash" at {_at} with radius 6 and height 6 and 30 points every 3 ticks lasting {_l}
+        start a cine emitter drawing a cylinder of "cloud" at {_at} ~ vector(0, -1, 0) with radius 8 and height 0.5 and 8 points every 8 ticks lasting {_l}
+
+# The ground cracking: dust, a quake and a heavy thud. ~2 s.
+cine sequence "fx:quake":
+    at 0 seconds:
+        play cine sound "entity.ravager.roar" at {_at} with volume 0.6 and pitch 0.5
+        play cine sound "block.anvil.land" at {_at} with volume 0.8 and pitch 0.4
+        shake the cine camera with intensity 1.4 for 1.5 seconds
+        draw a cine ring of "campfire_cosmic_smoke" at {_at} with radius 3 and 30 points
+        draw a cine ring of "poof" at {_at} with radius 5 and 40 points
+    at 10 ticks:
+        draw a cine ring of "large_smoke" at {_at} with radius 6 and 40 points
+        play cine sound "block.stone.break" at {_at} with volume 1 and pitch 0.5
+
+# Stone dust hanging in the air. Lasts {_len} (default 6 s).
+cine sequence "fx:stone-dust":
+    at 0 seconds:
+        set {_l} to {_len} ? 6 seconds
+        start a cine emitter drawing a cylinder of "white_ash" at {_at} with radius 5 and height 4 and 20 points every 4 ticks lasting {_l}
+        start a cine emitter drawing a cylinder of "dust" at {_at} with radius 5 and height 4 and 10 points every 6 ticks lasting {_l} with colour light grey
+
+# A tear in the world: portal particles, a dark sphere and a deep hum. ~4 s.
+cine sequence "fx:void-rift":
+    at 0 seconds:
+        play cine sound "block.portal.trigger" at {_at} with volume 0.5 and pitch 0.6
+        play cine preset "portal-opening" at {_at} with colour purple and accent black lasting 4 seconds
+        start a cine emitter drawing a vortex of "reverse_portal" at {_at} with radius 2.5 and height 4 and 50 points spinning at -8 degrees per tick lasting 4 seconds
+    at 1 second:
+        start a cine emitter drawing a sphere of "squid_ink" at {_at} ~ vector(0, 1.5, 0) with radius 1 and 30 points pulsing every 3 ticks lasting 3 seconds
+        play cine sound "entity.warden.heartbeat" at {_at} with volume 1 and pitch 0.7
+    at 2 seconds:
+        play cine sound "entity.warden.heartbeat" at {_at} with volume 1 and pitch 0.7
+    at 3 seconds:
+        play cine sound "entity.elder_guardian.curse" at {_at} with volume 0.6 and pitch 0.5
+
+# Void tendrils: dark spirals reaching up. Lasts {_len} (default 5 s).
+cine sequence "fx:void-tendrils":
+    at 0 seconds:
+        set {_l} to {_len} ? 5 seconds
+        start a cine emitter drawing a double helix of "dust" at {_at} with radius 1.5 and height 5 and 40 points spinning at 4 degrees per tick lasting {_l} with colour purple
+        start a cine emitter drawing a cylinder of "portal" at {_at} with radius 3 and height 4 and 30 points every 2 ticks lasting {_l}
+        start a cine emitter drawing a ring of "sculk_soul" at {_at} with radius 2.5 and 12 points spinning at -3 degrees per tick every 5 ticks lasting {_l}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Sky and weather
+# ─────────────────────────────────────────────────────────────────────────────
+
+# A few shooting stars across the sky above {_at}. ~3 s.
+cine sequence "fx:starfall":
+    at 0 seconds:
+        draw a cine line of "end_rod" from {_at} ~ vector(-20, 30, -5) to {_at} ~ vector(-6, 22, 4) with spacing 0.5
+        play cine sound "entity.firework_rocket.launch" at {_at} ~ vector(0, 10, 0) with volume 0.4 and pitch 1.6
+    at 15 ticks:
+        draw a cine line of "end_rod" from {_at} ~ vector(10, 34, -12) to {_at} ~ vector(22, 24, -2) with spacing 0.5
+        draw a cine line of "dust" from {_at} ~ vector(10, 34, -12) to {_at} ~ vector(22, 24, -2) with spacing 0.7 with colour light blue
+    at 1.5 seconds:
+        draw a cine line of "end_rod" from {_at} ~ vector(-4, 36, 18) to {_at} ~ vector(8, 26, 10) with spacing 0.5
+        play cine sound "entity.firework_rocket.twinkle" at {_at} ~ vector(0, 10, 0) with volume 0.3 and pitch 1.2
+    at 2.25 seconds:
+        draw a cine line of "end_rod" from {_at} ~ vector(16, 32, 14) to {_at} ~ vector(4, 24, 22) with spacing 0.5
+
+# A comet with a long tail that ends in an impact at {_at}. ~3 s.
+cine sequence "fx:comet":
+    at 0 seconds:
+        set {_c1} to {_colour} ? light blue
+        draw a cine line of "end_rod" from {_at} ~ vector(-40, 50, -20) to {_at} ~ vector(-20, 25, -10) with spacing 0.4
+        draw a cine line of "dust" from {_at} ~ vector(-40, 50, -20) to {_at} ~ vector(-20, 25, -10) with spacing 0.5 with colour {_c1}
+        play cine sound "entity.ender_dragon.flap" at {_at} with volume 0.6 and pitch 1.5
+    at 1 second:
+        draw a cine line of "end_rod" from {_at} ~ vector(-20, 25, -10) to {_at} with spacing 0.3
+        draw a cine line of "flame" from {_at} ~ vector(-20, 25, -10) to {_at} with spacing 0.6
+    at 2 seconds:
+        play cine preset "meteor-impact" at {_at} with colour {_c1} and accent orange
+        play cine sound "entity.generic.explode" at {_at} with volume 1 and pitch 0.6
+        shake the cine camera with intensity 1.2 for 1 second
+
+# Gentle snow over an area. Lasts {_len} (default 8 s).
+cine sequence "fx:snowfall":
+    at 0 seconds:
+        set {_l} to {_len} ? 8 seconds
+        start a cine emitter drawing a cylinder of "snowflake" at {_at} ~ vector(0, 6, 0) with radius 10 and height 1 and 30 points every 3 ticks lasting {_l}
+
+# Ash raining from a burning sky. Lasts {_len} (default 8 s).
+cine sequence "fx:ashfall":
+    at 0 seconds:
+        set {_l} to {_len} ? 8 seconds
+        start a cine emitter drawing a cylinder of "ash" at {_at} ~ vector(0, 6, 0) with radius 10 and height 2 and 40 points every 2 ticks lasting {_l}
+        start a cine emitter drawing a cylinder of "white_ash" at {_at} ~ vector(0, 4, 0) with radius 8 and height 2 and 15 points every 4 ticks lasting {_l}
+
+# Fireflies around a quiet place. Lasts {_len} (default 8 s).
+cine sequence "fx:fireflies":
+    at 0 seconds:
+        set {_l} to {_len} ? 8 seconds
+        start a cine emitter drawing a cylinder of "glow" at {_at} with radius 6 and height 3 and 8 points every 6 ticks lasting {_l}
+        start a cine emitter drawing a cylinder of "spore_blossom_air" at {_at} ~ vector(0, 2, 0) with radius 7 and height 2 and 10 points every 8 ticks lasting {_l}
+
+# Petals carried on the wind (used for the radiant ending). Lasts {_len} (default 8 s).
+cine sequence "fx:petals":
+    at 0 seconds:
+        set {_l} to {_len} ? 8 seconds
+        start a cine emitter drawing a cylinder of "cherry_leaves" at {_at} ~ vector(0, 5, 0) with radius 8 and height 2 and 20 points every 3 ticks lasting {_l}
+
+# Thunder and a lightning strike on {_at}, from {_from} (default straight above).
+cine sequence "fx:strike":
+    at 0 seconds:
+        set {_src} to {_from} ? {_at} ~ vector(2, 18, -1)
+        draw a cine lightning bolt of "electric_spark" from {_src} to {_at}
+        draw a cine lightning bolt of "end_rod" from {_src} to {_at}
+        play cine sound "entity.lightning_bolt.thunder" at {_at} with volume 0.8 and pitch 1.1
+        flash the cine screen with colour white over 5 ticks
+    at 2 ticks:
+        play cine preset "lightning-burst" at {_at} with colour {_colour} ? light blue
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Characters
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Someone stepping out of thin air: a flash of particles and a whoosh.
+cine sequence "fx:appear":
+    at 0 seconds:
+        set {_c1} to {_colour} ? light blue
+        play cine preset "teleport" at {_at} with colour {_c1}
+        play cine sound "entity.illusioner.mirror_move" at {_at} with volume 1 and pitch 1
+        draw a cine cylinder of "dust" at {_at} with radius 0.6 and height 2 and 30 points with colour {_c1}
+
+# Someone fading into smoke.
+cine sequence "fx:vanish":
+    at 0 seconds:
+        play cine preset "smoke-cloud" at {_at} lasting 1 second
+        play cine sound "entity.illusioner.prepare_mirror" at {_at} with volume 1 and pitch 1.2
+        draw a cine cylinder of "large_smoke" at {_at} with radius 0.7 and height 2 and 30 points
+
+# Healing light falling on someone.
+cine sequence "fx:blessing":
+    at 0 seconds:
+        play cine preset "heart-burst" at {_at} with colour pink lasting 1 second
+        start a cine emitter drawing a helix of "happy_villager" at {_at} with radius 0.8 and height 2.2 and 20 points spinning at 8 degrees per tick lasting 2 seconds
+        play cine sound "entity.zombie_villager.cure" at {_at} with volume 0.4 and pitch 1.8
+    at 1 second:
+        draw a cine beam of "end_rod" from {_at} ~ vector(0, 10, 0) to {_at} with spacing 0.4
+
+# A dark pulse around someone (shadow choices, the tyrant path).
+cine sequence "fx:dark-pulse":
+    at 0 seconds:
+        start a cine emitter drawing a sphere of "dust" at {_at} ~ vector(0, 1, 0) with radius 0.4 and 40 points expanding by 0.12 per tick lasting 1 second with colour purple
+        play cine sound "entity.wither.ambient" at {_at} with volume 0.4 and pitch 0.6
+    at 10 ticks:
+        draw a cine ring of "soul_fire_flame" at {_at} with radius 2 and 30 points
+        draw a cine ring of "squid_ink" at {_at} with radius 3 and 30 points
+
+# An aura that follows an entity for {_len} (default 6 s). {_at} may be an
+# entity here: emitters attached to entities follow them.
+cine sequence "fx:aura":
+    at 0 seconds:
+        set {_c1} to {_colour} ? gold
+        set {_l} to {_len} ? 6 seconds
+        start a cine emitter drawing a ring of "dust" at {_at} with radius 0.8 and 16 points spinning at 6 degrees per tick lasting {_l} with colour {_c1}
+        start a cine emitter drawing a helix of "end_rod" at {_at} with radius 0.6 and height 2 and 12 points spinning at 4 degrees per tick every 3 ticks lasting {_l}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Battle
+# ─────────────────────────────────────────────────────────────────────────────
+
+# A boss arriving: summoning circle, rising pillar, roar.
+cine sequence "fx:boss-arrival":
+    at 0 seconds:
+        set {_c1} to {_colour} ? dark red
+        set {_c2} to {_accent} ? dark grey
+        play cine preset "summoning-circle" at {_at} with colour {_c1} and accent {_c2} lasting 4 seconds
+        play cine sound "entity.evoker.prepare_summon" at {_at} with volume 1 and pitch 0.6
+    at 2 seconds:
+        play cine preset "boss-entrance" at {_at} with colour {_c1} and accent {_c2} lasting 3 seconds
+        play cine sound "entity.wither.spawn" at {_at} with volume 0.6 and pitch 0.9
+        shake the cine camera with intensity 1 for 1.5 seconds
+    at 4 seconds:
+        play cine preset "shockwave" at {_at} with colour {_c1}
+
+# A boss falling: sparks, collapse, a final flash.
+cine sequence "fx:boss-fall":
+    at 0 seconds:
+        set {_c1} to {_colour} ? white
+        play cine sound "entity.wither.death" at {_at} with volume 0.5 and pitch 1.2
+        start a cine emitter drawing a sphere of "electric_spark" at {_at} ~ vector(0, 1, 0) with radius 1.5 and 30 points pulsing every 2 ticks lasting 2 seconds
+        shake the cine camera with intensity 0.8 for 2 seconds
+    at 2 seconds:
+        play cine preset "explosion" at {_at} with colour {_c1}
+        flash the cine screen with colour {_c1} over 10 ticks
+        play cine sound "entity.generic.explode" at {_at} with volume 1 and pitch 0.8
+
+# Victory fanfare at {_at}.
+cine sequence "fx:victory":
+    at 0 seconds:
+        play cine preset "victory" at {_at} with colour gold and accent yellow lasting 3 seconds
+        play cine sound "ui.toast.challenge_complete" with volume 0.8
+    at 1 second:
+        play cine sound "entity.firework_rocket.large_blast" at {_at} ~ vector(0, 6, 0) with volume 0.8
+        draw a cine star of "firework" at {_at} ~ vector(0, 6, 0) with radius 2.5 and 40 points
+    at 2 seconds:
+        play cine sound "entity.firework_rocket.twinkle" at {_at} ~ vector(0, 6, 0) with volume 0.8
+        draw a cine sphere of "dust" at {_at} ~ vector(0, 7, 0) with radius 2 and 50 points with colour gold
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Title cards
+# ─────────────────────────────────────────────────────────────────────────────
+
+# A chapter title card. Parameters: {_title}, {_subtitle}, {_tone} (sound pitch).
+cine sequence "fx:title-card":
+    at 0 seconds:
+        show cine title {_title} with subtitle {_subtitle} for 3.5 seconds with fade 15 ticks
+        play cine sound "block.bell.use" with volume 0.6 and pitch {_tone} ? 0.8
+    at 10 ticks:
+        play cine sound "block.bell.resonate" with volume 0.4 and pitch {_tone} ? 0.8
+
+# A dramatic cut to black and back. ~1.5 s.
+cine sequence "fx:blink":
+    at 0 seconds:
+        fade the cine screen out over 10 ticks
+    at 15 ticks:
+        fade the cine screen in over 15 ticks

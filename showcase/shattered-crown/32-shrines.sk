@@ -1,0 +1,282 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   32-shrines.sk  —  shrines: landmarks admins place in the world
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   A shrine is a small floating monument built from SkCine display actors:
+#   a plinth, a slowly turning relic, a name and a ring of light. Players
+#   SNEAK next to one to commune with it (once a minute):
+#
+#     ember / tide / gale / stone / void
+#         if you hold that shard: a memory line, healing and its light;
+#         if not: a hint about where its story begins
+#     crown
+#         opens the campaign hub, and shows everyone's progress nearby
+#
+#   Admins:
+#     /crown admin shrine add <type>     place one where you stand
+#     /crown admin shrine remove         remove the nearest one (within 5 m)
+#     /crown admin shrine list
+#
+#   Shrines are saved ({crown::shrine::<n>::...}) and rebuilt when the script
+#   loads. They are public actors, so everyone sees them; they never touch
+#   real blocks.
+# ═════════════════════════════════════════════════════════════════════════════
+
+function crownShrineTypes() :: texts:
+    return "ember", "tide", "gale", "stone", "void" and "crown"
+
+function crownShrineBase(type: text) :: itemtype:
+    if {_type} is "ember":
+        return polished blackstone bricks
+    if {_type} is "tide":
+        return prismarine bricks
+    if {_type} is "gale":
+        return calcite
+    if {_type} is "stone":
+        return chiseled stone bricks
+    if {_type} is "void":
+        return crying obsidian
+    return chiseled quartz block
+
+function crownShrineRelic(type: text) :: itemtype:
+    if {_type} is "crown":
+        return golden helmet
+    return crownShardItem({_type})
+
+function crownShrineLabel(type: text) :: text:
+    if {_type} is "ember":
+        return "<gradient:gold:red>Shrine of the Ember</gradient>"
+    if {_type} is "tide":
+        return "<gradient:dark_aqua:aqua>Shrine of the Tide</gradient>"
+    if {_type} is "gale":
+        return "<gradient:white:aqua>Shrine of the Gale</gradient>"
+    if {_type} is "stone":
+        return "<gradient:gray:white>Shrine of the Stone</gradient>"
+    if {_type} is "void":
+        return "<gradient:dark_purple:light_purple>Shrine of the Void</gradient>"
+    return "<gradient:yellow:gold>Shrine of the Crown</gradient>"
+
+function crownShrineColor(type: text) :: color:
+    if {_type} is "crown":
+        return yellow
+    return crownShardColor({_type})
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Building and tearing down
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownShrineBuild(n: number):
+    set {_loc} to {crown::shrine::%{_n}%::loc}
+    set {_type} to {crown::shrine::%{_n}%::type}
+    if {_loc} is not set:
+        stop
+    set {_base} to crownShrineBase({_type})
+    set {_plinth} to a new public cine block display of {_base} at {_loc} ~ vector(-0.5, 0, -0.5) named "shrine-%{_n}%-plinth"
+    set {_relic} to a new public cine item display of crownShrineRelic({_type}) at {_loc} ~ vector(0, 1.7, 0) named "shrine-%{_n}%-relic"
+    set {_label} to a new public cine text display with text "%crownShrineLabel({_type})%<newline><dark_gray>sneak here to commune" at {_loc} ~ vector(0, 2.6, 0) named "shrine-%{_n}%-label"
+    if {_relic} is set:
+        spin cine display {_relic} around vector(0, 1, 0) continuously at 30 degrees per second
+    add {_plinth} to {-crown::shrineactors::*}
+    add {_relic} to {-crown::shrineactors::*}
+    add {_label} to {-crown::shrineactors::*}
+
+function crownShrinesRebuild():
+    loop {-crown::shrineactors::*}:
+        if loop-value is valid:
+            remove cine actor loop-value
+    delete {-crown::shrineactors::*}
+    loop {crown::shrine::*}:
+        set {_n} to loop-index parsed as integer
+        if {_n} is set:
+            crownShrineBuild({_n})
+
+on load:
+    wait 2 seconds
+    crownShrinesRebuild()
+
+on unload:
+    loop {-crown::shrineactors::*}:
+        if loop-value is valid:
+            remove cine actor loop-value
+    delete {-crown::shrineactors::*}
+
+# A gentle ring of light around every shrine, for players nearby.
+every 4 seconds:
+    loop {crown::shrine::*}:
+        set {_n} to loop-index
+        set {_loc} to {crown::shrine::%{_n}%::loc}
+        if {_loc} is set:
+            set {_near::*} to all players in radius 32 around {_loc}
+            if size of {_near::*} > 0:
+                set {_type} to {crown::shrine::%{_n}%::type}
+                draw a cine ring of "dust" at {_loc} ~ vector(0, 1.05, 0) with radius 0.9 and 18 points to {_near::*} with colour crownShrineColor({_type})
+                draw a cine ring of "end_rod" at {_loc} ~ vector(0, 2.2, 0) with radius 0.35 and 5 points to {_near::*}
+            delete {_near::*}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Communing
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownNearestShrine(l: location, within: number) :: number:
+    set {_best} to -1
+    set {_bestD} to {_within}
+    loop {crown::shrine::*}:
+        set {_loc} to {crown::shrine::%loop-index%::loc}
+        if {_loc} is set:
+            if world of {_loc} is world of {_l}:
+                set {_d} to distance between {_loc} and {_l}
+                if {_d} <= {_bestD}:
+                    set {_bestD} to {_d}
+                    set {_best} to loop-index parsed as integer
+    return {_best}
+
+on sneak toggle:
+    player is not sneaking
+    player is not watching a cine scene
+    set {_n} to crownNearestShrine(location of player, 2.5)
+    {_n} >= 0
+    set {_last} to {-crown::communed::%crownId(player)%}
+    if {_last} is set:
+        if difference between {_last} and now < 60 seconds:
+            send action bar "&8The shrine is quiet. Try again in a little while." to player
+            stop
+    set {-crown::communed::%crownId(player)%} to now
+    crownShrineUse(player, {_n})
+
+function crownShrineUse(p: player, n: number):
+    set {_type} to {crown::shrine::%{_n}%::type}
+    set {_loc} to {crown::shrine::%{_n}%::loc}
+    crownBumpStat({_p}, "communes")
+    if {_type} is "crown":
+        set {_near::*} to all players in radius 12 around {_loc}
+        crownRule({_p}, "Shrine of the Crown")
+        loop {_near::*}:
+            set {_c} to crownNextChapter(loop-value)
+            if crownNum(loop-value, "chapter") >= 8:
+                send " &6♛ &f%loop-value% &8· &acomplete &8· %crownShardIcons(loop-value)%" to {_p}
+            else:
+                send " &6• &f%loop-value% &8· %crownChapterColour({_c})%%crownChapterShort({_c})% &8· %crownShardIcons(loop-value)%" to {_p}
+        draw a cine helix of "end_rod" at {_loc} with radius 0.8 and height 3 and 30 points to {_p}
+        play cine sound "block.beacon.power_select" at {_loc} with volume 0.7 and pitch 1.3 to {_p}
+        crownHub({_p})
+        stop
+    if crownHasShard({_p}, {_type}) is false:
+        play cine sound "block.note_block.bass" at {_loc} with volume 0.6 and pitch 0.6 to {_p}
+        crownBark({_p}, "narrator", crownShrineHint({_type}))
+        stop
+    heal {_p}
+    play cine sound "block.amethyst_block.resonate" at {_loc} with volume 1 and pitch 1 to {_p}
+    draw a cine helix of "dust" at {_p} with radius 0.8 and height 2.2 and 30 points to {_p} with colour crownShrineColor({_type})
+    draw a cine beam of "end_rod" from {_loc} ~ vector(0, 1.7, 0) to {_p} ~ vector(0, 1, 0) with spacing 0.3 to {_p}
+    crownBark({_p}, crownShrineSpeaker({_p}, {_type}), crownShrineMemory({_p}, {_type}))
+
+function crownShrineHint(type: text) :: text:
+    if {_type} is "ember":
+        return "The relic is cold. Somewhere, a forge is still burning for it."
+    if {_type} is "tide":
+        return "The relic is silent. It is waiting for a song to end."
+    if {_type} is "gale":
+        return "The relic trembles. It wants to be up high, with someone."
+    if {_type} is "stone":
+        return "The relic is heavy. It has all the time in the world."
+    return "The relic is hollow. It only answers to someone who has seen the court."
+
+# Who speaks at a shrine depends on what you chose in that chapter.
+function crownShrineSpeaker(p: player, type: text) :: text:
+    if {_type} is "ember":
+        if crownChoice({_p}, "ember") is "spare":
+            return "hadrek"
+        return "narrator"
+    if {_type} is "tide":
+        if crownChoice({_p}, "tide") is "free":
+            return "matriarch"
+        return "soul"
+    if {_type} is "gale":
+        if crownChoice({_p}, "gale") is "trust":
+            return "kestrel"
+        return "narrator"
+    if {_type} is "stone":
+        if crownChoice({_p}, "stone") is "wake":
+            return "colossus"
+        return "narrator"
+    if crownChoice({_p}, "void") is "forgive":
+        return "aurelion"
+    return "narrator"
+
+function crownShrineMemory(p: player, type: text) :: text:
+    set {_r} to random integer between 1 and 2
+    if {_type} is "ember":
+        if crownChoice({_p}, "ember") is "spare":
+            if {_r} is 1:
+                return "Still alive? Good. The forge asks after you. Mostly it asks for coal."
+            return "I made you something. It's not finished. Nothing I make ever is."
+        return "The relic is warm, but it doesn't remember anyone's name."
+    if {_type} is "tide":
+        if crownChoice({_p}, "tide") is "free":
+            if {_r} is 1:
+                return "♪ ...and all of us are free... ♪ I've been practising the last verse."
+            return "Every sailor got home. Every single one. Thank you."
+        return "...we are here, master... we are always here..."
+    if {_type} is "gale":
+        if crownChoice({_p}, "gale") is "trust":
+            if {_r} is 1:
+                return "Did you see me fly over? I did a loop. Two loops. Okay, I fell once."
+            return "Kestrel's here. Kestrel's always here. Need a lift?"
+        return "The wind goes past without stopping."
+    if {_type} is "stone":
+        if crownChoice({_p}, "stone") is "wake":
+            if {_r} is 1:
+                return "...SMALL... ONE... I... SAW... A... BIRD..."
+            return "...THE... SKY... IS... STILL... VERY... BIG..."
+        return "There is a small hill in Greyhold. It doesn't move."
+    if crownChoice({_p}, "void") is "forgive":
+        if {_r} is 1:
+            return "He sings now, can you believe it? Badly. But he sings."
+        return "Thank you for bringing my brother home."
+    return "The relic is cold, and very quiet."
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Admin tools (called from 40-commands.sk)
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownAdminShrine(s: command sender, op: text, type: text):
+    if {_op} is "list":
+        set {_count} to 0
+        loop {crown::shrine::*}:
+            add 1 to {_count}
+            crownAdminReply({_s}, "Shrine %loop-index%: %{crown::shrine::%loop-index%::type}% at %{crown::shrine::%loop-index%::loc}%")
+        if {_count} is 0:
+            crownAdminReply({_s}, "No shrines placed.")
+        stop
+    if {_s} is not a player:
+        crownAdminReply({_s}, "Stand where the shrine should be: this needs a player.")
+        stop
+    set {_pl} to "%{_s}%" parsed as player
+    if {_op} is "add":
+        if crownShrineTypes() does not contain {_type}:
+            crownAdminReply({_s}, "Shrine types: ember, tide, gale, stone, void, crown")
+            stop
+        set {_n} to 1
+        while {crown::shrine::%{_n}%::loc} is set:
+            add 1 to {_n}
+        set {_loc} to location of {_pl}
+        set pitch of {_loc} to 0
+        # The node's own value marks it as a shrine, so "loop {crown::shrine::*}" finds it.
+        set {crown::shrine::%{_n}%} to {_type}
+        set {crown::shrine::%{_n}%::loc} to {_loc}
+        set {crown::shrine::%{_n}%::type} to {_type}
+        crownShrineBuild({_n})
+        crownAdminReply({_s}, "Placed shrine %{_n}% (%{_type}%).")
+        stop
+    if {_op} is "remove":
+        set {_n} to crownNearestShrine(location of {_pl}, 5)
+        if {_n} < 0:
+            crownAdminReply({_s}, "No shrine within 5 blocks.")
+            stop
+        delete {crown::shrine::%{_n}%::*}
+        delete {crown::shrine::%{_n}%}
+        crownShrinesRebuild()
+        crownAdminReply({_s}, "Removed shrine %{_n}%.")
+        stop
+    crownAdminReply({_s}, "Usage: crown admin shrine <add <type>|remove|list>")

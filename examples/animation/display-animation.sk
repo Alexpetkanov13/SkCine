@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: advanced display animation
+#  /sk reload display-animation   then   /displays
+#
+#  Item, block and text displays; group rotation around a pivot; keyframed
+#  rotation; smooth scaling; client-side interpolation; a particle emitter
+#  attached to an actor; parenting; and automatic cleanup when the scene ends.
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:displays":
+    duration: 12 seconds
+    timeline:
+        set {_c} to (location of event-player) ~ vector(0, 1, 4)
+        add cine camera keyframe at {_c} ~ vector(0, 2, -6) at 0 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(5, 3, -4) at 12 seconds with easing "ease-in-out-sine" looking at {_c}
+
+        # A small composition: a pedestal, a floating sword, a label, and two orbiting gems.
+        set {_pedestal} to a new cine block display of polished andesite at {_c} ~ vector(-0.5, -1, -0.5)
+        set {_sword} to a new cine item display of diamond sword at {_c} ~ vector(0, 0.5, 0) named "sword"
+        set {_label} to a new cine text display with text "<gradient:gold:yellow>Ancient Blade</gradient>" at {_c} ~ vector(0, 1.6, 0)
+        set {_gem1} to a new cine item display of emerald at {_c} ~ vector(1.5, 0.5, 0)
+        set {_gem2} to a new cine item display of amethyst shard at {_c} ~ vector(-1.5, 0.5, 0)
+
+        # Parenting: the label follows the sword, 1.1 blocks above it.
+        attach cine actor {_label} to {_sword} with offset vector(0, 1.1, 0)
+
+        at 0 seconds:
+            animate cine display {_pedestal} to scale 1 over 1 second with easing "ease-out-back"
+            spin cine display {_sword} around vector(0, 1, 0) continuously at 90 degrees per second
+            start a cine emitter drawing a circle of end rod particle at {_sword} with radius 0.6 and 12 points spinning at 8 degrees per tick lasting 12 seconds
+
+        # Keyframed movement (driven by the scene clock: pausing/seeking stays in sync).
+        add cine actor keyframe for {_sword} at {_c} ~ vector(0, 0.5, 0) at 0 seconds
+        add cine actor keyframe for {_sword} at {_c} ~ vector(0, 1.5, 0) at 4 seconds with easing "ease-in-out-sine"
+        add cine actor keyframe for {_sword} at {_c} ~ vector(0, 0.8, 0) at 8 seconds with easing "ease-in-out-sine"
+
+        at 2 seconds:
+            # Group transform: both gems rotate rigidly around the sword's base.
+            rotate cine actors {_gem1} and {_gem2} around {_c} by 720 degrees over 8 seconds with easing "ease-in-out-cubic"
+            scale cine actor {_gem1} to 1.6 over 2 seconds with easing "ease-out-elastic"
+            animate cine display {_gem2} to translation vector(0, 0.3, 0) and rotation vector(0, 180, 45) over 3 seconds
+
+        at 10 seconds:
+            play cine preset "legendary-reveal" at {_c} with colour gold lasting 2 seconds
+    # No cleanup code needed: every actor and effect above belongs to the scene and is removed when it ends.
+
+command /displays:
+    trigger:
+        play cine scene "examples:displays" for player

@@ -1,0 +1,3 @@
+command /neg3:
+    trigger:
+        send cine choice to player

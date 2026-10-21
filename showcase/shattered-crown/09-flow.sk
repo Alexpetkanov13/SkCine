@@ -1,0 +1,210 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   09-flow.sk  —  how chapters are started, chained and replayed
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   /crown play  →  crownPlay(player)
+#       picks the leader's next chapter, gathers the party, moves everyone to
+#       the chapter's stage (if an admin pinned one) and plays its intro scene.
+#
+#   Every chapter scene receives these caller locals:
+#       {_stage}    location   the centre of the set (ground level)
+#       {_chapter}  number     the chapter being played
+#       {_replay}   boolean    true when replayed from the gallery
+#
+#   A scene copies {_replay} into the cine variable "replay" as its first act,
+#   and every reward or follow-up in it is guarded by crownIsReplay(), so the
+#   gallery can show any scene again without granting anything twice.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# True when the current playback was started from the gallery.
+# Takes the cine variable's value (the variable is only reachable in scenes).
+function crownIsReplay(flag: object) :: boolean:
+    if {_flag} is true:
+        return true
+    return false
+
+function crownPlay(p: player):
+    if crownInTrial({_p}) is true:
+        crownMsg({_p}, "&cYou're in the middle of a trial!")
+        stop
+    if {_p} is watching a cine scene:
+        crownMsg({_p}, "&cYou're already watching a scene.")
+        stop
+    if crownInParty({_p}) is true:
+        if crownIsLeader({_p}) is false:
+            crownMsg({_p}, "&cOnly the party leader (&f%crownPartyLeader({_p})%&c) can continue the story.")
+            stop
+    if crownNum({_p}, "chapter") >= 8:
+        crownMsg({_p}, "&7Your tale is told. &fRelive any scene with &e/crown gallery&f, or start over with &e/crown reset&f.")
+        stop
+    # Back after a long break? A short "previously on…" first.
+    if crownInParty({_p}) is false:
+        if crownWantsRecap({_p}) is true:
+            crownMsg({_p}, "&7It's been a while. Here's where you left off...")
+            crownRecap({_p}, true)
+            stop
+    set {_n} to crownNextChapter({_p})
+    set {_members::*} to crownPartyMembers({_p})
+    set {_ready::*} to crownAvailable({_members::*})
+    if size of {_ready::*} < size of {_members::*}:
+        crownMsg({_p}, "&eSome party members are busy and won't join this chapter.")
+    if {_ready::*} does not contain {_p}:
+        crownMsg({_p}, "&cYou can't start a chapter right now.")
+        stop
+    crownSetFlag({_p}, "begun")
+    set {_stage} to crownStage({_p}, {_n})
+    if crownStageIsPinned({_n}) is true:
+        loop {_ready::*}:
+            teleport loop-value to {_stage} ~ vector(0, 0.2, -2)
+        wait 1 second
+    # The first time a chapter is played, its library interlude comes first.
+    if crownHasInterlude({_n}) is true:
+        if crownFlag({_p}, "interlude::%{_n}%") is false:
+            crownPlayInterlude({_ready::*}, {_n}, {_stage})
+            stop
+    crownStartChapter({_ready::*}, {_n}, {_stage}, false)
+
+# Plays the intro scene of chapter n for a group.
+function crownStartChapter(players: players, n: number, stage: location, replay: boolean):
+    set {_chapter} to {_n}
+    set {_scene} to crownChapterScene({_n})
+    loop {_players::*}:
+        crownSeen(loop-value, {_scene})
+        if {_replay} is false:
+            crownMsg(loop-value, "%crownChapterColour({_n})%%crownChapterName({_n})%")
+    play cine scene {_scene} for {_players::*} together
+
+# Plays the outro scene of chapter n (after its trial and guardian).
+function crownPlayChapterOutro(players: players, n: number, stage: location):
+    set {_chapter} to {_n}
+    set {_replay} to false
+    set {_scene} to crownChapterOutro({_n})
+    set {_ready::*} to crownAvailable({_players::*})
+    if size of {_ready::*} is 0:
+        # Nobody can watch: grant the chapter so no progress is lost.
+        crownFinishChapterFor({_players::*}, {_n})
+        stop
+    loop {_ready::*}:
+        crownSeen(loop-value, {_scene})
+    play cine scene {_scene} for {_ready::*} together
+
+# Any campaign scene, by id, for the gallery and admins.
+function crownReplayScene(players: players, scene: text, stage: location):
+    set {_replay} to true
+    set {_chapter} to crownSceneChapter({_scene})
+    # Scenes that normally receive a boss or an ending get a stand-in.
+    set {_ending} to crownSceneEnding({_scene})
+    play cine scene {_scene} for {_players::*} together
+
+# Called at the end of every intro: starts the trial, or (prologue/finale)
+# carries straight on.
+function crownAfterIntro(players: players, n: number, stage: location, replay: boolean):
+    if {_replay} is true:
+        stop
+    set {_shard} to crownChapterShard({_n})
+    if {_shard} is "none":
+        stop
+    crownStartTrial({_players::*}, {_shard}, {_stage})
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Scene catalogue (used by the gallery and admin commands)
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownCatalogue() :: texts:
+    add "crown:prologue" to {_s::*}
+    add "crown:interlude-2" to {_s::*}
+    add "crown:ember-intro" to {_s::*}
+    add "crown:ember-outro" to {_s::*}
+    add "crown:interlude-3" to {_s::*}
+    add "crown:tide-intro" to {_s::*}
+    add "crown:tide-outro" to {_s::*}
+    add "crown:interlude-4" to {_s::*}
+    add "crown:gale-intro" to {_s::*}
+    add "crown:gale-outro" to {_s::*}
+    add "crown:interlude-5" to {_s::*}
+    add "crown:stone-intro" to {_s::*}
+    add "crown:stone-outro" to {_s::*}
+    add "crown:interlude-6" to {_s::*}
+    add "crown:void-intro" to {_s::*}
+    add "crown:void-outro" to {_s::*}
+    add "crown:interlude-7" to {_s::*}
+    add "crown:finale-intro" to {_s::*}
+    add "crown:ending-radiant" to {_s::*}
+    add "crown:ending-tyrant" to {_s::*}
+    add "crown:ending-sacrifice" to {_s::*}
+    add "crown:ending-echo" to {_s::*}
+    add "crown:credits" to {_s::*}
+    return {_s::*}
+
+function crownSceneTitle(scene: text) :: text:
+    if {_scene} is "crown:prologue":
+        return "&eThe Fall of Aurelion"
+    if {_scene} is "crown:ember-intro":
+        return "&6The Last Forge"
+    if {_scene} is "crown:ember-outro":
+        return "&6What the Fire Remembers"
+    if {_scene} is "crown:tide-intro":
+        return "&3The Drowned Sanctuary"
+    if {_scene} is "crown:tide-outro":
+        return "&3The Quiet Song"
+    if {_scene} is "crown:gale-intro":
+        return "&bA Rider Without Wings"
+    if {_scene} is "crown:gale-outro":
+        return "&bThe Eye of the Storm"
+    if {_scene} is "crown:stone-intro":
+        return "&7The Sleeping Mountain"
+    if {_scene} is "crown:stone-outro":
+        return "&7Nine Hundred Years"
+    if {_scene} is "crown:void-intro":
+        return "&5The Hollow Court"
+    if {_scene} is "crown:void-outro":
+        return "&5The Truth About the Crown"
+    if {_scene} is "crown:finale-intro":
+        return "&dThe Crown Reforged"
+    if {_scene} is "crown:ending-radiant":
+        return "&eEnding · Radiant Dawn"
+    if {_scene} is "crown:ending-tyrant":
+        return "&4Ending · The Hollow Throne"
+    if {_scene} is "crown:ending-sacrifice":
+        return "&fEnding · Shards of Mercy"
+    if {_scene} is "crown:ending-echo":
+        return "&bEnding · Two Who Were One"
+    if {_scene} is "crown:credits":
+        return "&fCredits"
+    if {_scene} is "crown:interlude-2":
+        return "&eInterlude · The Briefing"
+    if {_scene} is "crown:interlude-3":
+        return "&eInterlude · Did You See Someone?"
+    if {_scene} is "crown:interlude-4":
+        return "&eInterlude · The Riders' Register"
+    if {_scene} is "crown:interlude-5":
+        return "&eInterlude · Hurry"
+    if {_scene} is "crown:interlude-6":
+        return "&eInterlude · His Name"
+    if {_scene} is "crown:interlude-7":
+        return "&eInterlude · The Empty Library"
+    return "&7%{_scene}%"
+
+function crownSceneChapter(scene: text) :: number:
+    if {_scene} is "crown:prologue":
+        return 1
+    if {_scene} starts with "crown:interlude-":
+        set {_n} to last character of {_scene} parsed as integer
+        return {_n} ? 7
+    if {_scene} contains "ember":
+        return 2
+    if {_scene} contains "tide":
+        return 3
+    if {_scene} contains "gale":
+        return 4
+    if {_scene} contains "stone":
+        return 5
+    if {_scene} contains "void":
+        return 6
+    return 7
+
+function crownSceneEnding(scene: text) :: text:
+    if {_scene} contains "ending-":
+        return "%{_scene}%"
+    return "none"

@@ -1,0 +1,30 @@
+# SkCine load benchmark scene: deliberately busy (camera path + shots, 3 actors, emitter, repeating particles,
+# typewriter dialogue, periodic presets, sounds). Used by integration-tests/bot/skcine-bench.mjs.
+
+cine scene "bench:load":
+    duration: 30 seconds
+    skippable: false
+    timeline:
+        set {_c} to location of event-player
+        add cine camera keyframe at {_c} ~ vector(0, 8, -10) at 0 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(10, 6, 0) at 10 seconds with easing "ease-in-out-sine" looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(0, 6, 10) at 20 seconds with easing "ease-in-out-sine" looking at {_c}
+        make the cine camera orbit around {_c} between 20 seconds and 30 seconds with radius 8 and height 4 blending over 1 second
+        set {_a} to a new cine actor of villager at {_c} ~ vector(2, 0, 2)
+        set {_b} to a new cine item display of diamond at {_c} ~ vector(0, 2, 0)
+        set {_t} to a new cine text display with text "<gold>Benchmark" at {_c} ~ vector(0, 3, 0)
+        at 0 seconds:
+            spin cine display {_b} around vector(0, 1, 0) continuously at 90 degrees per second
+            start a cine emitter drawing a helix of "end_rod" at {_c} with radius 1 and height 3 and 32 points spinning at 8 degrees per tick lasting 30 seconds
+        repeat every 5 ticks:
+            draw a cine circle of "flame" at {_c} with radius 2 and 24 points
+        repeat every 2 seconds:
+            play cine preset "magic-reveal" at {_c} lasting 1 second
+            play cine sound "block.note_block.pling" with volume 0.2
+            move cine actor {_a} to {_c} ~ vector(random number between -3 and 3, 0, random number between -3 and 3) over 1.5 seconds
+        repeat every 3 seconds:
+            show cine dialogue "Benchmark dialogue line with a typewriter effect." from "<aqua>Bench" in action bar with typewriter for 1 second
+
+command /skcinebench-play <player>:
+    trigger:
+        play cine scene "bench:load" for arg-1

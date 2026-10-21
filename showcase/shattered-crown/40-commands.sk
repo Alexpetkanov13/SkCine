@@ -1,0 +1,434 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   40-commands.sk  —  /crown and its admin tools
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   One command, /crown (aliases /cr, /shatteredcrown), with subcommands.
+#   A single text argument is split on spaces; this keeps the command
+#   simple and behaves the same on every Skript version.
+#
+#   Players:   see crownHelp() in 30-menus.sk
+#   Admins (crown.admin, also from the console):
+#     /crown admin info                       running trials, bosses, stages
+#     /crown admin reset <player>             wipe a profile
+#     /crown admin chapter <player> <0-8>     set a player's progress
+#     /crown admin karma <player> <-100..100> set karma
+#     /crown admin choose <player> <key> <value>
+#     /crown admin shards <player>            give all five shards
+#     /crown admin unlockall <player>         every codex entry and scene
+#     /crown admin stage set <1-7|default>    pin a chapter's stage here
+#     /crown admin stage clear <1-7|default>
+#     /crown admin stage list
+#     /crown admin run <player> <1-7>         start chapter n for real
+#     /crown admin outro <player> <2-6>       play a chapter's outro for real
+#     /crown admin ending <player> <name>     play an ending for real
+#     /crown admin replay <player> <scene>    replay any scene (no rewards)
+#     /crown admin trial <player> <shard>     start a trial
+#     /crown admin win <player>               clear the current wave or guardian
+#     /crown admin endtrial <player>          stop a trial without rewards
+#     /crown admin speed <player> <x>         change the playback speed
+#     /crown admin shrine add <type> | remove | list
+#     /crown admin bells                      start the Night of Bells here
+# ═════════════════════════════════════════════════════════════════════════════
+
+command /crown [<text>]:
+    aliases: /cr, /shatteredcrown
+    description: Echoes of the Shattered Crown — a cinematic campaign.
+    usage: /crown help
+    executable by: players and console
+    trigger:
+        set {_raw} to arg-1 ? ""
+        set {_args::*} to split {_raw} at " "
+        set {_sub} to {_args::1} ? ""
+        set {_sub} to {_sub} in lower case
+        if {_sub} is "admin":
+            if sender is a player:
+                if player does not have permission "crown.admin":
+                    send "&cYou don't have permission to use admin tools." to sender
+                    stop
+            crownAdmin(sender, {_args::*})
+            stop
+        if sender is not a player:
+            send "[ShatteredCrown] Only players can use that. Try: crown admin info" to sender
+            stop
+        set {_p} to player
+        if {_sub} is "" or "menu" or "hub":
+            crownHub({_p})
+        else if {_sub} is "play" or "continue" or "start":
+            crownPlay({_p})
+        else if {_sub} is "status" or "profile" or "me":
+            crownStatus({_p})
+        else if {_sub} is "journal" or "choices":
+            crownJournal({_p})
+        else if {_sub} is "codex" or "lore":
+            if {_args::2} is not set:
+                crownCodexList({_p})
+            else if {_args::2} is "read":
+                if {_args::3} is set:
+                    crownCodexReadAloud({_p}, {_args::3} in lower case)
+                else:
+                    crownMsg({_p}, "&7Usage: &f/crown codex read <id>")
+            else:
+                crownCodexShow({_p}, {_args::2} in lower case)
+        else if {_sub} is "characters" or "cast":
+            crownCharacters({_p})
+        else if {_sub} is "gallery" or "theater" or "theatre":
+            if {_args::2} is not set:
+                crownGalleryList({_p})
+            else if {_args::2} is "menu":
+                crownGalleryMenu({_p}, 1)
+            else:
+                crownGalleryPlay({_p}, {_args::2} parsed as integer)
+        else if {_sub} is "tales" or "tale" or "memories":
+            if {_args::2} is set:
+                crownPlayTale({_p}, {_args::2} in lower case)
+            else:
+                crownTalesMenu({_p})
+        else if {_sub} is "tips" or "advice":
+            crownTipsCommand({_p}, ({_args::2} ? "") in lower case)
+        else if {_sub} is "recap" or "previously":
+            crownRecap({_p}, false)
+        else if {_sub} is "cosmetics" or "aura" or "auras":
+            crownCosmeticsMenu({_p})
+        else if {_sub} is "photo" or "camera" or "tour":
+            crownPhoto({_p}, ({_args::2} ? "epic") in lower case)
+        else if {_sub} is "gauntlet" or "echoes":
+            crownStartGauntlet({_p})
+        else if {_sub} is "leaderboard" or "top" or "board":
+            crownBoardShow({_p}, ({_args::2} ? "gauntlet") in lower case)
+        else if {_sub} is "achievements" or "ach":
+            crownAchievementList({_p})
+        else if {_sub} is "settings" or "options":
+            crownSettingsCommand({_p}, {_args::2} ? "", {_args::3} ? "")
+        else if {_sub} is "party" or "p":
+            crownPartyCommand({_p}, {_args::*})
+        else if {_sub} is "leave":
+            if crownInTrial({_p}) is true:
+                crownTrialLeave({_p})
+            else if crownInParty({_p}) is true:
+                crownPartyLeave({_p}, false)
+            else:
+                crownMsg({_p}, "&7There's nothing to leave.")
+        else if {_sub} is "reset":
+            if {_args::2} is "confirm":
+                if {_p} is watching a cine scene:
+                    crownMsg({_p}, "&cNot while watching a scene.")
+                    stop
+                if crownInTrial({_p}) is true:
+                    crownMsg({_p}, "&cNot during a trial.")
+                    stop
+                crownResetProfile({_p})
+                crownMsg({_p}, "&7Your story has been forgotten. &f/crown play &7to begin again.")
+            else:
+                crownMsg({_p}, "&cThis erases ALL of your progress, choices and achievements.")
+                crownMsg({_p}, "&7Type &f/crown reset confirm &7if you're sure.")
+        else if {_sub} is "help" or "?":
+            crownHelp({_p})
+        else:
+            crownMsg({_p}, "&cUnknown subcommand '%{_sub}%'. &7Try &f/crown help&7.")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Settings and party subcommands
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownSettingsCommand(p: player, key: text, value: text):
+    if {_key} is "":
+        crownSettingsMenu({_p})
+        stop
+    set {_key} to {_key} in lower case
+    set {_value} to {_value} in lower case
+    if {_key} is "speed":
+        if {_value} is "":
+            crownCycleSpeed({_p})
+        else:
+            crownSetSpeed({_p}, {_value})
+    else if {_key} is "channel":
+        if {_value} is "":
+            crownCycleChannel({_p})
+        else:
+            crownSetChannel({_p}, {_value})
+    else if {_key} is "ambient":
+        crownToggleAmbient({_p})
+    else:
+        crownMsg({_p}, "&7Settings: &fspeed &7(slow|normal|fast|instant), &fchannel &7(subtitle|title|actionbar|chat), &fambient")
+
+function crownPartyCommand(p: player, args: texts):
+    set {_op} to {_args::2} ? "list"
+    set {_op} to {_op} in lower case
+    if {_op} is "invite" or "add":
+        if {_args::3} is not set:
+            crownMsg({_p}, "&7Usage: &f/crown party invite <player>")
+            stop
+        set {_t} to {_args::3} parsed as player
+        if {_t} is not set:
+            crownMsg({_p}, "&c'%{_args::3}%' is not online.")
+            stop
+        crownPartyInvite({_p}, {_t})
+    else if {_op} is "accept" or "join":
+        crownPartyAccept({_p})
+    else if {_op} is "deny" or "decline":
+        crownPartyDeny({_p})
+    else if {_op} is "leave" or "quit":
+        crownPartyLeave({_p}, false)
+    else if {_op} is "kick" or "remove":
+        if {_args::3} is not set:
+            crownMsg({_p}, "&7Usage: &f/crown party kick <player>")
+            stop
+        set {_t} to {_args::3} parsed as player
+        if {_t} is not set:
+            crownMsg({_p}, "&c'%{_args::3}%' is not online.")
+            stop
+        crownPartyKick({_p}, {_t})
+    else if {_op} is "disband":
+        crownPartyDisband({_p})
+    else if {_op} is "chat" or "c":
+        set {_words::*} to {_args::*}
+        delete {_words::1}
+        delete {_words::2}
+        if size of {_words::*} is 0:
+            crownMsg({_p}, "&7Usage: &f/crown party chat <message>")
+            stop
+        crownPartyChat({_p}, join {_words::*} with " ")
+    else:
+        crownPartyList({_p})
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Admin
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownAdminReply(s: command sender, msg: text):
+    send "&c[Crown admin] &7%{_msg}%" to {_s}
+
+function crownAdminTarget(s: command sender, name: object) :: player:
+    if {_name} is not set:
+        crownAdminReply({_s}, "Name a player.")
+        return {_none}
+    set {_t} to "%{_name}%" parsed as player
+    if {_t} is not set:
+        crownAdminReply({_s}, "'%{_name}%' is not online.")
+    return {_t}
+
+function crownAdmin(s: command sender, args: texts):
+    set {_op} to {_args::2} ? "info"
+    set {_op} to {_op} in lower case
+    if {_op} is "info":
+        crownAdminInfo({_s})
+    else if {_op} is "reset":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        if {_t} is set:
+            crownTrialLeave({_t})
+            crownResetProfile({_t})
+            crownAdminReply({_s}, "Reset %{_t}%.")
+    else if {_op} is "chapter":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        set {_n} to {_args::4} parsed as integer
+        if {_t} is set:
+            if {_n} is not set:
+                crownAdminReply({_s}, "Usage: crown admin chapter <player> <0-8>")
+            else if {_n} < 0:
+                crownAdminReply({_s}, "Chapters go from 0 to 8.")
+            else if {_n} > 8:
+                crownAdminReply({_s}, "Chapters go from 0 to 8.")
+            else:
+                crownSet({_t}, "chapter", {_n})
+                crownSetFlag({_t}, "begun")
+                crownAdminReply({_s}, "%{_t}% is now at chapter %{_n}% (next: %crownChapterName(crownNextChapter({_t}))%).")
+    else if {_op} is "karma":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        set {_n} to {_args::4} parsed as number
+        if {_t} is set:
+            if {_n} is not set:
+                crownAdminReply({_s}, "Usage: crown admin karma <player> <-100..100>")
+            else:
+                crownSet({_t}, "karma", 0)
+                crownShiftKarma({_t}, {_n}, "Set by an admin")
+                crownAdminReply({_s}, "%{_t}%'s karma is now %crownKarma({_t})%.")
+    else if {_op} is "choose":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        if {_t} is set:
+            if {_args::5} is not set:
+                crownAdminReply({_s}, "Usage: crown admin choose <player> <oath|ember|tide|gale|stone|void|final> <value>")
+            else:
+                crownChoose({_t}, {_args::4}, {_args::5})
+                crownAdminReply({_s}, "Set %{_t}%'s choice %{_args::4}% = %{_args::5}%.")
+    else if {_op} is "shards":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        if {_t} is set:
+            loop crownShardNames():
+                crownGiveShard({_t}, loop-value)
+            crownCheckAchievements({_t})
+            crownAdminReply({_s}, "Gave all five shards to %{_t}%.")
+    else if {_op} is "unlockall":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        if {_t} is set:
+            loop crownCodexIds():
+                crownUnlockCodex({_t}, loop-value)
+            loop crownCatalogue():
+                crownSetFlag({_t}, "seen::%loop-value%")
+            crownAdminReply({_s}, "Unlocked every codex entry and gallery scene for %{_t}%.")
+    else if {_op} is "bells":
+        crownNightOfBells({_s})
+    else if {_op} is "shrine":
+        crownAdminShrine({_s}, ({_args::3} ? "list") in lower case, ({_args::4} ? "") in lower case)
+    else if {_op} is "stage":
+        crownAdminStage({_s}, {_args::3} ? "list", {_args::4} ? "default")
+    else if {_op} is "run":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        set {_n} to {_args::4} parsed as integer
+        if {_t} is set:
+            if {_n} is not set:
+                crownAdminReply({_s}, "Usage: crown admin run <player> <1-7>")
+            else:
+                crownAdminRun({_s}, {_t}, {_n})
+    else if {_op} is "outro":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        set {_n} to {_args::4} parsed as integer
+        if {_t} is set:
+            if {_n} is not set:
+                crownAdminReply({_s}, "Usage: crown admin outro <player> <2-6>")
+            else:
+                crownPlayChapterOutro({_t}, {_n}, crownStage({_t}, {_n}))
+                crownAdminReply({_s}, "Playing %crownChapterOutro({_n})% for %{_t}%.")
+    else if {_op} is "ending":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        if {_t} is set:
+            if {_args::4} is not "radiant", "tyrant", "sacrifice" or "echo":
+                crownAdminReply({_s}, "Usage: crown admin ending <player> <radiant|tyrant|sacrifice|echo>")
+            else:
+                crownBeginEnding({_t}, {_args::4}, crownStage({_t}, 7), false)
+                crownAdminReply({_s}, "Playing the %{_args::4}% ending for %{_t}%.")
+    else if {_op} is "replay":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        if {_t} is set:
+            if crownCatalogue() does not contain {_args::4}:
+                set {_list} to join crownCatalogue() with ", "
+                crownAdminReply({_s}, "Unknown scene. Scenes: %{_list}%")
+            else:
+                set {_stage} to location of {_t}
+                set pitch of {_stage} to 0
+                set yaw of {_stage} to 0
+                crownReplayScene({_t}, {_args::4}, {_stage})
+                crownAdminReply({_s}, "Replaying %{_args::4}% for %{_t}%.")
+    else if {_op} is "trial":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        if {_t} is set:
+            if crownShardNames() does not contain {_args::4}:
+                crownAdminReply({_s}, "Usage: crown admin trial <player> <ember|tide|gale|stone|void>")
+            else:
+                crownStartTrial(crownPartyMembers({_t}), {_args::4}, crownStage({_t}, crownTrialChapter({_args::4})))
+                crownAdminReply({_s}, "Started the %{_args::4}% trial for %{_t}%.")
+    else if {_op} is "endtrial":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        if {_t} is set:
+            set {_k} to crownTrialKeyOf({_t})
+            if {_k} is "":
+                crownAdminReply({_s}, "%{_t}% is not in a trial.")
+            else:
+                crownTrialCleanup({_k})
+                crownAdminReply({_s}, "Ended %{_t}%'s trial (no reward).")
+    else if {_op} is "win":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        if {_t} is set:
+            crownAdminWin({_s}, {_t})
+    else if {_op} is "speed":
+        set {_t} to crownAdminTarget({_s}, {_args::3})
+        set {_x} to {_args::4} parsed as number
+        if {_t} is set:
+            if {_x} is not set:
+                crownAdminReply({_s}, "Usage: crown admin speed <player> <0.1-10>")
+            else if {_t} is not watching a cine scene:
+                crownAdminReply({_s}, "%{_t}% isn't watching a scene.")
+            else:
+                set {_pb} to cine playback of {_t}
+                set cine speed of {_pb} to {_x}
+                crownAdminReply({_s}, "Playback speed of %{_t}%'s scene is now %{_x}%x.")
+    else:
+        crownAdminReply({_s}, "Subcommands: info, reset, chapter, karma, choose, shards, unlockall, stage, shrine, bells, run, outro, ending, replay, trial, win, endtrial, speed")
+
+function crownAdminInfo(s: command sender):
+    crownAdminReply({_s}, "Echoes of the Shattered Crown")
+    crownAdminReply({_s}, "Scenes registered: %size of crownCatalogue()% campaign scenes · SkCine %skcine version%")
+    set {_n} to 0
+    loop {-crown::trials::*}:
+        add 1 to {_n}
+        set {_k} to loop-value
+        set {_names::*} to crownTrialPlayers({_k})
+        set {_who} to join {_names::*} with ", "
+        crownAdminReply({_s}, "Trial %{-crown::trial::%{_k}%::id}% · phase %{-crown::trial::%{_k}%::phase}% · wave %{-crown::trial::%{_k}%::wave}% · %{-crown::trial::%{_k}%::elapsed}%s · %{_who}%")
+    if {_n} is 0:
+        crownAdminReply({_s}, "No trials running.")
+    loop {-crown::bosses::*}:
+        set {_b} to {-crown::boss::%loop-value%::entity}
+        if {_b} is alive:
+            set {_state} to "alive, %round(health of {_b})% hearts"
+        else:
+            set {_state} to "gone"
+        crownAdminReply({_s}, "Guardian %{-crown::boss::%loop-value%::id}% · %{_state}% · frozen %{-crown::boss::%loop-value%::frozen}% · at %location of {_b}%")
+    loop 7 times:
+        if crownStageIsPinned(loop-number) is true:
+            crownAdminReply({_s}, "Stage %loop-number%: %{crown::stage::%loop-number%}%")
+    if {crown::stage::default} is set:
+        crownAdminReply({_s}, "Default stage: %{crown::stage::default}%")
+    crownAdminReply({_s}, "Active cine playbacks: %number of active cine playbacks% · actors: %number of active cine actors%")
+
+function crownAdminStage(s: command sender, op: text, which: text):
+    if {_op} is "list":
+        loop 7 times:
+            if crownStageIsPinned(loop-number) is true:
+                crownAdminReply({_s}, "%crownChapterShort(loop-number)%: %{crown::stage::%loop-number%}%")
+            else:
+                crownAdminReply({_s}, "%crownChapterShort(loop-number)%: (wherever the leader stands)")
+        if {crown::stage::default} is set:
+            crownAdminReply({_s}, "default: %{crown::stage::default}%")
+        stop
+    if {_op} is "set":
+        if {_s} is not a player:
+            crownAdminReply({_s}, "Stand where the stage should be: this needs a player.")
+            stop
+        set {_pl} to "%{_s}%" parsed as player
+        set {_l} to location of {_pl}
+        set pitch of {_l} to 0
+        set yaw of {_l} to 0
+        set {crown::stage::%{_which}%} to {_l}
+        crownAdminReply({_s}, "Stage '%{_which}%' pinned here. Chapters on it are built towards +z (south).")
+        stop
+    if {_op} is "clear":
+        delete {crown::stage::%{_which}%}
+        crownAdminReply({_s}, "Stage '%{_which}%' cleared.")
+        stop
+    crownAdminReply({_s}, "Usage: crown admin stage <set|clear|list> [1-7|default]")
+
+function crownAdminRun(s: command sender, t: player, n: number):
+    if {_n} < 1:
+        crownAdminReply({_s}, "Chapters go from 1 to 7.")
+        stop
+    if {_n} > 7:
+        crownAdminReply({_s}, "Chapters go from 1 to 7.")
+        stop
+    if {_t} is watching a cine scene:
+        crownAdminReply({_s}, "%{_t}% is already watching a scene.")
+        stop
+    crownSetFlag({_t}, "begun")
+    set {_members::*} to crownAvailable(crownPartyMembers({_t}))
+    crownStartChapter({_members::*}, {_n}, crownStage({_t}, {_n}), false)
+    set {_who} to join {_members::*} with ", "
+    crownAdminReply({_s}, "Started %crownChapterName({_n})% for %{_who}%.")
+
+function crownAdminWin(s: command sender, t: player):
+    set {_k} to crownTrialKeyOf({_t})
+    if {_k} is "":
+        crownAdminReply({_s}, "%{_t}% is not in a trial.")
+        stop
+    if {-crown::trial::%{_k}%::phase} is "boss":
+        set {_b} to {-crown::trial::%{_k}%::boss}
+        if {_b} is alive:
+            set {-crown::boss::%{_k}%::frozen} to false
+            kill {_b}
+            crownAdminReply({_s}, "The guardian falls.")
+        else:
+            crownAdminReply({_s}, "The guardian hasn't arrived yet. Try again in a moment.")
+        stop
+    loop {-crown::trial::%{_k}%::mobs::*}:
+        if loop-value is alive:
+            kill loop-value
+    crownAdminReply({_s}, "Wave %{-crown::trial::%{_k}%::wave}% cleared.")

@@ -1,0 +1,519 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   05-trials.sk  —  the playable part between cinematics
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Every shard chapter has a TRIAL: waves of enemies around the stage, then
+#   the chapter's guardian (see 20-bosses.sk). The flow is:
+#
+#     intro scene  →  trial waves  →  boss intro scene  →  boss fight
+#                  →  outro scene (choice, shard, chapter complete)
+#
+#   A trial belongs to the party leader; everyone in the party fights in it.
+#   Players are never killed in a trial: a lethal hit "downs" them instead
+#   (they are healed and thrown back to the edge of the arena). Too many
+#   downs, everyone leaving, or running out of time fails the trial; it can
+#   be retried with /crown play.
+#
+#   Trials need difficulty Easy or higher: on Peaceful, hostile mobs vanish,
+#   so the trial is skipped with a message (the story still continues).
+#
+#   Memory layout (cleared on restart):
+#     {-crown::trials::<key>}                 active trial keys
+#     {-crown::trial::<key>::...}             trial state (key = leader uuid)
+#     {-crown::mob::<entity uuid>}            → key of the trial owning a mob
+#     {-crown::intrial::<player uuid>}        → key of the trial a player is in
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Trial definitions
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownTrialName(id: text) :: text:
+    if {_id} is "ember":
+        return "&6Trial of Cinders"
+    if {_id} is "tide":
+        return "&3Trial of the Deep"
+    if {_id} is "gale":
+        return "&bTrial of the Storm"
+    if {_id} is "stone":
+        return "&7Trial of the Mountain"
+    if {_id} is "void":
+        return "&5Trial of Nothing"
+    if {_id} is "gauntlet":
+        return "&dTrial of Echoes"
+    return "&fTrial"
+
+function crownTrialChapter(id: text) :: number:
+    if {_id} is "ember":
+        return 2
+    if {_id} is "tide":
+        return 3
+    if {_id} is "gale":
+        return 4
+    if {_id} is "stone":
+        return 5
+    if {_id} is "void":
+        return 6
+    return 0
+
+function crownTrialWaves(id: text) :: number:
+    if {_id} is "void":
+        return 4
+    if {_id} is "gauntlet":
+        return 0
+    return 3
+
+# Entity types for each wave, as text (parsed when spawning).
+function crownTrialWave(id: text, wave: number) :: texts:
+    if {_id} is "ember":
+        if {_wave} is 1:
+            return "zombie", "zombie", "husk" and "husk"
+        if {_wave} is 2:
+            return "blaze", "husk", "husk" and "zombie"
+        return "blaze", "blaze", "magma cube" and "magma cube"
+    if {_id} is "tide":
+        if {_wave} is 1:
+            return "drowned", "drowned" and "drowned"
+        if {_wave} is 2:
+            return "drowned", "drowned", "guardian" and "zombie"
+        return "drowned", "drowned", "drowned", "guardian" and "guardian"
+    if {_id} is "gale":
+        if {_wave} is 1:
+            return "skeleton", "skeleton" and "spider"
+        if {_wave} is 2:
+            return "stray", "stray", "spider" and "skeleton"
+        return "breeze", "stray", "stray" and "phantom"
+    if {_id} is "stone":
+        if {_wave} is 1:
+            return "silverfish", "silverfish", "silverfish", "zombie" and "zombie"
+        if {_wave} is 2:
+            return "vindicator", "zombie", "zombie" and "silverfish"
+        return "vindicator", "vindicator", "pillager" and "pillager"
+    if {_id} is "void":
+        if {_wave} is 1:
+            return "enderman", "endermite", "endermite" and "endermite"
+        if {_wave} is 2:
+            return "wither skeleton", "wither skeleton" and "endermite"
+        if {_wave} is 3:
+            return "vex", "vex", "wither skeleton" and "enderman"
+        return "wither skeleton", "wither skeleton", "vex", "vex" and "enderman"
+    return "zombie"
+
+function crownTrialMobName(id: text) :: text:
+    if {_id} is "ember":
+        return "&6Cinder Thrall"
+    if {_id} is "tide":
+        return "&3Drowned Faithful"
+    if {_id} is "gale":
+        return "&bStormbound"
+    if {_id} is "stone":
+        return "&7Mountain Kin"
+    if {_id} is "void":
+        return "&5Hollowed"
+    if {_id} is "gauntlet":
+        return "&dEcho"
+    return "&cFoe"
+
+# Hearts per mob for a wave (party scaling is applied on top).
+function crownTrialMobHealth(id: text, wave: number) :: number:
+    set {_base} to 10
+    if {_id} is "tide":
+        set {_base} to 11
+    else if {_id} is "gale":
+        set {_base} to 11
+    else if {_id} is "stone":
+        set {_base} to 13
+    else if {_id} is "void":
+        set {_base} to 14
+    return {_base} + ({_wave} - 1) * 3
+
+function crownTrialTimeLimit(id: text) :: number:
+    if {_id} is "void":
+        return 600
+    if {_id} is "gauntlet":
+        return 1200
+    return 480
+
+# A par time for the "Swift" achievement, in seconds.
+function crownTrialPar(id: text) :: number:
+    if {_id} is "void":
+        return 240
+    if {_id} is "gauntlet":
+        return 480
+    return 180
+
+function crownTrialColor(id: text) :: color:
+    return crownShardColor({_id})
+
+# Allowed downs per player before the trial fails.
+function crownTrialDownsPerPlayer() :: number:
+    return 3
+
+# The chapter outro scene that follows a trial's boss.
+function crownChapterOutro(n: number) :: text:
+    if {_n} is 2:
+        return "crown:ember-outro"
+    if {_n} is 3:
+        return "crown:tide-outro"
+    if {_n} is 4:
+        return "crown:gale-outro"
+    if {_n} is 5:
+        return "crown:stone-outro"
+    if {_n} is 6:
+        return "crown:void-outro"
+    return "crown:credits"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Starting and stopping
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownTrialKeyOf(p: player) :: text:
+    set {_k} to {-crown::intrial::%crownId({_p})%}
+    if {_k} is set:
+        return "%{_k}%"
+    return ""
+
+function crownInTrial(p: player) :: boolean:
+    if crownTrialKeyOf({_p}) is "":
+        return false
+    return true
+
+# Begins a trial for a group of players at a stage. Waits a moment so the
+# scene that called this has finished restoring its viewers.
+function crownStartTrial(players: players, id: text, stage: location):
+    wait 1 second
+    loop {_players::*}:
+        if loop-value is online:
+            add loop-value to {_live::*}
+    if size of {_live::*} is 0:
+        stop
+    set {_leader} to {_live::1}
+    set {_k} to crownId({_leader})
+    if {-crown::trials::%{_k}%} is set:
+        crownTrialCleanup({_k})
+    set {_n} to crownTrialChapter({_id})
+    if difficulty of world of {_stage} is peaceful:
+        crownMsgAll({_live::*}, "&eThis world is on Peaceful, so hostile foes can't appear. The trial is skipped.")
+        crownMsgAll({_live::*}, "&8(Set the difficulty to Easy or higher to fight the trials.)")
+        wait 2 seconds
+        crownPlayChapterOutro({_live::*}, {_n}, {_stage})
+        stop
+    set {-crown::trials::%{_k}%} to {_k}
+    set {-crown::trial::%{_k}%::id} to {_id}
+    set {-crown::trial::%{_k}%::chapter} to {_n}
+    set {-crown::trial::%{_k}%::stage} to {_stage}
+    set {-crown::trial::%{_k}%::wave} to 0
+    set {-crown::trial::%{_k}%::elapsed} to 0
+    set {-crown::trial::%{_k}%::downs} to 0
+    set {-crown::trial::%{_k}%::kills} to 0
+    set {-crown::trial::%{_k}%::phase} to "waves"
+    # "spawning" stays true until the first wave is out, so the trial clock
+    # never mistakes the empty arena for a cleared wave.
+    set {-crown::trial::%{_k}%::spawning} to true
+    loop {_live::*}:
+        add loop-value to {-crown::trial::%{_k}%::players::*}
+        set {-crown::intrial::%crownId(loop-value)%} to {_k}
+        set {-crown::trial::%{_k}%::down::%crownId(loop-value)%} to 0
+        heal loop-value
+    if crownTrialWaves({_id}) is 0:
+        crownAnnounce({_live::*}, crownTrialName({_id}), "&7Five guardians, back to back")
+    else:
+        crownAnnounce({_live::*}, crownTrialName({_id}), "&7Survive %crownTrialWaves({_id})% waves, then face the guardian")
+    loop {_live::*}:
+        crownBumpStat(loop-value, "trials")
+        play cine sound "event.raid.horn" with volume 0.5 and pitch 1.2 to loop-value
+    crownLog("Trial %{_id}% started by %{_leader}% with %size of {_live::*}% player(s).")
+    wait 3 seconds
+    crownTrialNextWave({_k})
+
+# Online, still-participating players of a trial.
+function crownTrialPlayers(k: text) :: players:
+    loop {-crown::trial::%{_k}%::players::*}:
+        if loop-value is online:
+            if {-crown::intrial::%crownId(loop-value)%} is {_k}:
+                add loop-value to {_out::*}
+    return {_out::*}
+
+# Health multiplier: +60%% per extra player.
+function crownTrialScale(k: text) :: number:
+    set {_n} to size of crownTrialPlayers({_k})
+    if {_n} < 1:
+        set {_n} to 1
+    return 1 + ({_n} - 1) * 0.6
+
+# Spawns the next wave, or calls the guardian after the last one.
+function crownTrialNextWave(k: text):
+    if {-crown::trials::%{_k}%} is not set:
+        stop
+    set {_id} to {-crown::trial::%{_k}%::id}
+    set {_wave} to {-crown::trial::%{_k}%::wave} + 1
+    if {_wave} > crownTrialWaves({_id}):
+        crownTrialBossPhase({_k})
+        stop
+    set {-crown::trial::%{_k}%::wave} to {_wave}
+    set {-crown::trial::%{_k}%::spawning} to true
+    set {_stage} to {-crown::trial::%{_k}%::stage}
+    set {_players::*} to crownTrialPlayers({_k})
+    set {_types::*} to crownTrialWave({_id}, {_wave})
+    set {_count} to size of {_types::*}
+    show cine title "&fWave %{_wave}%" with subtitle crownTrialName({_id}) to {_players::*} for 1.5 seconds with fade 5 ticks
+    # Telegraph: a ring where every foe will appear, one second early.
+    set {_i} to 0
+    loop {_types::*}:
+        add 1 to {_i}
+        set {_angle} to ({_i} / {_count}) * 360 + random number between -12 and 12
+        set {_spot} to {_stage} ~ vector(cos({_angle}) * 9, 0.1, sin({_angle}) * 9)
+        set {_spots::%{_i}%} to {_spot}
+        draw a cine circle of "dust" at {_spot} with radius 0.8 and 16 points to {_players::*} with colour crownTrialColor({_id})
+        draw a cine cylinder of "portal" at {_spot} with radius 0.5 and height 2 and 16 points to {_players::*}
+    play cine sound "entity.evoker.prepare_summon" at {_stage} with volume 0.8 and pitch 1.2 to {_players::*}
+    wait 1 second
+    if {-crown::trials::%{_k}%} is not set:
+        stop
+    set {_hp} to crownTrialMobHealth({_id}, {_wave}) * crownTrialScale({_k})
+    set {_i} to 0
+    loop {_types::*}:
+        add 1 to {_i}
+        set {_type} to loop-value parsed as entity type
+        if {_type} is not set:
+            crownLog("Unknown trial entity type '%loop-value%' in %{_id}% wave %{_wave}%.")
+        else:
+            crownTrialSpawnMob({_k}, {_type}, {_spots::%{_i}%}, {_hp})
+            draw a cine sphere of "large_smoke" at {_spots::%{_i}%} ~ vector(0, 1, 0) with radius 0.7 and 14 points to {_players::*}
+    set {-crown::trial::%{_k}%::spawning} to false
+
+function crownTrialSpawnMob(k: text, type: entity type, at: location, hp: number):
+    spawn {_type} at {_at}
+    set {_m} to last spawned entity
+    set {_id} to {-crown::trial::%{_k}%::id}
+    set display name of {_m} to crownTrialMobName({_id})
+    set max health of {_m} to {_hp}
+    heal {_m}
+    set {-crown::mob::%uuid of {_m}%} to {_k}
+    add {_m} to {-crown::trial::%{_k}%::mobs::*}
+    set {_ps::*} to crownTrialPlayers({_k})
+    if size of {_ps::*} > 0:
+        set target of {_m} to random element out of {_ps::*}
+
+# Counts live foes of a trial and forgets dead ones.
+function crownTrialAlive(k: text) :: number:
+    set {_n} to 0
+    loop {-crown::trial::%{_k}%::mobs::*}:
+        if loop-value is alive:
+            add 1 to {_n}
+        else:
+            delete {-crown::trial::%{_k}%::mobs::%loop-index%}
+    return {_n}
+
+function crownTrialBossPhase(k: text):
+    if {-crown::trial::%{_k}%::phase} is not "waves":
+        stop
+    set {-crown::trial::%{_k}%::phase} to "boss"
+    set {_id} to crownTrialBossId({_k})
+    set {_players::*} to crownTrialPlayers({_k})
+    crownMsgAll({_players::*}, "&7The ground trembles. &fThe guardian of the %crownShardTitle({_id})% &fawakens...")
+    loop {_players::*}:
+        heal loop-value
+    wait 2 seconds
+    if {-crown::trials::%{_k}%} is not set:
+        stop
+    crownSpawnBoss({_k}, {_id})
+
+# Called by the boss system when the guardian falls.
+function crownTrialVictory(k: text):
+    if {-crown::trials::%{_k}%} is not set:
+        stop
+    set {_id} to {-crown::trial::%{_k}%::id}
+    # The gauntlet moves on to its next guardian instead of ending.
+    if {_id} is "gauntlet":
+        if crownGauntletAdvance({_k}) is true:
+            crownGauntletNextBoss({_k})
+            stop
+    set {_n} to {-crown::trial::%{_k}%::chapter}
+    set {_stage} to {-crown::trial::%{_k}%::stage}
+    set {_time} to {-crown::trial::%{_k}%::elapsed}
+    set {_downs} to {-crown::trial::%{_k}%::downs}
+    set {_players::*} to crownTrialPlayers({_k})
+    loop {_players::*}:
+        crownBumpStat(loop-value, "trialswon")
+        crownHookTrialWon(loop-value, {_id}, {_time})
+        crownMsg(loop-value, "%crownTrialName({_id})% &acomplete &8· &7time &f%crownClock({_time})% &8· &7downs &f%{-crown::trial::%{_k}%::down::%crownId(loop-value)%}%")
+        if {_time} <= crownTrialPar({_id}):
+            crownGrantAchievement(loop-value, "swift")
+        if {-crown::trial::%{_k}%::down::%crownId(loop-value)%} is 0:
+            crownGrantAchievement(loop-value, "untouchable")
+        set {_rank} to crownBoardSubmit(loop-value, {_id}, {_time})
+        crownMsg(loop-value, "&7Leaderboard rank: &f#%{_rank}% &8(/crown leaderboard %{_id}%)")
+        set {_best} to crownNum(loop-value, "best::%{_id}%")
+        if {_best} is 0:
+            crownSet(loop-value, "best::%{_id}%", {_time})
+        else if {_time} < {_best}:
+            crownSet(loop-value, "best::%{_id}%", {_time})
+            crownMsg(loop-value, "&eNew best time for %crownTrialName({_id})%&e!")
+        heal loop-value
+    crownTrialCleanup({_k})
+    wait 2 seconds
+    if {_id} is "gauntlet":
+        loop {_players::*}:
+            crownGrantAchievement(loop-value, "gauntlet")
+            crownAnnounce(loop-value, "<gradient:light_purple:aqua><bold>TRIAL OF ECHOES</bold></gradient>", "<gray>All five guardians, in %crownClock({_time})%")
+            play cine preset "victory" at loop-value to loop-value with colour pink and accent light blue lasting 3 seconds
+        stop
+    crownPlayChapterOutro({_players::*}, {_n}, {_stage})
+
+function crownTrialFail(k: text, reason: text):
+    if {-crown::trials::%{_k}%} is not set:
+        stop
+    set {_id} to {-crown::trial::%{_k}%::id}
+    set {_players::*} to crownTrialPlayers({_k})
+    loop {_players::*}:
+        crownMsg(loop-value, "%crownTrialName({_id})% &cfailed: &7%{_reason}%")
+        crownMsg(loop-value, "&7Gather yourself and try again with &f/crown play&7.")
+        crownChime(loop-value, "bad")
+        crownBumpStat(loop-value, "trialsfailed")
+        heal loop-value
+    crownLog("Trial %{_id}% (%{_k}%) failed: %{_reason}%")
+    set {_tipId} to crownTrialBossId({_k})
+    crownTrialCleanup({_k})
+    crownTipBriefing({_players::*}, {_tipId})
+
+# Removes every foe and forgets the trial.
+function crownTrialCleanup(k: text):
+    set {-crown::trial::%{_k}%::phase} to "ending"
+    loop {-crown::trial::%{_k}%::mobs::*}:
+        if loop-value is alive:
+            kill loop-value
+    if {-crown::trial::%{_k}%::boss} is set:
+        set {_b} to {-crown::trial::%{_k}%::boss}
+        if {_b} is alive:
+            kill {_b}
+    loop {-crown::trial::%{_k}%::players::*}:
+        if {-crown::intrial::%crownId(loop-value)%} is {_k}:
+            delete {-crown::intrial::%crownId(loop-value)%}
+    delete {-crown::trial::%{_k}%::*}
+    delete {-crown::trials::%{_k}%}
+    crownBossForget({_k})
+
+# A player leaves a trial (quit, /crown leave). The rest fight on.
+function crownTrialLeave(p: player):
+    set {_k} to crownTrialKeyOf({_p})
+    if {_k} is "":
+        stop
+    delete {-crown::intrial::%crownId({_p})%}
+    crownMsg({_p}, "&7You left the trial.")
+    loop crownTrialPlayers({_k}):
+        crownMsg(loop-value, "&f%{_p}% &7left the trial.")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The trial clock: HUD, leash, retargeting, wave progression, failure
+# ─────────────────────────────────────────────────────────────────────────────
+
+every 1 second:
+    loop {-crown::trials::*}:
+        crownTrialTick(loop-value)
+
+function crownTrialTick(k: text):
+    if {-crown::trials::%{_k}%} is not set:
+        stop
+    set {_phase} to {-crown::trial::%{_k}%::phase}
+    if {_phase} is "ending":
+        stop
+    set {_id} to {-crown::trial::%{_k}%::id}
+    set {_stage} to {-crown::trial::%{_k}%::stage}
+    add 1 to {-crown::trial::%{_k}%::elapsed}
+    set {_elapsed} to {-crown::trial::%{_k}%::elapsed}
+    set {_players::*} to crownTrialPlayers({_k})
+    if size of {_players::*} is 0:
+        crownTrialFail({_k}, "everyone left the arena")
+        stop
+    if {_elapsed} > crownTrialTimeLimit({_id}):
+        crownTrialFail({_k}, "the shard's patience ran out (time limit)")
+        stop
+    if {_phase} is "boss":
+        # The boss system drives this phase; it shows its own HUD.
+        stop
+    # Players who wander off (or change worlds) leave the trial.
+    loop {_players::*}:
+        if world of loop-value is not world of {_stage}:
+            crownTrialLeave(loop-value)
+        else if distance between loop-value and {_stage} > 64:
+            crownTrialLeave(loop-value)
+    set {_alive} to crownTrialAlive({_k})
+    # HUD
+    set {_wave} to {-crown::trial::%{_k}%::wave}
+    set {_waves} to crownTrialWaves({_id})
+    set {_foes} to crownPlural({_alive}, "foe")
+    loop {_players::*}:
+        set {_d} to {-crown::trial::%{_k}%::down::%crownId(loop-value)%}
+        send action bar "%crownTrialName({_id})% &8| &fWave %{_wave}%/%{_waves}% &8| &c%{_foes}% &8| &7%crownClock({_elapsed})% &8| &7downs %{_d}%/%crownTrialDownsPerPlayer()%" to loop-value
+    # Leash and retarget: foes that wander off are pulled back into the arena.
+    loop {-crown::trial::%{_k}%::mobs::*}:
+        if loop-value is alive:
+            if distance between loop-value and {_stage} > 28:
+                teleport loop-value to {_stage} ~ vector(random number between -6 and 6, 0.2, random number between -6 and 6)
+                draw a cine sphere of "portal" at loop-value with radius 0.6 and 14 points to {_players::*}
+            if mod({_elapsed}, 4) is 0:
+                set target of loop-value to random element out of {_players::*}
+    # Wave cleared?
+    if {_alive} is 0:
+        if {-crown::trial::%{_k}%::spawning} is false:
+            set {-crown::trial::%{_k}%::spawning} to true
+            loop {_players::*}:
+                play cine sound "entity.experience_orb.pickup" with volume 0.8 and pitch 0.8 to loop-value
+            if {_wave} < {_waves}:
+                crownMsgAll({_players::*}, "&7Wave %{_wave}% cleared. &fCatch your breath...")
+            crownTrialBreather({_k})
+
+function crownTrialBreather(k: text):
+    wait 3 seconds
+    crownTrialNextWave({_k})
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Players in trials are downed, never killed
+# ─────────────────────────────────────────────────────────────────────────────
+
+on damage of player:
+    set {_k} to crownTrialKeyOf(victim)
+    {_k} is not ""
+    damage >= health of victim
+    cancel event
+    crownTrialDown(victim, {_k})
+
+function crownTrialDown(p: player, k: text):
+    set {_id} to crownId({_p})
+    add 1 to {-crown::trial::%{_k}%::down::%{_id}%}
+    add 1 to {-crown::trial::%{_k}%::downs}
+    set {_downs} to {-crown::trial::%{_k}%::down::%{_id}%}
+    set {_stage} to {-crown::trial::%{_k}%::stage}
+    heal {_p}
+    teleport {_p} to {_stage} ~ vector(0, 0.5, -11)
+    crownBumpStat({_p}, "downs")
+    draw a cine sphere of "soul" at {_p} with radius 0.8 and 20 points
+    play cine sound "entity.player.hurt_freeze" with volume 1 and pitch 0.6 to {_p}
+    crownMsgAll(crownTrialPlayers({_k}), "&c%{_p}% was downed! &8(%{_downs}%/%crownTrialDownsPerPlayer()%)")
+    crownTipOnDown({_p}, {_k})
+    if {_downs} >= crownTrialDownsPerPlayer():
+        crownMsg({_p}, "&cYou are too wounded to continue this trial.")
+        delete {-crown::intrial::%{_id}%}
+        if size of crownTrialPlayers({_k}) is 0:
+            crownTrialFail({_k}, "every champion has fallen")
+
+# Foes of a trial drop nothing: the reward is the story.
+on death:
+    victim is not a player
+    set {_k} to {-crown::mob::%uuid of victim%}
+    {_k} is set
+    clear drops
+    delete {-crown::mob::%uuid of victim%}
+    if attacker is a player:
+        crownBumpStat(attacker, "kills")
+        add 1 to {-crown::trial::%{_k}%::kills}
+
+# Trial foes never burn in daylight (zombies, skeletons, phantoms).
+on combust:
+    {-crown::mob::%uuid of event-entity%} is set
+    cancel event
+
+on quit:
+    crownTrialLeave(player)

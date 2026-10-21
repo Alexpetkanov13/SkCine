@@ -1,0 +1,4 @@
+on load:
+    set {_x} to cine ease 0.5 using "wobble"
+    stop all cine scenes
+    broadcast "SKCINE-NEG runtime-done"

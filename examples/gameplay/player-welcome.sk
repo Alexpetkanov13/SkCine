@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: first-join welcome tour
+#  /sk reload player-welcome    (plays automatically on a player's first join)
+#  /tour replays it.
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:welcome-tour":
+    skippable: true
+    timeline:
+        set {_spawn} to spawn of world of event-player
+        add cine camera keyframe at {_spawn} ~ vector(0, 40, -40) at 0 seconds looking at {_spawn}
+        add cine camera keyframe at {_spawn} ~ vector(30, 25, 0) at 6 seconds with easing "ease-in-out-sine" looking at {_spawn}
+        add cine camera keyframe at {_spawn} ~ vector(0, 15, 25) at 12 seconds with easing "ease-in-out-sine" looking at {_spawn}
+        add cine camera keyframe at {_spawn} ~ vector(0, 3, -6) at 16 seconds with easing "ease-out-cubic" looking at {_spawn} ~ vector(0, 1.5, 0)
+        at 0 seconds:
+            fade cine screen in over 1 second
+            play cine sound "music_disc.otherside" with volume 0.3
+        at 1 second:
+            show cine title "<gold><bold>Welcome, %name of event-player%!" with subtitle "<gray>Sneak to skip the tour" for 4 seconds
+        at 6 seconds:
+            show cine dialogue "This is the spawn. Everything starts here." with typewriter for 3 seconds
+        at 12 seconds:
+            show cine dialogue "Type /help any time. Have fun!" with typewriter for 3 seconds
+        at 15 seconds:
+            play cine preset "level-up" at {_spawn} lasting 2 seconds
+    on end:
+        stop cine sounds of event-player
+
+on first join:
+    wait 2 seconds
+    if player is online:
+        play cine scene "examples:welcome-tour" for player
+
+command /tour:
+    trigger:
+        play cine scene "examples:welcome-tour" for player

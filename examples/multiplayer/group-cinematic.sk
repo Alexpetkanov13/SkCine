@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: synchronized group cinematic
+#  /sk reload group-cinematic   then   /groupscene
+#
+#  One shared timeline for everyone within 30 blocks: shared actors, particles
+#  and sounds, a group completion event, and skip voting (majority needed).
+#  Players who disconnect simply leave the scene; the rest keep watching.
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:group":
+    skippable: true
+    skip mode: vote
+    timeline:
+        set {_c} to location of event-player
+        add cine camera keyframe at {_c} ~ vector(0, 10, -12) at 0 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(12, 8, 0) at 5 seconds with easing "ease-in-out-sine" looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(0, 6, 12) at 10 seconds with easing "ease-in-out-sine" looking at {_c}
+        # Shared actor: every viewer sees the same dragon head turning.
+        set {_head} to a new cine block display of dragon head at {_c} ~ vector(0, 2, 0)
+        at 1 second:
+            spin cine display {_head} around vector(0, 1, 0) by 360 degrees over 8 seconds with easing "ease-in-out-sine"
+            show cine dialogue "Together we stand." in boss bar with typewriter for 3 seconds
+        at 3 seconds:
+            play cine preset "summoning-circle" at {_c} with colour purple lasting 5 seconds
+            play cine sound "block.end_portal.spawn" with volume 0.6
+        at 8 seconds:
+            play cine preset "explosion" at {_c} ~ vector(0, 2, 0)
+            shake the cine camera with intensity 1 for 1 second
+
+on cine scene finish of "examples:group":
+    loop cine viewers of event-cineplayback:
+        send "&aYou all completed the ritual." to loop-player
+
+command /groupscene:
+    trigger:
+        set {_viewers::*} to all players in radius 30 around player
+        play cine scene "examples:group" for {_viewers::*} together

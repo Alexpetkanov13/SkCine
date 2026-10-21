@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: particle shapes, emitters and presets (no camera needed)
+#  /sk reload particle-effects   then   /vfx <name>   e.g. /vfx legendary-reveal
+#  /vfxshapes   draws a selection of built-in shapes around you.
+#  Particles accept Skript particle values (flame particle) or names ("end_rod").
+# ─────────────────────────────────────────────────────────────────────────────
+
+command /vfx [<text>]:
+    trigger:
+        if arg-1 is not set:
+            send "&ePresets: &f%cine presets%"
+            stop
+        if cine preset arg-1 is not valid:
+            send "&cUnknown preset. Try one of: %cine presets%"
+            stop
+        # Colour, accent and scale come from the script, so presets fit any server theme.
+        play cine preset arg-1 at player with colour gold and accent white with scale 1 lasting 3 seconds
+
+command /vfxshapes:
+    trigger:
+        # Available shapes: %cine shapes% — the shape is part of the syntax, e.g. "draw a cine torus of ...".
+        draw a cine circle of flame particle at player with radius 2 and 40 points
+        draw a cine sphere of "end_rod" at (location of player) ~ vector(4, 2, 0) with radius 1.5 and 80 points
+        draw a cine helix of "soul_fire_flame" at (location of player) ~ vector(-4, 0, 0) with radius 1 and height 3 and 48 points
+        draw a cine star of "electric_spark" at (location of player) ~ vector(0, 1, 4) with radius 1.5 and 50 points
+        draw a cine heart of "dust" at (location of player) ~ vector(0, 2, -4) with radius 1.2 and 40 points with colour red
+        draw a cine lightning bolt of "electric_spark" from (location of player) ~ vector(6, 10, 6) to (location of player) ~ vector(6, 0, 6)
+
+command /aura:
+    trigger:
+        # A custom composite: an emitter that follows the player, spinning and pulsing for 10 seconds.
+        start a cine emitter drawing a ring of "dust" at player with radius 1.2 and 30 points spinning at 6 degrees per tick pulsing every 2 ticks lasting 10 seconds with colour gold
+        # Effects are runtime handles, so keep them in a memory-only variable ({-...}).
+        set {-aura::%player's uuid%} to last cine effect
+
+command /auraoff:
+    trigger:
+        stop cine effect {-aura::%player's uuid%}
+        delete {-aura::%player's uuid%}

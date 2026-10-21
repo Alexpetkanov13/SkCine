@@ -1,0 +1,17 @@
+# Requires Minecraft 1.21.9+ (Mannequin). Loaded by bot/skcine-player-actor-test.mjs only when the capability exists.
+cine scene "test:player-actor":
+    duration: 4 seconds
+    timeline:
+        set {_c} to location of event-player
+        add cine camera keyframe at {_c} ~ vector(0, 3, -5) at 0 seconds looking at {_c}
+        set {_npc} to a new cine player actor at {_c} ~ vector(0, 0, 3) named "twin" with skin of event-player with name tag "<gold>Twin"
+        set {_named} to a new cine player actor at {_c} ~ vector(2, 0, 3) with skin of "Notch"
+        set {_plain} to a new public cine player actor at {_c} ~ vector(-2, 0, 3)
+        make cine actor {_npc} look at event-player
+        at 1 second:
+            move cine actor {_named} to {_c} ~ vector(2, 0, 1) over 1 second
+            send "SKCINE-TEST EVENT player-actors %size of cine actors%" to console
+
+command /skcinetest-playeractor <player>:
+    trigger:
+        play cine scene "test:player-actor" for arg-1

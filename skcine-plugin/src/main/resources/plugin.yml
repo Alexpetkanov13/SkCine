@@ -1,0 +1,21 @@
+name: SkCine
+version: '${version}'
+main: dev.dheaven.skcine.SkCinePlugin
+api-version: '1.21'
+author: DHeaven
+description: Cinematic cameras, timelines, actors, effects and dialogue for Skript — scenes are written in .sk files.
+website: https://github.com/Alexpetkanov13/SkCine
+depend: [Skript]
+softdepend: [packetevents]
+load: POSTWORLD
+
+commands:
+  skcine:
+    description: SkCine diagnostics and information (scenes are authored in Skript).
+    usage: /skcine <version|info|capabilities|debug|profiler|health|help>
+    permission: skcine.admin
+
+permissions:
+  skcine.admin:
+    description: Use /skcine diagnostics commands.
+    default: op

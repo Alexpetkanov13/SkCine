@@ -1,0 +1,49 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   37-server-hooks.sk  —  YOUR file: plug the campaign into your server
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   The campaign calls these functions at key moments. They do nothing by
+#   default except log, so the campaign never assumes anything about your
+#   economy, ranks or items. Edit them to give rewards, run your own effects,
+#   announce in Discord through your own plugins, and so on.
+#
+#   Every hook is called once per player, on the main thread, after the
+#   campaign has recorded the progress. Replays (gallery, tales) never call
+#   them.
+#
+#   Read-only helpers you can use anywhere in your own scripts:
+#     crownNum(p, "chapter")        0–8 (8 = story finished)
+#     crownHasShard(p, "ember")     true/false (ember, tide, gale, stone, void)
+#     crownKarma(p)                 -100 … 100
+#     crownChoice(p, "ember")       spare/absorb, tide: free/command, …
+#     crownEndingCount(p)           0–4
+#     crownHasAchievement(p, id)    see 07-achievements.sk
+#     crownInTrial(p)               true while fighting a trial
+# ═════════════════════════════════════════════════════════════════════════════
+
+# A chapter was completed (n: 1 = prologue … 7 = finale).
+function crownHookChapter(p: player, n: number):
+    crownLog("%{_p}% completed chapter %{_n}% (%crownChapterShort({_n})%).")
+    # Example: give 5 diamonds for every shard chapter.
+    #   if {_n} >= 2:
+    #       if {_n} <= 6:
+    #           give {_p} 5 diamonds
+
+# A trial (or the gauntlet) was won. seconds = time taken.
+function crownHookTrialWon(p: player, trial: text, seconds: number):
+    crownLog("%{_p}% won the %{_trial}% trial in %crownClock({_seconds})%.")
+    # Example: a small XP reward, more for fast runs.
+    #   give {_p} 30 xp
+    #   if {_seconds} <= crownTrialPar({_trial}):
+    #       give {_p} 30 xp
+
+# An ending was reached for the first time (radiant, tyrant, sacrifice, echo).
+function crownHookEnding(p: player, ending: text):
+    crownLog("%{_p}% reached the %{_ending}% ending.")
+    # Example: a commemorative item.
+    #   give {_p} 1 golden helmet named "&6Crown of Aurelion" with lore "&7%{_ending}% ending"
+
+# An achievement was earned.
+function crownHookAchievement(p: player, id: text):
+    crownLog("%{_p}% earned the achievement '%{_id}%'.")

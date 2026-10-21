@@ -1,0 +1,308 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   30-menus.sk  —  the hub, the gallery, settings, status and the journal
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   The menus are SkCine choices shown "using a menu": a one-row inventory
+#   with one item per option. Clicks are validated by SkCine, and the section
+#   below the choice runs with event-player and cine choice. Closing a menu
+#   without choosing falls back to clickable chat options.
+#
+#     /crown            hub
+#     /crown gallery    replay any scene you have seen (in pages of six)
+#     /crown settings   text speed, dialogue channel, ambient effects
+#     /crown status     your profile at a glance
+#     /crown journal    every choice you made, and what it cost
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Hub
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownHub(p: player):
+    if {_p} is watching a cine scene:
+        stop
+    set {_n} to crownNextChapter({_p})
+    if crownNum({_p}, "chapter") >= 8:
+        set {_play} to "Gallery"
+    else if crownStarted({_p}) is true:
+        set {_play} to "Continue: %crownChapterShort({_n})%"
+    else:
+        set {_play} to "Begin the story"
+    present cine choice "<gold>✦ Echoes of the Shattered Crown ✦" to {_p} with options {_play}, "Status", "Journal", "Codex", "Gallery", "Achievements", "Settings", "Party" and "Help" with timeout 60 seconds using a menu:
+        crownChime(event-player, "click")
+        if cine choice starts with "Continue" or "Begin":
+            crownPlay(event-player)
+        else if cine choice is "Status":
+            crownStatus(event-player)
+        else if cine choice is "Journal":
+            crownJournal(event-player)
+        else if cine choice is "Codex":
+            crownCodexList(event-player)
+        else if cine choice is "Gallery":
+            crownGalleryMenu(event-player, 1)
+        else if cine choice is "Achievements":
+            crownAchievementList(event-player)
+        else if cine choice is "Settings":
+            crownSettingsMenu(event-player)
+        else if cine choice is "Party":
+            crownPartyList(event-player)
+        else if cine choice is "Help":
+            crownHelp(event-player)
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Gallery
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Scenes this player has seen, in story order.
+function crownSeenScenes(p: player) :: texts:
+    loop crownCatalogue():
+        if crownFlag({_p}, "seen::%loop-value%") is true:
+            add loop-value to {_out::*}
+    return {_out::*}
+
+function crownGalleryMenu(p: player, page: number):
+    wait 2 ticks
+    set {_seen::*} to crownSeenScenes({_p})
+    set {_total} to size of {_seen::*}
+    if {_total} is 0:
+        crownMsg({_p}, "&7The gallery is empty. Scenes appear here once you've watched them.")
+        stop
+    set {_pages} to ceil({_total} / 6)
+    if {_page} > {_pages}:
+        set {_page} to {_pages}
+    if {_page} < 1:
+        set {_page} to 1
+    set {_from} to ({_page} - 1) * 6 + 1
+    set {_to} to {_page} * 6
+    set {_i} to 0
+    loop {_seen::*}:
+        add 1 to {_i}
+        if {_i} >= {_from}:
+            if {_i} <= {_to}:
+                set {_label} to uncoloured crownSceneTitle(loop-value)
+                add "%{_i}%. %{_label}%" to {_opts::*}
+    if {_page} > 1:
+        add "« Previous" to {_opts::*}
+    if {_page} < {_pages}:
+        add "Next »" to {_opts::*}
+    add "Close" to {_opts::*}
+    set {-crown::gallerypage::%crownId({_p})%} to {_page}
+    present cine choice "<gold>Gallery <gray>(page %{_page}%/%{_pages}%)" to {_p} with options {_opts::*} with timeout 60 seconds using a menu:
+        set {_who} to event-player
+        set {_pg} to {-crown::gallerypage::%crownId({_who})%}
+        if cine choice is "Next »":
+            crownGalleryMenu({_who}, {_pg} + 1)
+        else if cine choice is "« Previous":
+            crownGalleryMenu({_who}, {_pg} - 1)
+        else if cine choice is not "Close":
+            set {_num} to first element of (split cine choice at ".")
+            crownGalleryPlay({_who}, {_num} parsed as integer)
+
+function crownGalleryPlay(p: player, index: number):
+    set {_seen::*} to crownSeenScenes({_p})
+    if {_index} is not set:
+        crownMsg({_p}, "&cPick a scene number from &f/crown gallery&c.")
+        stop
+    if {_index} < 1:
+        crownMsg({_p}, "&cThere's no scene with that number.")
+        stop
+    if {_index} > size of {_seen::*}:
+        crownMsg({_p}, "&cThere's no scene with that number.")
+        stop
+    if {_p} is watching a cine scene:
+        crownMsg({_p}, "&cYou're already watching something.")
+        stop
+    if crownInTrial({_p}) is true:
+        crownMsg({_p}, "&cNot during a trial!")
+        stop
+    set {_scene} to {_seen::%{_index}%}
+    wait 2 ticks
+    crownMsg({_p}, "&7Replaying &f%crownSceneTitle({_scene})%&7... &8(nothing is changed or granted)")
+    crownBumpStat({_p}, "replays")
+    if crownStat({_p}, "replays") >= 10:
+        crownGrantAchievement({_p}, "cinephile")
+    set {_stage} to location of {_p}
+    set pitch of {_stage} to 0
+    set yaw of {_stage} to 0
+    crownReplayScene({_p}, {_scene}, {_stage})
+
+function crownGalleryList(p: player):
+    set {_seen::*} to crownSeenScenes({_p})
+    crownRule({_p}, "Gallery %size of {_seen::*}%/%size of crownCatalogue()%")
+    set {_i} to 0
+    loop {_seen::*}:
+        add 1 to {_i}
+        send " &6%{_i}%. &f%crownSceneTitle(loop-value)%" to {_p}
+    send "&7Replay one with &f/crown gallery <number>&7, or browse with &f/crown gallery menu&7." to {_p}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Settings
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownSettingsMenu(p: player):
+    wait 2 ticks
+    set {_speed} to crownSpeedName({_p})
+    set {_channel} to crownChannel({_p})
+    if crownAmbientOn({_p}) is true:
+        set {_amb} to "on"
+    else:
+        set {_amb} to "off"
+    present cine choice "<gold>Settings" to {_p} with options "Text speed: %{_speed}%", "Dialogue in: %{_channel}%", "Ambient effects: %{_amb}%" and "Done" with timeout 60 seconds using a menu:
+        set {_who} to event-player
+        if cine choice starts with "Text speed":
+            crownCycleSpeed({_who})
+            crownSettingsMenu({_who})
+        else if cine choice starts with "Dialogue in":
+            crownCycleChannel({_who})
+            crownSettingsMenu({_who})
+        else if cine choice starts with "Ambient":
+            crownToggleAmbient({_who})
+            crownSettingsMenu({_who})
+
+function crownCycleSpeed(p: player):
+    set {_s} to crownSpeedName({_p})
+    if {_s} is "slow":
+        set {_next} to "normal"
+    else if {_s} is "normal":
+        set {_next} to "fast"
+    else if {_s} is "fast":
+        set {_next} to "instant"
+    else:
+        set {_next} to "slow"
+    crownSetSpeed({_p}, {_next})
+
+function crownSetSpeed(p: player, value: text):
+    if {_value} is not "slow", "normal", "fast" or "instant":
+        crownMsg({_p}, "&cText speed can be slow, normal, fast or instant.")
+        stop
+    crownSet({_p}, "set::speed", {_value})
+    crownMsg({_p}, "&7Text speed: &f%{_value}% &8(%crownCps({_p})% characters per second)")
+
+function crownCycleChannel(p: player):
+    set {_c} to crownChannel({_p})
+    if {_c} is "subtitle":
+        set {_next} to "title"
+    else if {_c} is "title":
+        set {_next} to "actionbar"
+    else if {_c} is "actionbar":
+        set {_next} to "chat"
+    else:
+        set {_next} to "subtitle"
+    crownSetChannel({_p}, {_next})
+
+function crownSetChannel(p: player, value: text):
+    if {_value} is not "subtitle", "title", "actionbar" or "chat":
+        crownMsg({_p}, "&cDialogue can be shown in subtitle, title, actionbar or chat.")
+        stop
+    crownSet({_p}, "set::channel", {_value})
+    crownMsg({_p}, "&7Dialogue is now shown in the &f%{_value}%&7.")
+
+function crownToggleAmbient(p: player):
+    if crownAmbientOn({_p}) is true:
+        crownSet({_p}, "set::ambient", false)
+        crownMsg({_p}, "&7Ambient world effects: &coff")
+    else:
+        crownSet({_p}, "set::ambient", true)
+        crownMsg({_p}, "&7Ambient world effects: &aon")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Status
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownShardIcons(p: player) :: text:
+    set {_s} to ""
+    loop crownShardNames():
+        if crownHasShard({_p}, loop-value) is true:
+            set {_title} to crownShardTitle(loop-value)
+            set {_code} to first 2 characters of {_title}
+            set {_s} to "%{_s}%%{_code}%◆ "
+        else:
+            set {_s} to "%{_s}%&8◇ "
+    return {_s}
+
+function crownStatus(p: player):
+    set {_c} to crownNum({_p}, "chapter")
+    set {_e} to crownGet({_p}, "ending")
+    set {_ending} to crownEndingTitle("%{_e}%")
+    set {_oath} to crownOathTitle(crownChoice({_p}, "oath"))
+    set {_won} to crownStat({_p}, "trialswon")
+    set {_kills} to crownStat({_p}, "kills")
+    set {_downs} to crownStat({_p}, "downs")
+    set {_scenes} to crownStat({_p}, "scenes")
+    set {_skips} to crownStat({_p}, "skips")
+    crownRule({_p}, "%{_p}%")
+    if {_c} >= 8:
+        send " &7Story: &acomplete &8· &7ending %{_ending}%" to {_p}
+    else:
+        set {_n} to crownNextChapter({_p})
+        send " &7Next: %crownChapterColour({_n})%%crownChapterName({_n})%" to {_p}
+    set {_done} to {_c}
+    if {_done} > 7:
+        set {_done} to 7
+    set {_bar} to crownBar({_done}, 7, 21, "&a", "&8")
+    send " &7Progress: %{_bar}% &f%crownPercent({_done}, 7)%" to {_p}
+    send " &7Shards: %crownShardIcons({_p})%&8(%crownShardCount({_p})%/5)" to {_p}
+    send " &7Oath: %{_oath}%" to {_p}
+    send " &7Karma: %crownKarmaTier({_p})% &8(%crownKarma({_p})%) %crownKarmaGauge({_p})%" to {_p}
+    send " &7Mercies: &f%crownMercyCount({_p})%/5 &8· &7Endings: &f%crownEndingCount({_p})%/4" to {_p}
+    send " &7Codex: &f%crownCodexCount({_p})%/%crownCodexTotal()% &8· &7Achievements: &f%crownAchievementCount({_p})%/%size of crownAchievementIds()%" to {_p}
+    send " &7Trials won: &f%{_won}% &8· &7foes: &f%{_kills}% &8· &7downs: &f%{_downs}%" to {_p}
+    send " &7Scenes watched: &f%{_scenes}% &8· &7skipped: &f%{_skips}%" to {_p}
+    if crownInParty({_p}) is true:
+        send " &7Party: &f%crownPartySize({_p})% players &8· &7leader &f%crownPartyLeader({_p})%" to {_p}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Journal
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownJournalLine(p: player, key: text, n: number, good: text, bad: text, goodText: text, badText: text):
+    set {_v} to crownChoice({_p}, {_key})
+    if {_v} is "none":
+        send " %crownChapterColour({_n})%%crownChapterShort({_n})% &8— not yet written" to {_p}
+    else if {_v} is {_good}:
+        send " %crownChapterColour({_n})%%crownChapterShort({_n})% &8— &e☀ &7%{_goodText}%" to {_p}
+    else:
+        send " %crownChapterColour({_n})%%crownChapterShort({_n})% &8— &5☾ &7%{_badText}%" to {_p}
+
+function crownJournal(p: player):
+    crownRule({_p}, "Journal")
+    set {_oath} to crownChoice({_p}, "oath")
+    if {_oath} is "none":
+        send " &eProlog &8— not yet written" to {_p}
+    else:
+        send " &eProlog &8— &7You swore the %crownOathTitle({_oath})%&7." to {_p}
+    crownJournalLine({_p}, "ember", 2, "spare", "absorb", "You spared Hadrek. The forge stays lit.", "You took Hadrek's flame. The forge went cold.")
+    crownJournalLine({_p}, "tide", 3, "free", "command", "You freed the drowned. They rose singing.", "You bound the drowned. They follow you still.")
+    crownJournalLine({_p}, "gale", 4, "trust", "take", "You trusted Kestrel. She flew again.", "You left Kestrel grounded. She walked away.")
+    crownJournalLine({_p}, "stone", 5, "wake", "break", "You let the Colossus walk. It went to see the sky.", "You broke the Colossus' heart. It is a hill now.")
+    crownJournalLine({_p}, "void", 6, "forgive", "condemn", "You forgave Malrec. He went home to his sister.", "You condemned Malrec. Nobody sang for him.")
+    set {_final} to crownChoice({_p}, "final")
+    if {_final} is not "none":
+        send " &dFinale &8— &7%{_final}%." to {_p}
+    send " &7Karma: %crownKarmaTier({_p})% %crownKarmaGauge({_p})%" to {_p}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Help
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownHelp(p: player):
+    crownRule({_p}, "Help")
+    send " &f/crown &8— &7the hub menu" to {_p}
+    send " &f/crown play &8— &7continue the story" to {_p}
+    send " &f/crown status &8· &f/crown journal &8— &7your progress and your choices" to {_p}
+    send " &f/crown codex [id] &8· &f/crown codex read <id> &8— &7lore, in chat or aloud" to {_p}
+    send " &f/crown characters &8— &7who's who" to {_p}
+    send " &f/crown gallery [number|menu] &8— &7replay scenes you've seen" to {_p}
+    send " &f/crown achievements &8— &7what you've earned" to {_p}
+    send " &f/crown tales &8— &7memories the crown kept (unlocked by chapters)" to {_p}
+    send " &f/crown gauntlet &8· &f/crown leaderboard [trial] &8— &7post-game challenge" to {_p}
+    send " &f/crown photo [epic|calm|sky] &8— &7a camera tour of where you stand" to {_p}
+    send " &f/crown recap &8— &7previously on... &8· &f/crown cosmetics &8— &7wear an earned aura" to {_p}
+    send " &f/crown settings [speed|channel|ambient] [value] &8— &7how dialogue is shown" to {_p}
+    send " &f/crown party invite|accept|deny|leave|kick|disband|list|chat &8— &7play together" to {_p}
+    send " &f/crown leave &8— &7leave a trial &8· &f/crown tips <shard> &8— &7how to beat a guardian" to {_p}
+    send " &f/crown reset confirm &8— &7start over (all progress is lost)" to {_p}
+    send "&8 Sneak to skip a scene (in a party, a majority must agree)." to {_p}
+    if {_p} has permission "crown.admin":
+        send " &c/crown admin &8— &7admin tools" to {_p}

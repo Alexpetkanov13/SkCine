@@ -1,0 +1,22 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: dynamic camera path built at runtime (no named scene needed)
+#  /sk reload camera-path   then   /flyover
+#
+#  The path is generated from the player's current position and world, so it
+#  works anywhere: start above the player, circle around, move in, pause, return.
+# ─────────────────────────────────────────────────────────────────────────────
+
+command /flyover:
+    trigger:
+        set {_c} to location of player
+        set {_scene} to a new cine scene:
+            # Start high above the player.
+            add cine camera keyframe at {_c} ~ vector(0, 20, 0.1) at 0 seconds looking at {_c}
+            # Circle around them (orbit shot overrides keyframes while active, blending in smoothly).
+            make the cine camera orbit around {_c} between 2 seconds and 8 seconds with radius 10 and height 6 sweeping 360 degrees blending over 1 second
+            # Move toward the player and hold for a moment.
+            add cine camera keyframe at {_c} ~ vector(0, 3, -4) at 10 seconds with easing "ease-out-cubic" looking at {_c}
+            add cine camera keyframe at {_c} ~ vector(0, 2.6, -3) at 12 seconds looking at {_c}
+            at 10 seconds:
+                show cine title "" with subtitle "<gray>...and back to the action" for 2 seconds
+        play cine scene {_scene} for player

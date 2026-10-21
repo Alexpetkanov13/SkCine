@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: individual vs shared playback, late joining
+#  /sk reload synchronized-scene
+#  /solo        everyone nearby watches their OWN copy (independent timelines)
+#  /together    everyone nearby shares ONE timeline
+#  /joinscene <player>   join someone's running shared scene mid-way
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:sync":
+    duration: 12 seconds
+    skip mode: individual
+    timeline:
+        set {_c} to location of event-player
+        make the cine camera orbit around {_c} between 0 seconds and 12 seconds with radius 8 and height 4 sweeping 360 degrees
+        repeat every 2 seconds:
+            draw a cine ring of "end_rod" at {_c} with radius 3 and 40 points
+            play cine sound "block.note_block.bell" with pitch 1.4
+
+command /solo:
+    trigger:
+        # Separate playbacks: skipping or leaving only affects that player.
+        play cine scene "examples:sync" for all players in radius 30 around player
+
+command /together:
+    trigger:
+        play cine scene "examples:sync" for all players in radius 30 around player together
+
+command /joinscene <player>:
+    trigger:
+        if arg-1 is watching a cine scene:
+            add player to cine playback (cine playback of arg-1)
+        else:
+            send "&c%arg-1% is not watching a scene."

@@ -1,0 +1,331 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   16-finale.sk  —  Finale · The Crown Reforged
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Back where it began: the coronation hall of Aurelion, now a ruin. The five
+#   shards rise and the crown is made whole. Everyone the player spared comes
+#   back to stand with them — or doesn't. Then the Archivist and the Echo ask
+#   for the same thing: the crown.
+#
+#   What the scene shows depends on the PRIMARY viewer's past choices
+#   (the party leader when playing together):
+#     ember = spare    Hadrek walks out of the fire
+#     tide  = free     Nerys sings the drowned home one last time
+#     gale  = trust    Kestrel flies in and returns the Gale Shard
+#     stone = wake     the Colossus is heard, far away, walking
+#     void  = forgive  Aurelion and Malrec, together
+#   and the opposite choices leave a silence, or worse, in their place.
+#
+#   The final CHOICE (voted, in a menu, pausing):
+#     Wear the crown          → Radiant ending (karma ≥ 0) or Tyrant (karma < 0)
+#     Shatter it forever      → Sacrifice ending
+#     Give it to your Echo    → Echo ending — only offered after five mercies
+# ═════════════════════════════════════════════════════════════════════════════
+
+cine scene "crown:finale-intro":
+    duration: 70 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_c} to {_stage} ~ vector(0, 0, 10)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        set {_core} to {_c} ~ vector(0, 2.5, 0)
+        add cine marker "verdict" at 62 seconds
+
+        # What the primary viewer did. Replays show the merciful version.
+        if crownIsReplay({_replay}) is true:
+            set {_ember} to "spare"
+            set {_tide} to "free"
+            set {_gale} to "trust"
+            set {_stone} to "wake"
+            set {_void} to "forgive"
+            set {_mercy} to 5
+        else:
+            set {_ember} to crownChoice(event-player, "ember")
+            set {_tide} to crownChoice(event-player, "tide")
+            set {_gale} to crownChoice(event-player, "gale")
+            set {_stone} to crownChoice(event-player, "stone")
+            set {_void} to crownChoice(event-player, "void")
+            set {_mercy} to crownMercyCount(event-player)
+        set cine variable "mercy" to {_mercy}
+
+        # ── The ruined hall ─────────────────────────────────────────────────
+        set {_pillar1} to a new cine block display of cracked stone bricks at {_c} ~ vector(-5.5, 0, -2)
+        set {_pillar2} to a new cine block display of quartz pillar at {_c} ~ vector(-5.5, 1, -2)
+        set {_pillar3} to a new cine block display of cracked stone bricks at {_c} ~ vector(4.5, 0, -2)
+        set {_pillar4} to a new cine block display of chiseled quartz block at {_c} ~ vector(4.5, 1, -2)
+        set {_pillar5} to a new cine block display of mossy stone bricks at {_c} ~ vector(-5.5, 0, 4)
+        set {_pillar6} to a new cine block display of mossy stone bricks at {_c} ~ vector(4.5, 0, 4)
+        set {_web1} to a new cine block display of cobweb at {_c} ~ vector(-5.5, 2, -2)
+        set {_web2} to a new cine block display of cobweb at {_c} ~ vector(4.5, 2, 4)
+        set {_altar} to a new cine block display of gold block at {_c} ~ vector(-0.5, 0, -0.5)
+        set {_altarTop} to a new cine block display of smooth quartz slab at {_c} ~ vector(-0.5, 1, -0.5)
+        set {_banner} to a new cine item display of yellow banner at {_c} ~ vector(0, 4, 4)
+        set {_s1} to a new cine item display of blaze powder at {_core} ~ vector(2.5, 0, 0) named "shard-ember"
+        set {_s2} to a new cine item display of prismarine crystals at {_core} ~ vector(0.8, 0, 2.4) named "shard-tide"
+        set {_s3} to a new cine item display of feather at {_core} ~ vector(-2, 0, 1.5) named "shard-gale"
+        set {_s4} to a new cine item display of flint at {_core} ~ vector(-2, 0, -1.5) named "shard-stone"
+        set {_s5} to a new cine item display of echo shard at {_core} ~ vector(0.8, 0, -2.4) named "shard-void"
+        add {_s1}, {_s2}, {_s3}, {_s4} and {_s5} to {_shards::*}
+        set {_crown} to a new cine item display of golden helmet at {_core} named "crown"
+        hide cine actor {_crown}
+
+        # ── The cast ────────────────────────────────────────────────────────
+        set {_archivist} to a new cine player actor at {_c} ~ vector(-2.5, 0, 2) named "archivist" with name tag "<gold>The Archivist"
+        set {_echo} to a new cine player actor at {_c} ~ vector(2.5, 0, 2) named "echo" with skin of event-player with name tag "<aqua>Your Echo"
+        set {_hadrek} to a new cine player actor at {_c} ~ vector(-5, 0, -4) named "hadrek" with name tag "<gold>Hadrek"
+        set {_nerys} to a new cine player actor at {_c} ~ vector(5, 0, -4) named "nerys" with name tag "<dark_aqua>Nerys"
+        set {_kestrel} to a new cine player actor at {_c} ~ vector(0, 30, -6) named "kestrel" with name tag "<aqua>Kestrel"
+        set {_wings} to a new cine item display of elytra at {_c} ~ vector(0, 30, -6)
+        attach cine actor {_wings} to {_kestrel} with offset vector(0, 1.1, -0.3) and rotate with it
+        set {_aurelion} to a new cine player actor at {_c} ~ vector(-1.5, 0, 6) named "aurelion" with name tag "<yellow>Aurelion"
+        set {_malrec} to a new cine player actor at {_c} ~ vector(1.5, 0, 6) named "malrec" with name tag "<dark_purple>Malrec"
+        hide cine actors {_echo}, {_hadrek}, {_nerys}, {_kestrel}, {_wings}, {_aurelion} and {_malrec}
+
+        # ── Camera ──────────────────────────────────────────────────────────
+        set {_focus} to {_core}
+        play cine sequence "cam:crane-down" at 0 seconds
+        make the cine camera watch {_archivist} from {_c} ~ vector(-1, 2, -1.5) between 7 seconds and 13 seconds blending over 1 second
+        set {_r} to 6
+        play cine sequence "cam:orbit-slow" at 13 seconds
+        make the cine camera watch {_hadrek} from {_c} ~ vector(-3, 2, -7) between 21 seconds and 26 seconds blending over 1 second
+        make the cine camera watch {_nerys} from {_c} ~ vector(3, 2, -7) between 26 seconds and 31 seconds blending over 1 second
+        make the cine camera watch {_kestrel} from {_c} ~ vector(0, 3, -10) between 31 seconds and 36 seconds blending over 1 second
+        make the cine camera hold at {_c} ~ vector(0, 8, -14) between 36 seconds and 41 seconds blending over 1 second
+        make the cine camera watch {_aurelion} from {_c} ~ vector(0, 2.2, 2) between 41 seconds and 46 seconds blending over 1 second
+        set {_focus} to {_core}
+        play cine sequence "cam:spiral-rise" at 46 seconds
+        set {_a} to {_archivist}
+        set {_b} to {_echo}
+        play cine sequence "cam:dialogue" at 54 seconds
+        make the cine camera watch {_crown} from {_c} ~ vector(0, 2.5, -4) between 66 seconds and 70 seconds blending over 1 second
+
+        # ── Arrival ─────────────────────────────────────────────────────────
+        at 0 seconds:
+            fade the cine screen out with colour white over 1 tick
+            play cine sound "music_disc.relic" with volume 0.35
+            make cine actor {_archivist} look at {_eye}
+        at 5 ticks:
+            fade the cine screen in over 3 seconds
+            set {_at} to {_c}
+            set {_len} to 68 seconds
+            play cine sequence "fx:fireflies"
+            spin cine displays {_shards::*} around vector(0, 1, 0) continuously at 45 degrees per second
+        at 1 second:
+            set {_title} to "<gradient:yellow:light_purple><bold>FINALE</bold></gradient>"
+            set {_subtitle} to "<light_purple>The Crown Reforged"
+            set {_tone} to 0.8
+            play cine sequence "fx:title-card"
+        at 5 seconds:
+            set {_who} to "narrator"
+            set {_line} to "The coronation hall of Aurelion. Where every bell once rang at once."
+            play cine sequence "say"
+        at 8 seconds:
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            set {_len} to 60 seconds
+            play cine sequence "fx:aura"
+            set {_who} to "archivist"
+            set {_line} to "Five shards. You actually did it. I'm... I'm almost whole. Can you feel it?"
+            play cine sequence "say"
+        at 11 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Let's finish it. Together."
+            play cine sequence "say"
+        at 13 seconds:
+            rotate cine actors {_shards::*} around {_core} by 720 degrees over 30 seconds with easing "ease-in-out-sine"
+            play cine sound "block.beacon.ambient" with volume 1 and pitch 0.8
+            set {_at} to {_c}
+            set {_colour} to yellow
+            play cine sequence "fx:sigil"
+        at 17 seconds:
+            set {_who} to "narrator"
+            set {_line} to "And then, one by one, the others came."
+            play cine sequence "say"
+
+        # ── Those who were spared ───────────────────────────────────────────
+        at 21 seconds:
+            if {_ember} is "spare":
+                show cine actor {_hadrek}
+                set {_at} to {_hadrek}
+                play cine sequence "fx:fire-ring"
+                make cine actor {_hadrek} look at {_eye}
+                set {_who} to "hadrek"
+                set {_line} to "The forge is lit. Whatever you make of that crown, make it well."
+                play cine sequence "say"
+            else:
+                set {_who} to "narrator"
+                set {_line} to "Somewhere far away, the Last Forge was cold. No one came from it."
+                play cine sequence "say"
+        at 26 seconds:
+            if {_tide} is "free":
+                show cine actor {_nerys}
+                set {_at} to {_nerys}
+                set {_colour} to cyan
+                play cine sequence "fx:appear"
+                make cine actor {_nerys} look at {_eye}
+                set {_who} to "matriarch"
+                set {_line} to "<italic>♪ The tide comes in, the tide goes out... and all of us are free... ♪"
+                play cine sequence "say"
+            else:
+                set {_who} to "soul"
+                set {_line} to "...we are here, master... we are always here... waiting..."
+                play cine sequence "whisper"
+                set {_at} to {_c} ~ vector(5, 0, -4)
+                play cine sequence "fx:dark-pulse"
+        at 31 seconds:
+            if {_gale} is "trust":
+                show cine actors {_kestrel} and {_wings}
+                add cine actor keyframe for {_kestrel} at {_c} ~ vector(0, 30, -6) at 31 seconds
+                add cine actor keyframe for {_kestrel} at {_c} ~ vector(0, 0, -6) at 34 seconds with easing "ease-out-cubic"
+                set {_who} to "kestrel"
+                set {_line} to "Told you. A rider's word is a rider's word. Here. It flew beautifully."
+                play cine sequence "say"
+            else:
+                set {_who} to "narrator"
+                set {_line} to "The wind howled through the broken windows, and it sounded like someone walking."
+                play cine sequence "say"
+        at 34 seconds:
+            if {_gale} is "trust":
+                set {_at} to {_s3}
+                play cine sequence "fx:gale-spiral"
+        at 36 seconds:
+            if {_stone} is "wake":
+                play cine sound "entity.iron_golem.step" with volume 1 and pitch 0.3
+                set {_who} to "colossus"
+                set {_line} to "...SMALL... ONE... THE... SKY... IS... VERY... BIG..."
+                play cine sequence "say"
+                shake the cine camera with intensity 0.4 for 1 second
+            else:
+                set {_who} to "narrator"
+                set {_line} to "In Greyhold there is a small hill that has not moved for a long time."
+                play cine sequence "say"
+        at 38 seconds:
+            if {_stone} is "wake":
+                play cine sound "entity.iron_golem.step" with volume 0.8 and pitch 0.3
+        at 41 seconds:
+            if {_void} is "forgive":
+                show cine actors {_aurelion} and {_malrec}
+                set {_at} to {_c} ~ vector(0, 0, 6)
+                play cine sequence "fx:blessing"
+                make cine actors {_aurelion} and {_malrec} look at {_eye}
+                set {_who} to "aurelion"
+                set {_line} to "We wore it, and we broke it. You can do better than both of us."
+                play cine sequence "say"
+            else:
+                set {_who} to "narrator"
+                set {_line} to "The throne at the end of the hall stayed empty. Nobody was left to sit on it."
+                play cine sequence "say"
+
+        # ── The crown is reforged ───────────────────────────────────────────
+        at 46 seconds:
+            set {_at} to {_core}
+            play cine sequence "fx:crown-reforge"
+            move cine actors {_shards::*} to {_core} over 4 seconds with easing "ease-in-cubic"
+        at 50 seconds:
+            hide cine actors {_shards::*}
+            show cine actor {_crown}
+            spin cine display {_crown} around vector(0, 1, 0) continuously at 30 degrees per second
+            animate cine display {_crown} to scale 1.5 over 2 seconds with easing "ease-out-elastic"
+            set {_at} to {_crown}
+            play cine sequence "fx:crown-glow"
+            set {_who} to "crown"
+            set {_line} to "WHOLE."
+            play cine sequence "proclaim"
+        at 53 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Put it on. We'll be whole, you and I. No one will ever have to break it again."
+            play cine sequence "say"
+            move cine actor {_archivist} to {_c} ~ vector(-1.5, 0, 0.5) over 2 seconds facing the movement
+        at 55 seconds:
+            show cine actor {_echo}
+            set {_at} to {_echo}
+            set {_colour} to light blue
+            play cine sequence "fx:appear"
+            make cine actor {_echo} look at {_archivist}
+            make cine actor {_archivist} look at {_echo}
+        at 56 seconds:
+            set {_who} to "echo"
+            set {_line} to "Or don't. It isn't the only way. It's just the way he remembers."
+            play cine sequence "say"
+        at 59 seconds:
+            set {_who} to "archivist"
+            set {_line} to "It's not your choice. You're just a reflection."
+            play cine sequence "say"
+        at 61 seconds:
+            set {_who} to "echo"
+            set {_line} to "I know. So are you. That's why it's theirs."
+            play cine sequence "say"
+            make cine actors {_archivist} and {_echo} look at {_eye}
+
+        # ── The choice ──────────────────────────────────────────────────────
+        at 62 seconds:
+            add "Wear the crown" to {_opts::*}
+            add "Shatter it forever" to {_opts::*}
+            if cine variable "mercy" >= 5:
+                add "Give it to your Echo" to {_opts::*}
+            present cine choice "<gradient:yellow:light_purple>The crown is waiting.</gradient>" to cine viewers with options {_opts::*} with timeout 45 seconds defaulting to "Wear the crown" as a vote using a menu pausing the scene:
+                set cine variable "final" to cine choice
+        at 63 seconds:
+            set {_who} to "narrator"
+            if cine variable "final" is "Shatter it forever":
+                set {_line} to "You lifted the crown above your head... and brought it down on the altar."
+            else if cine variable "final" is "Give it to your Echo":
+                set {_line} to "You turned, and held it out to the one person who already knew you."
+            else:
+                set {_line} to "You lifted the crown. It was lighter than you expected. They always are."
+            play cine sequence "say"
+        at 67 seconds:
+            fade the cine screen out with colour white over 2 seconds
+        at 69 seconds even if skipped:
+            set {_final} to cine variable "final" ? "Wear the crown"
+            loop cine viewers:
+                add loop-value to {_v::*}
+            set {_ending} to crownDecideEnding({_v::*}, {_final})
+            if crownIsReplay(cine variable "replay") is false:
+                loop {_v::*}:
+                    crownChoose(loop-value, "final", "%{_final}%")
+                    crownUnlockCodex(loop-value, "reforged")
+            crownBeginEnding({_v::*}, {_ending}, cine variable "stage", crownIsReplay(cine variable "replay"))
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Choosing an ending
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Average karma of a group, so a party's ending reflects everyone.
+function crownAverageKarma(players: players) :: number:
+    set {_sum} to 0
+    set {_n} to 0
+    loop {_players::*}:
+        add crownKarma(loop-value) to {_sum}
+        add 1 to {_n}
+    if {_n} is 0:
+        return 0
+    return {_sum} / {_n}
+
+function crownDecideEnding(players: players, final: text) :: text:
+    if {_final} is "Shatter it forever":
+        return "sacrifice"
+    if {_final} is "Give it to your Echo":
+        return "echo"
+    if crownAverageKarma({_players::*}) >= 0:
+        return "radiant"
+    return "tyrant"
+
+function crownBeginEnding(players: players, ending: text, stage: location, replay: boolean):
+    wait 1 second
+    set {_ready::*} to crownAvailable({_players::*})
+    if size of {_ready::*} is 0:
+        if {_replay} is false:
+            crownRecordEnding({_players::*}, {_ending})
+        stop
+    set {_scene} to "crown:ending-%{_ending}%"
+    loop {_ready::*}:
+        crownSeen(loop-value, {_scene})
+    play cine scene {_scene} for {_ready::*} together
+
+# Starts the finale (called by crownStartChapter for chapter 7 like any other).
+# The finale has no trial: its intro leads straight to an ending.

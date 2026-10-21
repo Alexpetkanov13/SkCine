@@ -1,0 +1,3 @@
+command /neg6:
+    trigger:
+        animate cine display target entity over 1 second

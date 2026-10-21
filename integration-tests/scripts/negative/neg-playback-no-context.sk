@@ -1,0 +1,3 @@
+command /neg4:
+    trigger:
+        set {_p::*} to cine viewers

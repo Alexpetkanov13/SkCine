@@ -1,0 +1,3 @@
+command /neg1:
+    trigger:
+        add cine camera keyframe at location of player at 0 seconds

@@ -1,0 +1,93 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine examples: progression moments for any server type
+#  (level-ups, rank unlocks, rebirths, egg hatching, pet reveals)
+#  /sk reload progression-moments
+#
+#  These are presentation only. Your own systems (levels, ranks, pets, eggs,
+#  currencies) decide WHEN to call them and own every reward. No plugin,
+#  economy or pet system is assumed.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Level up: a short no-camera celebration around the player ──
+function cineLevelUp(p: player, level: number):
+    play cine preset "level-up" at {_p} with colour lime and accent yellow lasting 2 seconds
+    play cine sound "entity.player.levelup" to {_p}
+    show cine title "<green><bold>LEVEL UP" with subtitle "<white>Level %{_level}%" to {_p} for 2 seconds
+
+# ── Rank unlock: camera sweep + rank banner (pass the rank's display text and colour) ──
+cine scene "generic:rank-unlock":
+    duration: 5 seconds
+    timeline:
+        set {_c} to location of event-player
+        make the cine camera orbit around event-player between 0 seconds and 5 seconds with radius 4 and height 1.5 sweeping 200 degrees
+        at 0 seconds:
+            play cine preset "power-up" at event-player with colour {_colour} lasting 2 seconds
+            play cine sound "block.beacon.activate"
+        at 2 seconds:
+            flash cine screen with colour {_colour} over 10 ticks
+            show cine title {_rank} with subtitle "<gray>unlocked" for 3 seconds
+            play cine preset "golden-aura" at event-player with colour {_colour} lasting 3 seconds
+
+function cineRankUnlock(p: player, rank: text, colour: color):
+    play cine scene "generic:rank-unlock" for {_p}
+
+# ── Rebirth / prestige: fade to white, reappear transformed ──
+cine scene "generic:rebirth":
+    duration: 7 seconds
+    timeline:
+        set {_c} to location of event-player
+        add cine camera keyframe at {_c} ~ vector(0, 2, -4) at 0 seconds looking at {_c} ~ vector(0, 1, 0)
+        add cine camera keyframe at {_c} ~ vector(0, 8, -1) at 7 seconds with easing "ease-in-out-sine" looking at {_c}
+        at 0 seconds:
+            play cine preset "vortex" at {_c} with colour white lasting 3 seconds
+            play cine sound "block.respawn_anchor.charge"
+        at 3 seconds:
+            fade cine screen out with colour white over 1 second
+        at 4.5 seconds:
+            fade cine screen in with colour white over 1 second
+            play cine preset "legendary-reveal" at {_c} with colour aqua lasting 2 seconds
+            show cine title "<aqua><bold>REBORN" with subtitle "<gray>Rebirth %{_count}%" for 2 seconds
+
+function cineRebirth(p: player, count: number):
+    play cine scene "generic:rebirth" for {_p}
+
+# ── Egg hatching / pet reveal: works with ANY entity type you pass in ──
+cine scene "generic:hatch":
+    duration: 8 seconds
+    timeline:
+        set {_spot} to (location of event-player) ~ vector(0, 0, 3)
+        add cine camera keyframe at {_spot} ~ vector(0, 1.5, -3) at 0 seconds looking at {_spot} ~ vector(0, 0.5, 0)
+        add cine camera keyframe at {_spot} ~ vector(1.5, 1.2, -2) at 8 seconds with easing "ease-in-out-sine" looking at {_spot} ~ vector(0, 0.5, 0)
+        set {_egg} to a new cine item display of {_eggItem} at {_spot} ~ vector(0, 0.4, 0)
+        at 0 seconds:
+            play cine sound "block.sniffer_egg.crack"
+            spin cine display {_egg} around vector(0, 0, 1) by 60 degrees over 10 ticks with easing "ease-in-out-sine"
+        at 1 second:
+            spin cine display {_egg} around vector(0, 0, 1) by -120 degrees over 10 ticks with easing "ease-in-out-sine"
+        at 2 seconds:
+            play cine sound "block.sniffer_egg.crack" with pitch 1.3
+            scale cine actor {_egg} to 1.3 over 1 second with easing "ease-in-quad"
+        at 3.5 seconds:
+            flash cine screen with colour white over 10 ticks
+            play cine sound "entity.chicken.egg"
+            remove cine actor {_egg}
+            set {_pet} to a new cine actor of {_petType} at {_spot} named "pet"
+            make cine actor {_pet} look at event-player
+            play cine preset "heart-burst" at {_spot} with colour pink lasting 2 seconds
+            show cine title "" with subtitle {_petName} for 3 seconds
+
+# Example call: cineHatch(player, egg, chicken, "<yellow>A fluffy chick!")
+function cineHatch(p: player, eggItem: item, petType: entity type, petName: text):
+    play cine scene "generic:hatch" for {_p}
+
+command /testprogress <text>:
+    permission: op
+    trigger:
+        if arg-1 is "level":
+            cineLevelUp(player, 42)
+        else if arg-1 is "rank":
+            cineRankUnlock(player, "<gold><bold>HERO", gold)
+        else if arg-1 is "rebirth":
+            cineRebirth(player, 3)
+        else if arg-1 is "hatch":
+            cineHatch(player, 1 egg, cat, "<yellow>A curious kitten!")

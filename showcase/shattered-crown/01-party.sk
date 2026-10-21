@@ -1,0 +1,232 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   01-party.sk  —  play the campaign together (up to four players)
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   A party watches every chapter as ONE shared SkCine playback:
+#     • everyone sees the same actors, effects and camera,
+#     • story choices are decided by vote (ties go to the earlier option),
+#     • skipping needs a majority (skip mode: vote),
+#     • trials and bosses are fought together and scale with party size.
+#
+#   The leader starts chapters. Progress is the LEADER's: members are carried
+#   along and receive the same shards, karma shifts and achievements, so a
+#   member who later plays solo continues from where they were carried to.
+#
+#   Party state lives in memory only ({-crown::party::...}).
+# ═════════════════════════════════════════════════════════════════════════════
+
+function crownPartyMax() :: number:
+    return 4
+
+# The leader of p's party, or p itself when p is solo.
+function crownPartyLeader(p: player) :: player:
+    set {_l} to {-crown::party::of::%crownId({_p})%}
+    if {_l} is set:
+        if {_l} is online:
+            return {_l}
+    return {_p}
+
+function crownInParty(p: player) :: boolean:
+    if {-crown::party::of::%crownId({_p})%} is set:
+        return true
+    return false
+
+function crownIsLeader(p: player) :: boolean:
+    if crownPartyLeader({_p}) is {_p}:
+        return true
+    return false
+
+# Every online member of p's party (the leader first), or just p.
+function crownPartyMembers(p: player) :: players:
+    if crownInParty({_p}) is false:
+        return {_p}
+    set {_leader} to crownPartyLeader({_p})
+    add {_leader} to {_out::*}
+    loop {-crown::party::members::%crownId({_leader})%::*}:
+        if loop-value is online:
+            if loop-value is not {_leader}:
+                add loop-value to {_out::*}
+    return {_out::*}
+
+function crownPartySize(p: player) :: number:
+    return size of crownPartyMembers({_p})
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Creating, inviting, joining
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownPartyCreate(leader: player):
+    set {_id} to crownId({_leader})
+    set {-crown::party::of::%{_id}%} to {_leader}
+    delete {-crown::party::members::%{_id}%::*}
+    add {_leader} to {-crown::party::members::%{_id}%::*}
+
+function crownPartyInvite(leader: player, target: player):
+    if {_target} is {_leader}:
+        crownMsg({_leader}, "&cYou can't invite yourself.")
+        stop
+    if crownInParty({_target}) is true:
+        crownMsg({_leader}, "&c%{_target}% is already in a party.")
+        stop
+    if crownInParty({_leader}) is true:
+        if crownIsLeader({_leader}) is false:
+            crownMsg({_leader}, "&cOnly the party leader can invite players.")
+            stop
+    if crownPartySize({_leader}) >= crownPartyMax():
+        crownMsg({_leader}, "&cYour party is full (%crownPartyMax()% players).")
+        stop
+    if crownInParty({_leader}) is false:
+        crownPartyCreate({_leader})
+    set {_t} to crownId({_target})
+    set {-crown::party::invite::%{_t}%} to {_leader}
+    set {-crown::party::invitedat::%{_t}%} to now
+    crownMsg({_leader}, "&7Invited &f%{_target}%&7. The invite expires in 60 seconds.")
+    crownMsg({_target}, "&f%{_leader}% &7invited you to their party. &a/crown party accept &7or &c/crown party deny")
+    crownChime({_target}, "click")
+
+function crownPartyAccept(p: player):
+    set {_id} to crownId({_p})
+    set {_leader} to {-crown::party::invite::%{_id}%}
+    if {_leader} is not set:
+        crownMsg({_p}, "&cYou have no pending party invite.")
+        stop
+    if difference between {-crown::party::invitedat::%{_id}%} and now > 60 seconds:
+        delete {-crown::party::invite::%{_id}%}
+        crownMsg({_p}, "&cThat invite has expired.")
+        stop
+    delete {-crown::party::invite::%{_id}%}
+    if {_leader} is not online:
+        crownMsg({_p}, "&cThe party leader is no longer online.")
+        stop
+    if crownPartySize({_leader}) >= crownPartyMax():
+        crownMsg({_p}, "&cThat party is already full.")
+        stop
+    if {_p} is watching a cine scene:
+        crownMsg({_p}, "&cFinish your current scene first.")
+        stop
+    if {_leader} is watching a cine scene:
+        crownMsg({_p}, "&cThe party is watching a scene right now. Try again in a moment.")
+        stop
+    set {_lid} to crownId({_leader})
+    add {_p} to {-crown::party::members::%{_lid}%::*}
+    set {-crown::party::of::%{_id}%} to {_leader}
+    crownMsgAll(crownPartyMembers({_leader}), "&f%{_p}% &ajoined the party. &8(%crownPartySize({_leader})%/%crownPartyMax()%)")
+    loop crownPartyMembers({_leader}):
+        crownChime(loop-value, "good")
+
+function crownPartyDeny(p: player):
+    set {_id} to crownId({_p})
+    set {_leader} to {-crown::party::invite::%{_id}%}
+    if {_leader} is not set:
+        crownMsg({_p}, "&cYou have no pending party invite.")
+        stop
+    delete {-crown::party::invite::%{_id}%}
+    crownMsg({_p}, "&7Invite declined.")
+    if {_leader} is online:
+        crownMsg({_leader}, "&f%{_p}% &7declined your invite.")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Leaving, kicking, disbanding
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownPartyLeave(p: player, quiet: boolean):
+    if crownInParty({_p}) is false:
+        if {_quiet} is false:
+            crownMsg({_p}, "&cYou're not in a party.")
+        stop
+    set {_leader} to {-crown::party::of::%crownId({_p})%}
+    set {_lid} to crownId({_leader})
+    remove {_p} from {-crown::party::members::%{_lid}%::*}
+    delete {-crown::party::of::%crownId({_p})%}
+    if {_quiet} is false:
+        crownMsg({_p}, "&7You left the party.")
+    if {_p} is {_leader}:
+        crownPartyPromote({_lid})
+        stop
+    loop {-crown::party::members::%{_lid}%::*}:
+        if loop-value is online:
+            crownMsg(loop-value, "&f%{_p}% &7left the party.")
+    crownPartyTidy({_lid})
+
+# Hands leadership to the next online member when the leader leaves.
+function crownPartyPromote(oldLeaderId: text):
+    set {_heir} to ""
+    loop {-crown::party::members::%{_oldLeaderId}%::*}:
+        if loop-value is online:
+            set {_heir} to loop-value
+            stop loop
+    if {_heir} is "":
+        delete {-crown::party::members::%{_oldLeaderId}%::*}
+        stop
+    set {_hid} to crownId({_heir})
+    loop {-crown::party::members::%{_oldLeaderId}%::*}:
+        add loop-value to {-crown::party::members::%{_hid}%::*}
+        set {-crown::party::of::%crownId(loop-value)%} to {_heir}
+    delete {-crown::party::members::%{_oldLeaderId}%::*}
+    loop {-crown::party::members::%{_hid}%::*}:
+        if loop-value is online:
+            crownMsg(loop-value, "&f%{_heir}% &7is now the party leader.")
+    crownPartyTidy({_hid})
+
+# A party of one is no party: dissolve it.
+function crownPartyTidy(leaderId: text):
+    set {_n} to size of {-crown::party::members::%{_leaderId}%::*}
+    if {_n} <= 1:
+        loop {-crown::party::members::%{_leaderId}%::*}:
+            delete {-crown::party::of::%crownId(loop-value)%}
+            if loop-value is online:
+                crownMsg(loop-value, "&7Your party was dissolved.")
+        delete {-crown::party::members::%{_leaderId}%::*}
+
+function crownPartyKick(leader: player, target: player):
+    if crownIsLeader({_leader}) is false:
+        crownMsg({_leader}, "&cOnly the party leader can kick players.")
+        stop
+    if crownPartyLeader({_target}) is not {_leader}:
+        crownMsg({_leader}, "&c%{_target}% is not in your party.")
+        stop
+    if {_target} is {_leader}:
+        crownMsg({_leader}, "&cUse &f/crown party leave &cto leave your own party.")
+        stop
+    crownMsg({_target}, "&cYou were removed from the party.")
+    crownPartyLeave({_target}, true)
+    crownMsg({_leader}, "&7Removed &f%{_target}%&7.")
+
+function crownPartyDisband(leader: player):
+    if crownIsLeader({_leader}) is false:
+        crownMsg({_leader}, "&cOnly the party leader can disband the party.")
+        stop
+    set {_lid} to crownId({_leader})
+    loop {-crown::party::members::%{_lid}%::*}:
+        delete {-crown::party::of::%crownId(loop-value)%}
+        if loop-value is online:
+            crownMsg(loop-value, "&7The party was disbanded.")
+    delete {-crown::party::members::%{_lid}%::*}
+
+function crownPartyList(p: player):
+    if crownInParty({_p}) is false:
+        crownMsg({_p}, "&7You're playing solo. Invite friends with &f/crown party invite <player>&7.")
+        stop
+    set {_leader} to crownPartyLeader({_p})
+    crownRule({_p}, "Party")
+    loop crownPartyMembers({_p}):
+        set {_n} to crownNextChapter(loop-value)
+        if loop-value is {_leader}:
+            send " &6♛ &f%loop-value% &8· %crownChapterColour({_n})%%crownChapterShort({_n})% &8· %crownKarmaTier(loop-value)%" to {_p}
+        else:
+            send " &7• &f%loop-value% &8· %crownChapterColour({_n})%%crownChapterShort({_n})% &8· %crownKarmaTier(loop-value)%" to {_p}
+    send "&8 %crownPartySize({_p})%/%crownPartyMax()% players · the leader's progress is used" to {_p}
+
+# Party chat: /crown party chat <message>
+function crownPartyChat(p: player, msg: text):
+    if crownInParty({_p}) is false:
+        crownMsg({_p}, "&cYou're not in a party.")
+        stop
+    loop crownPartyMembers({_p}):
+        send "&8[&dParty&8] &f%{_p}%&7: &f%{_msg}%" to loop-value
+
+on quit:
+    if crownInParty(player) is true:
+        crownPartyLeave(player, true)
+    delete {-crown::party::invite::%crownId(player)%}

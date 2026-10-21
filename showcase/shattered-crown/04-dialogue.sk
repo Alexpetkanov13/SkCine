@@ -1,0 +1,189 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   04-dialogue.sk  —  the cast, their voices, and how lines are spoken
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Lines are spoken with the "say" sequence so every viewer gets them the way
+#   they like (see /crown settings):
+#
+#     • text speed   slow · normal · fast · instant   (typewriter speed)
+#     • channel      subtitle · title · actionbar · chat
+#
+#   Parameters (caller locals):
+#     {_who}    speaker id: archivist, echo, warden, matriarch, kestrel,
+#               colossus, king, crown, narrator (default)
+#     {_line}   the text (MiniMessage or & codes)
+#     {_hold}   how long the full line stays, default 3 seconds
+#
+#   Example, inside a timeline:
+#       at 12 seconds:
+#           set {_who} to "archivist"
+#           set {_line} to "The crown did not break. It was broken."
+#           play cine sequence "say"
+#
+#   Dialogue started by a scene belongs to it: skipping clears it at once.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The cast
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownSpeaker(id: text) :: text:
+    if {_id} is "archivist":
+        return "<gold>The Archivist"
+    if {_id} is "echo":
+        return "<aqua>Your Echo"
+    if {_id} is "warden":
+        return "<gradient:gold:red>The Ember Warden</gradient>"
+    if {_id} is "matriarch":
+        return "<dark_aqua>The Drowned Matriarch"
+    if {_id} is "kestrel":
+        return "<aqua>Kestrel"
+    if {_id} is "colossus":
+        return "<gray>The Colossus"
+    if {_id} is "king":
+        return "<dark_purple>The Hollow King"
+    if {_id} is "crown":
+        return "<gradient:yellow:gold>The Crown</gradient>"
+    if {_id} is "aurelion":
+        return "<yellow>Queen Aurelion"
+    if {_id} is "soul":
+        return "<gray>A Drowned Soul"
+    if {_id} is "malrec":
+        return "<dark_purple>Prince Malrec"
+    if {_id} is "hadrek":
+        return "<gold>Hadrek"
+    return ""
+
+# Typing sound for each speaker: short, quiet, characterful.
+function crownVoice(id: text) :: text:
+    if {_id} is "archivist":
+        return "block.note_block.harp"
+    if {_id} is "echo":
+        return "block.amethyst_block.hit"
+    if {_id} is "warden":
+        return "block.note_block.basedrum"
+    if {_id} is "matriarch":
+        return "block.bubble_column.bubble_pop"
+    if {_id} is "kestrel":
+        return "block.note_block.flute"
+    if {_id} is "colossus":
+        return "block.stone.hit"
+    if {_id} is "king":
+        return "block.sculk.step"
+    if {_id} is "crown":
+        return "block.note_block.chime"
+    if {_id} is "aurelion":
+        return "block.note_block.bell"
+    if {_id} is "soul":
+        return "block.bubble_column.bubble_pop"
+    if {_id} is "malrec":
+        return "block.sculk.step"
+    if {_id} is "hadrek":
+        return "block.note_block.basedrum"
+    return "block.note_block.hat"
+
+# A one-line description for the codex "Characters" page.
+function crownSpeakerBio(id: text) :: text:
+    if {_id} is "archivist":
+        return "Keeper of the Last Library. Remembers everything except his own name."
+    if {_id} is "echo":
+        return "A reflection the crown made of you. It knows what you will choose."
+    if {_id} is "warden":
+        return "A smith who swore to guard the Ember Shard and burned with it."
+    if {_id} is "matriarch":
+        return "Once a priestess of the tide. Now she sings the drowned to sleep."
+    if {_id} is "kestrel":
+        return "A sky rider who lost her wings to the Gale and wants them back."
+    if {_id} is "colossus":
+        return "A mountain that learned to walk. It has been asleep for nine centuries."
+    if {_id} is "king":
+        return "Aurelion's brother. He shattered the crown so no one could wear it."
+    if {_id} is "aurelion":
+        return "The last queen. Her voice still lives inside the crown."
+    return "Unknown."
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Speaking
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Speaks {_line} as {_who} to every viewer, using each viewer's settings.
+cine sequence "say":
+    at 0 seconds:
+        set {_id} to {_who} ? "narrator"
+        set {_name} to crownSpeaker({_id})
+        set {_voice} to crownVoice({_id})
+        set {_h} to {_hold} ? 3 seconds
+        loop cine viewers:
+            set {_cps} to crownCps(loop-value)
+            set {_ch} to crownChannel(loop-value)
+            if {_name} is "":
+                if {_ch} is "title":
+                    show cine dialogue "<gray><italic>%{_line}%" to loop-value in title with typewriter at {_cps} characters per second for {_h} with typing sound {_voice}
+                else if {_ch} is "actionbar":
+                    show cine dialogue "<gray><italic>%{_line}%" to loop-value in action bar with typewriter at {_cps} characters per second for {_h} with typing sound {_voice}
+                else if {_ch} is "chat":
+                    show cine dialogue "<gray><italic>%{_line}%" to loop-value in chat for {_h}
+                else:
+                    show cine dialogue "<gray><italic>%{_line}%" to loop-value in subtitle with typewriter at {_cps} characters per second for {_h} with typing sound {_voice}
+            else:
+                if {_ch} is "title":
+                    show cine dialogue {_line} from {_name} to loop-value in title with typewriter at {_cps} characters per second for {_h} with typing sound {_voice}
+                else if {_ch} is "actionbar":
+                    show cine dialogue {_line} from {_name} to loop-value in action bar with typewriter at {_cps} characters per second for {_h} with typing sound {_voice}
+                else if {_ch} is "chat":
+                    show cine dialogue {_line} from {_name} to loop-value in chat for {_h}
+                else:
+                    show cine dialogue {_line} from {_name} to loop-value in subtitle with typewriter at {_cps} characters per second for {_h} with typing sound {_voice}
+
+# A line that lands word by word in the title area, whatever the settings.
+# Reserved for the biggest moments. Parameters: {_who}, {_line}, {_hold}.
+cine sequence "proclaim":
+    at 0 seconds:
+        set {_id} to {_who} ? "narrator"
+        set {_name} to crownSpeaker({_id})
+        set {_h} to {_hold} ? 3 seconds
+        if {_name} is "":
+            show cine dialogue {_line} in title word by word at 3 words per second for {_h} fading in over 10 ticks
+        else:
+            show cine dialogue {_line} from {_name} in title word by word at 3 words per second for {_h} fading in over 10 ticks
+        play cine sound "block.bell.resonate" with volume 0.4 and pitch 0.8
+
+# A shout: a line in the title with a short shake. Parameters: {_who}, {_line}.
+cine sequence "shout":
+    at 0 seconds:
+        set {_id} to {_who} ? "narrator"
+        set {_name} to crownSpeaker({_id})
+        show cine dialogue "<bold>%{_line}%" from {_name} in title word by word at 6 words per second for 2 seconds
+        shake the cine camera with intensity 0.6 for 12 ticks
+
+# A whisper: grey italic text in the action bar, slow. Parameters: {_who}, {_line}.
+cine sequence "whisper":
+    at 0 seconds:
+        set {_id} to {_who} ? "narrator"
+        set {_name} to crownSpeaker({_id})
+        if {_name} is "":
+            show cine dialogue "<dark_gray><italic>%{_line}%" in action bar with typewriter at 16 characters per second for 3 seconds
+        else:
+            show cine dialogue "<dark_gray><italic>%{_line}%" from {_name} in action bar with typewriter at 16 characters per second for 3 seconds
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Outside scenes
+# ─────────────────────────────────────────────────────────────────────────────
+
+# A short line outside any scene (ambient events, trials). Uses the action bar
+# so it never fights with gameplay titles.
+function crownBark(p: player, who: text, line: text):
+    set {_name} to crownSpeaker({_who})
+    if {_name} is "":
+        show cine dialogue "<gray><italic>%{_line}%" to {_p} in action bar with typewriter at crownCps({_p}) characters per second for 3 seconds
+    else:
+        show cine dialogue {_line} from {_name} to {_p} in action bar with typewriter at crownCps({_p}) characters per second for 3 seconds with typing sound crownVoice({_who})
+
+function crownBarkAll(players: players, who: text, line: text):
+    loop {_players::*}:
+        crownBark(loop-value, {_who}, {_line})
+
+# A big announcement in the title area, outside scenes.
+function crownAnnounce(players: players, title: text, subtitle: text):
+    show cine title {_title} with subtitle {_subtitle} to {_players::*} for 3 seconds with fade 10 ticks

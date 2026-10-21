@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: generic boss introduction
+#  /sk reload boss-introduction   then   /testboss [entity type]
+#
+#  Gameplay code spawns the boss ONCE, then hands it to the cinematic. The
+#  scene only wraps the existing entity (never spawns it), so replaying or
+#  skipping the intro can never duplicate the boss. Works with any entity type.
+#  When the intro ends (finished OR skipped), bossFightBegins() is called.
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:boss-intro":
+    skippable: true
+    skip mode: vote
+    timeline:
+        # {_boss} and {_name} come from the code that played the scene (caller locals).
+        set cine variable "boss" to {_boss}
+        set {_arena} to location of {_boss}
+        add cine camera keyframe at {_arena} ~ vector(0, 25, -20) at 0 seconds looking at {_arena}
+        add cine camera keyframe at {_arena} ~ vector(10, 12, -10) at 3 seconds with easing "ease-in-out-sine" looking at {_arena}
+        add cine camera keyframe at {_arena} ~ vector(2, 3, -5) at 6 seconds with easing "ease-out-cubic" looking at {_arena} ~ vector(0, 2, 0)
+        make the cine camera watch {_boss} from {_arena} ~ vector(2, 3, -5) between 6 seconds and 10 seconds blending over 10 ticks
+
+        at 0 seconds:
+            play cine sound "music_disc.pigstep" with volume 0.4
+        at 2 seconds:
+            play cine preset "boss-entrance" at {_arena} with colour dark red and accent black lasting 4 seconds
+        at 5 seconds:
+            play cine sound "entity.wither.spawn" at {_arena} with volume 1.5
+            shake the cine camera with intensity 1.5 for 1.5 seconds
+        at 6 seconds:
+            show cine title {_name} with subtitle "<gray>has awoken" for 3 seconds
+        at 9 seconds:
+            show cine title "<red><bold>FIGHT!" for 1 second with fade 3 ticks
+    on end:
+        # Finished or skipped: gameplay begins through an explicit callback.
+        bossFightBegins(cine variable "boss")
+
+function startBossIntro(boss: entity, name: text):
+    set {_viewers::*} to all players in radius 40 around {_boss}
+    if size of {_viewers::*} is 0:
+        bossFightBegins({_boss})
+        stop
+    play cine scene "examples:boss-intro" for {_viewers::*} together
+
+function bossFightBegins(boss: entity):
+    # Your server's own gameplay goes here (AI, boss bars, rewards...).
+    broadcast "&cThe battle against %{_boss}% begins!"
+
+command /testboss [<entity type>]:
+    permission: op
+    trigger:
+        set {_type} to arg-1 ? wither skeleton
+        spawn {_type} at (location of player) ~ vector(0, 0, 12)
+        startBossIntro(last spawned entity, "<dark_red><bold>The Fallen King")

@@ -1,0 +1,23 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: camera shake, flash and dolly zoom
+#  /sk reload camera-shake   then   /quake
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:quake":
+    duration: 6 seconds
+    timeline:
+        set {_c} to location of event-player
+        add cine camera keyframe at {_c} ~ vector(6, 4, 6) at 0 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(5, 3, 5) at 6 seconds looking at {_c}
+        at 1 second:
+            play cine sound "entity.generic.explode" with volume 2
+            flash cine screen with colour white over 8 ticks
+            shake the cine camera with intensity 2 for 2 seconds
+            play cine preset "shockwave" at {_c} with colour orange
+        at 3.5 seconds:
+            # A "dolly zoom": the camera pushes forward 3 blocks (true FOV changes are not possible server-side).
+            zoom the cine camera by 3 blocks over 1.5 seconds with easing "ease-in-out-sine"
+
+command /quake:
+    trigger:
+        play cine scene "examples:quake" for player

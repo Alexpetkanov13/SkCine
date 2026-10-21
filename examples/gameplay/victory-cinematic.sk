@@ -1,0 +1,27 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: victory celebration for a winner, shown to everyone nearby
+#  /sk reload victory-cinematic   then   /testvictory
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:victory":
+    skippable: true
+    skip mode: anyone
+    timeline:
+        set {_c} to location of {_winner}
+        make the cine camera orbit around {_winner} between 0 seconds and 7 seconds with radius 6 and height 2 sweeping 270 degrees
+        add cine camera keyframe at {_c} ~ vector(0, 14, -8) at 7.5 seconds with easing "ease-in-out-cubic" looking at {_c}
+        at 0 seconds:
+            play cine preset "golden-aura" at {_winner} lasting 7 seconds
+            play cine sound "ui.toast.challenge_complete"
+            show cine title "<gold><bold>VICTORY" with subtitle "<yellow>%name of {_winner}% wins!" for 4 seconds
+        repeat every 1 second from 1 second until 7 seconds:
+            play cine preset "victory" at {_c} ~ vector(0, 2, 0) with colour yellow and accent orange lasting 20 ticks
+            play cine sound "entity.firework_rocket.blast" with volume 0.7
+
+function celebrate(winner: player):
+    set {_viewers::*} to all players in radius 64 around {_winner}
+    play cine scene "examples:victory" for {_viewers::*} together
+
+command /testvictory:
+    trigger:
+        celebrate(player)

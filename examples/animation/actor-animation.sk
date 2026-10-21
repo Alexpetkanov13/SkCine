@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: actors — spawn, walk with real pathfinding, look, rotate,
+#  keyframed paths, visibility and automatic cleanup.
+#  /sk reload actor-animation   then   /actors
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:actors":
+    duration: 14 seconds
+    timeline:
+        set {_c} to location of event-player
+        add cine camera keyframe at {_c} ~ vector(-6, 4, -6) at 0 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(6, 4, -6) at 14 seconds with easing "ease-in-out-sine" looking at {_c}
+
+        # Actors in a scene are private to its viewers and removed when it ends.
+        set {_guard} to a new cine actor of iron golem at {_c} ~ vector(4, 0, 4) named "guard"
+        set {_fox} to a new cine actor of fox at {_c} ~ vector(-4, 0, 4)
+        set {_bird} to a new cine actor of parrot at {_c} ~ vector(0, 3, 6)
+
+        at 1 second:
+            make cine actor {_guard} walk to {_c} ~ vector(1, 0, 1) at speed 1
+            make cine actor {_fox} look at event-player for 3 seconds
+        at 4 seconds:
+            rotate cine actor {_guard} to yaw 180 over 1 second with easing "ease-in-out-quad"
+            show cine dialogue "Halt! Who goes there?" from "<gray>Guard" in action bar with typewriter for 2 seconds
+        # The parrot flies a keyframed path synchronized with the scene clock.
+        add cine actor keyframe for {_bird} at {_c} ~ vector(0, 3, 6) at 0 seconds
+        add cine actor keyframe for {_bird} at {_c} ~ vector(5, 5, 0) at 6 seconds with easing "ease-in-out-sine"
+        add cine actor keyframe for {_bird} at {_c} ~ vector(0, 4, -5) at 12 seconds with easing "ease-in-out-sine"
+        at 8 seconds:
+            move cine actor {_fox} to {_c} ~ vector(-1, 0, 1) over 2 seconds with easing "ease-out-cubic" facing the movement
+        at 11 seconds:
+            hide cine actor {_guard}
+            play cine preset "smoke-cloud" at {_c} ~ vector(1, 0, 1) lasting 1 second
+
+command /actors:
+    trigger:
+        play cine scene "examples:actors" for player

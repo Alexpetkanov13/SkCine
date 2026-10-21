@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a1458"/>
+      <stop offset="0.55" stop-color="#140b2e"/>
+      <stop offset="1" stop-color="#07040f"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.58" r="0.5">
+      <stop offset="0" stop-color="#ff4d6d" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ff4d6d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="board" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2b38"/>
+      <stop offset="1" stop-color="#15151d"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe08a"/>
+      <stop offset="1" stop-color="#ff9e2c"/>
+    </linearGradient>
+    <linearGradient id="play" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff7a59"/>
+      <stop offset="1" stop-color="#ff2e63"/>
+    </linearGradient>
+    <clipPath id="clapClip"><rect x="0" y="0" width="330" height="62" rx="12"/></clipPath>
+    <clipPath id="baseClip"><rect x="0" y="0" width="330" height="62"/></clipPath>
+  </defs>
+
+  <rect width="512" height="512" rx="104" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="104" fill="url(#glow)"/>
+
+  <!-- film strip perforations along the top and bottom edges -->
+  <g fill="#ffffff" opacity="0.07">
+    <rect x="36"  y="30" width="34" height="22" rx="5"/><rect x="100" y="30" width="34" height="22" rx="5"/>
+    <rect x="164" y="30" width="34" height="22" rx="5"/><rect x="228" y="30" width="34" height="22" rx="5"/>
+    <rect x="292" y="30" width="34" height="22" rx="5"/><rect x="356" y="30" width="34" height="22" rx="5"/>
+    <rect x="420" y="30" width="34" height="22" rx="5"/>
+    <rect x="36"  y="460" width="34" height="22" rx="5"/><rect x="100" y="460" width="34" height="22" rx="5"/>
+    <rect x="164" y="460" width="34" height="22" rx="5"/><rect x="228" y="460" width="34" height="22" rx="5"/>
+    <rect x="292" y="460" width="34" height="22" rx="5"/><rect x="356" y="460" width="34" height="22" rx="5"/>
+    <rect x="420" y="460" width="34" height="22" rx="5"/>
+  </g>
+
+  <!-- clapper arm (opened) -->
+  <g transform="translate(91 168) rotate(-17)">
+    <g clip-path="url(#clapClip)">
+      <rect width="330" height="62" fill="#f4f1ff"/>
+      <g fill="#1a1726">
+        <polygon points="0,0 38,0 0,62"/>
+        <polygon points="76,0 124,0 82,62 34,62"/>
+        <polygon points="162,0 210,0 168,62 120,62"/>
+        <polygon points="248,0 296,0 254,62 206,62"/>
+        <polygon points="334,0 340,0 340,62 292,62"/>
+      </g>
+    </g>
+  </g>
+  <circle cx="102" cy="222" r="13" fill="url(#gold)"/>
+
+  <!-- clapper base stripe -->
+  <g transform="translate(91 206)">
+    <g clip-path="url(#baseClip)">
+      <rect width="330" height="62" fill="#f4f1ff"/>
+      <g fill="#1a1726">
+        <polygon points="34,0 82,0 124,62 76,62"/>
+        <polygon points="120,0 168,0 210,62 162,62"/>
+        <polygon points="206,0 254,0 296,62 248,62"/>
+        <polygon points="292,0 340,0 340,62 334,62"/>
+        <polygon points="0,0 0,62 38,62"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- board body -->
+  <rect x="91" y="262" width="330" height="178" rx="18" fill="url(#board)" stroke="#3b3a52" stroke-width="4"/>
+  <rect x="91" y="262" width="330" height="10" fill="#0e0e14" opacity="0.6"/>
+
+  <!-- play button -->
+  <circle cx="256" cy="352" r="62" fill="url(#play)"/>
+  <circle cx="256" cy="352" r="62" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="4"/>
+  <path d="M236 318 L290 352 L236 386 Z" fill="#ffffff" stroke="#ffffff" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- sparkles -->
+  <g fill="url(#gold)">
+    <path d="M420 96 l9 25 25 9 -25 9 -9 25 -9 -25 -25 -9 25 -9 z"/>
+    <path d="M452 216 l5 14 14 5 -14 5 -5 14 -5 -14 -14 -5 14 -5 z"/>
+    <path d="M70 112 l5 14 14 5 -14 5 -5 14 -5 -14 -14 -5 14 -5 z"/>
+  </g>
+</svg>

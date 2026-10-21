@@ -1,0 +1,256 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   35-recap-and-cosmetics.sk  —  "previously on…", and wearable auras
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   /crown recap
+#     A "previously on" cinematic generated from YOUR journal. Every other
+#     scene in this campaign is declared with the `cine scene "id":`
+#     structure; this one is built at runtime with `a new cine scene:` (a
+#     section expression), because its content is different for every
+#     player: one beat per finished chapter, narrating the choice you made.
+#     If you come back after three days away, it plays before the next
+#     chapter on its own.
+#
+#   /crown cosmetics
+#     Auras you have earned, worn in the world for everyone to see:
+#       halo        Radiant ending          smoke       Tyrant ending
+#       mirror      secret ending           glass       Sacrifice ending
+#       embers      spared Hadrek           crownlight  every achievement
+#       echoes      the Trial of Echoes
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Recap
+# ─────────────────────────────────────────────────────────────────────────────
+
+# One narrated beat per finished chapter, as "chapter|line".
+function crownRecapBeats(p: player) :: texts:
+    set {_oath} to crownChoice({_p}, "oath")
+    if crownNum({_p}, "chapter") >= 1:
+        add "1|You woke in the Last Library and swore %crownOathTitle({_oath})%&r." to {_b::*}
+    if crownFlag({_p}, "done::2") is true:
+        if crownChoice({_p}, "ember") is "spare":
+            add "2|At the Last Forge, you spared Hadrek. The fire still burns for you." to {_b::*}
+        else:
+            add "2|At the Last Forge, you took Hadrek's flame. The forge went cold." to {_b::*}
+    if crownFlag({_p}, "done::3") is true:
+        if crownChoice({_p}, "tide") is "free":
+            add "3|In the Drowned Sanctuary, you let the souls go home." to {_b::*}
+        else:
+            add "3|In the Drowned Sanctuary, the drowned learned to follow you." to {_b::*}
+    if crownFlag({_p}, "done::4") is true:
+        if crownChoice({_p}, "gale") is "trust":
+            add "4|On the Windspire, you trusted Kestrel, and she flew again." to {_b::*}
+        else:
+            add "4|On the Windspire, you took the Gale and left a rider walking." to {_b::*}
+    if crownFlag({_p}, "done::5") is true:
+        if crownChoice({_p}, "stone") is "wake":
+            add "5|In Greyhold, the Colossus woke and went to see the sky." to {_b::*}
+        else:
+            add "5|In Greyhold, a mountain lay down for the last time." to {_b::*}
+    if crownFlag({_p}, "done::6") is true:
+        if crownChoice({_p}, "void") is "forgive":
+            add "6|In the Hollow Court, you forgave Malrec, and he went home." to {_b::*}
+        else:
+            add "6|In the Hollow Court, you condemned Malrec. Nobody sang for him." to {_b::*}
+    return {_b::*}
+
+function crownRecap(p: player, thenContinue: boolean):
+    if {_p} is watching a cine scene:
+        crownMsg({_p}, "&cYou're already watching something.")
+        stop
+    set {_beats::*} to crownRecapBeats({_p})
+    if size of {_beats::*} is 0:
+        crownMsg({_p}, "&7There's nothing to recap yet. &f/crown play &7to begin.")
+        stop
+    set {_stage} to location of {_p}
+    set pitch of {_stage} to 0
+    set yaw of {_stage} to 0
+    set {_count} to size of {_beats::*}
+    set {_next} to crownNextChapter({_p})
+    set {_continue} to {_thenContinue}
+    set {_audience::*} to {_p}
+    # Built at runtime: the body below is this scene's timeline. It runs when
+    # the scene plays, with a copy of the locals above ({_beats::*}, {_stage}…).
+    set {_scene} to a new cine scene:
+        set {_total} to "%{_count} * 6 + 7% seconds" parsed as timespan
+        set cine duration to {_total}
+        set {_c} to {_stage} ~ vector(0, 0, 6)
+        set {_focus} to {_c} ~ vector(0, 1.5, 0)
+        set {_r} to 7
+        add cine camera keyframe at {_c} ~ vector(0, 12, -12) at 0 seconds looking at {_focus}
+        make the cine camera orbit around {_focus} between 1 second and {_total} with radius 7 and height 3 sweeping 300 degrees blending over 1 second
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            set {_at} to {_c}
+            set {_len} to 60 seconds
+            play cine sequence "fx:fireflies"
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+            set {_title} to "<gray><italic>Previously..."
+            set {_subtitle} to "<dark_gray>Echoes of the Shattered Crown"
+            set {_tone} to 0.7
+            play cine sequence "fx:title-card"
+        set {_i} to 0
+        loop {_beats::*}:
+            add 1 to {_i}
+            set {_parts::*} to split loop-value at "|"
+            set {_n} to {_parts::1} parsed as integer
+            set {_text} to {_parts::2}
+            set {_when} to "%({_i} - 1) * 6 + 4% seconds" parsed as timespan
+            at {_when}:
+                set {_who} to "narrator"
+                set {_line} to {_text}
+                set {_hold} to 4 seconds
+                play cine sequence "say"
+                set {_at} to {_c} ~ vector(0, 1, 0)
+                set {_colour} to crownChapterColor({_n})
+                if {_n} >= 2:
+                    play cine sequence "fx:shard-call"
+                else:
+                    play cine sequence "fx:crown-glow"
+        set {_endAt} to "%{_count} * 6 + 4% seconds" parsed as timespan
+        at {_endAt}:
+            set {_title} to "%crownChapterTag({_next})%%crownChapterName({_next})%"
+            set {_subtitle} to "<gray>...continues"
+            set {_tone} to 1
+            play cine sequence "fx:title-card"
+        set {_fadeAt} to "%{_count} * 6 + 5.5% seconds" parsed as timespan
+        at {_fadeAt}:
+            fade the cine screen out over 1.5 seconds
+        set {_doneAt} to "%{_count} * 6 + 6.8% seconds" parsed as timespan
+        at {_doneAt} even if skipped:
+            if {_continue} is true:
+                crownAfterRecap({_audience::*})
+    make the cine scene {_scene} skippable
+    crownSet({_p}, "lastrecap", now)
+    play cine scene {_scene} for {_p}
+
+function crownAfterRecap(players: players):
+    wait 1 second
+    loop {_players::*}:
+        if loop-value is online:
+            crownPlay(loop-value)
+            stop
+
+# Remember when the player last played, for the automatic recap.
+on cine scene finish:
+    set {_p} to event-player
+    {_p} is set
+    event-text starts with "crown:"
+    crownSet({_p}, "lastplayed", now)
+
+# True if a recap should play before continuing (three days away).
+function crownWantsRecap(p: player) :: boolean:
+    set {_last} to crownGet({_p}, "lastplayed")
+    if {_last} is not set:
+        return false
+    if crownNum({_p}, "chapter") < 2:
+        return false
+    if crownNum({_p}, "chapter") >= 8:
+        return false
+    if difference between {_last} and now < 3 days:
+        return false
+    set {_recap} to crownGet({_p}, "lastrecap")
+    if {_recap} is set:
+        if difference between {_recap} and now < 3 days:
+            return false
+    return true
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Cosmetics
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownCosmeticIds() :: texts:
+    return "halo", "smoke", "mirror", "glass", "embers", "echoes" and "crownlight"
+
+function crownCosmeticTitle(id: text) :: text:
+    if {_id} is "halo":
+        return "Radiant Halo"
+    if {_id} is "smoke":
+        return "Hollow Smoke"
+    if {_id} is "mirror":
+        return "Mirror Shimmer"
+    if {_id} is "glass":
+        return "Glass Shards"
+    if {_id} is "embers":
+        return "Hadrek's Embers"
+    if {_id} is "echoes":
+        return "Five Echoes"
+    if {_id} is "crownlight":
+        return "Crownlight"
+    return "None"
+
+function crownCosmeticUnlocked(p: player, id: text) :: boolean:
+    if {_id} is "halo":
+        return crownFlag({_p}, "ending::radiant")
+    if {_id} is "smoke":
+        return crownFlag({_p}, "ending::tyrant")
+    if {_id} is "mirror":
+        return crownFlag({_p}, "ending::echo")
+    if {_id} is "glass":
+        return crownFlag({_p}, "ending::sacrifice")
+    if {_id} is "embers":
+        if crownChoice({_p}, "ember") is "spare":
+            return true
+        return false
+    if {_id} is "echoes":
+        return crownHasAchievement({_p}, "gauntlet")
+    if {_id} is "crownlight":
+        return crownHasAchievement({_p}, "completionist")
+    return false
+
+function crownCosmeticsMenu(p: player):
+    wait 2 ticks
+    loop crownCosmeticIds():
+        if crownCosmeticUnlocked({_p}, loop-value) is true:
+            add crownCosmeticTitle(loop-value) to {_opts::*}
+    if size of {_opts::*} is 0:
+        crownMsg({_p}, "&7No auras yet. Endings and achievements unlock them.")
+        stop
+    add "Remove aura" to {_opts::*}
+    present cine choice "<gold>Auras" to {_p} with options {_opts::*} with timeout 60 seconds using a menu:
+        if cine choice is "Remove aura":
+            crownClear(event-player, "cosmetic")
+            crownMsg(event-player, "&7Aura removed.")
+        else:
+            loop crownCosmeticIds():
+                if crownCosmeticTitle(loop-value) is cine choice:
+                    crownSet(event-player, "cosmetic", loop-value)
+                    crownMsg(event-player, "&7Now wearing: &f%cine choice%")
+
+every 2 seconds:
+    loop all players:
+        set {_c} to crownGet(loop-player, "cosmetic")
+        if {_c} is set:
+            if crownAmbientEligible(loop-player) is true:
+                if crownCosmeticUnlocked(loop-player, "%{_c}%") is true:
+                    set {_viewers::*} to all players in radius 24 around loop-player
+                    crownDrawCosmetic(loop-player, "%{_c}%", {_viewers::*})
+                    delete {_viewers::*}
+
+function crownDrawCosmetic(p: player, id: text, viewers: players):
+    if {_id} is "halo":
+        draw a cine ring of "end_rod" at {_p} ~ vector(0, 2.25, 0) with radius 0.35 and 10 points to {_viewers::*}
+        draw a cine ring of "dust" at {_p} ~ vector(0, 2.25, 0) with radius 0.4 and 12 points to {_viewers::*} with colour yellow
+    else if {_id} is "smoke":
+        draw a cine cylinder of "smoke" at {_p} with radius 0.5 and height 1.8 and 8 points to {_viewers::*}
+        draw a cine ring of "dust" at {_p} ~ vector(0, 0.1, 0) with radius 0.7 and 10 points to {_viewers::*} with colour purple
+    else if {_id} is "mirror":
+        draw a cine cylinder of "dust" at {_p} with radius 0.6 and height 2 and 10 points to {_viewers::*} with colour light blue
+        draw a cine ring of "glow" at {_p} ~ vector(0, 1, 0) with radius 0.7 and 4 points to {_viewers::*}
+    else if {_id} is "glass":
+        draw a cine sphere of "end_rod" at {_p} ~ vector(0, 1, 0) with radius 0.9 and 6 points to {_viewers::*}
+        draw a cine ring of "dust" at {_p} ~ vector(0, 0.1, 0) with radius 0.6 and 10 points to {_viewers::*} with colour white
+    else if {_id} is "embers":
+        draw a cine cylinder of "small_flame" at {_p} with radius 0.6 and height 0.4 and 6 points to {_viewers::*}
+    else if {_id} is "echoes":
+        draw a cine ring of "dust" at {_p} ~ vector(0, 0.1, 0) with radius 0.5 and 6 points to {_viewers::*} with colour orange
+        draw a cine ring of "dust" at {_p} ~ vector(0, 0.5, 0) with radius 0.55 and 6 points to {_viewers::*} with colour cyan
+        draw a cine ring of "dust" at {_p} ~ vector(0, 0.9, 0) with radius 0.6 and 6 points to {_viewers::*} with colour light blue
+        draw a cine ring of "dust" at {_p} ~ vector(0, 1.3, 0) with radius 0.55 and 6 points to {_viewers::*} with colour light grey
+        draw a cine ring of "dust" at {_p} ~ vector(0, 1.7, 0) with radius 0.5 and 6 points to {_viewers::*} with colour purple
+    else if {_id} is "crownlight":
+        draw a cine star of "dust" at {_p} ~ vector(0, 2.4, 0) with radius 0.45 and 15 points to {_viewers::*} with colour gold
+        draw a cine helix of "end_rod" at {_p} with radius 0.7 and height 2.2 and 8 points to {_viewers::*}

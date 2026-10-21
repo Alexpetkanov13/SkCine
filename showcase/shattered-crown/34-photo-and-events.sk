@@ -1,0 +1,200 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   34-photo-and-events.sk  —  photo mode, and the Night of Bells
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Photo mode: a camera tour of wherever you are standing, built entirely
+#   from the camera library (03-camera-library.sk). Good for screenshots and
+#   for showing off a build.
+#       /crown photo [epic|calm|sky]
+#
+#   The Night of Bells: a server event an admin can start. Everyone within
+#   64 blocks watches one shared scene together: a comet, every bell of
+#   Aurelion, fireworks of the five shards. Skipping needs a majority.
+#       /crown admin bells
+# ═════════════════════════════════════════════════════════════════════════════
+
+function crownPhoto(p: player, style: text):
+    if {_p} is watching a cine scene:
+        crownMsg({_p}, "&cYou're already watching something.")
+        stop
+    if crownInTrial({_p}) is true:
+        crownMsg({_p}, "&cNot during a trial.")
+        stop
+    if {_style} is not "epic", "calm" or "sky":
+        crownMsg({_p}, "&7Photo styles: &fepic&7, &fcalm&7, &fsky")
+        stop
+    set {_stage} to location of {_p}
+    set pitch of {_stage} to 0
+    set yaw of {_stage} to 0
+    crownBumpStat({_p}, "photos")
+    play cine scene "crown:photo-%{_style}%" for {_p}
+
+# Epic: a wide sweep, a heroic low angle, then a long pull back. 22 s.
+cine scene "crown:photo-epic":
+    duration: 22 seconds
+    skippable: true
+    timeline:
+        set {_focus} to {_stage} ~ vector(0, 1.5, 0)
+        play cine sequence "cam:establish" at 0 seconds
+        play cine sequence "cam:hero-low" at 9 seconds
+        play cine sequence "cam:pull-back" at 15 seconds
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            play cine sound "music_disc.otherside" with volume 0.25
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+        at 20 seconds:
+            fade the cine screen out over 2 seconds
+
+# Calm: drifting, an unhurried orbit, fireflies. 24 s.
+cine scene "crown:photo-calm":
+    duration: 24 seconds
+    skippable: true
+    timeline:
+        set {_focus} to {_stage} ~ vector(0, 1.2, 0)
+        set {_from} to {_stage} ~ vector(-4, 2, -5)
+        set {_r} to 6
+        play cine sequence "cam:breathe" at 0 seconds
+        play cine sequence "cam:orbit-slow" at 10 seconds
+        add cine camera keyframe at {_stage} ~ vector(5, 3, -6) at 24 seconds with easing "ease-in-out-sine" looking at {_focus}
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            set {_at} to {_stage}
+            set {_len} to 24 seconds
+            play cine sequence "fx:fireflies"
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+        at 22 seconds:
+            fade the cine screen out over 2 seconds
+
+# Sky: down from the clouds, a spiral, and back up to the stars. 22 s.
+cine sequence "photo:stars":
+    at 0 seconds:
+        set {_at} to {_stage}
+        play cine sequence "fx:starfall"
+    at 4 seconds:
+        set {_at} to {_stage}
+        play cine sequence "fx:starfall"
+
+cine scene "crown:photo-sky":
+    duration: 22 seconds
+    skippable: true
+    timeline:
+        set {_focus} to {_stage} ~ vector(0, 1.5, 0)
+        play cine sequence "cam:sky-down" at 0 seconds
+        play cine sequence "cam:spiral-rise" at 6 seconds
+        play cine sequence "cam:sky-up" at 15 seconds
+        play cine sequence "photo:stars" at 15 seconds
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+        at 20.5 seconds:
+            fade the cine screen out with colour white over 1.5 seconds
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The Night of Bells
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownNightOfBells(s: command sender):
+    if {_s} is not a player:
+        crownAdminReply({_s}, "Stand where the event should happen: this needs a player.")
+        stop
+    set {_host} to "%{_s}%" parsed as player
+    set {_near::*} to all players in radius 64 around {_host}
+    set {_viewers::*} to crownAvailable({_near::*})
+    if size of {_viewers::*} is 0:
+        crownAdminReply({_s}, "Nobody nearby can watch right now.")
+        stop
+    set {_stage} to location of {_host}
+    set pitch of {_stage} to 0
+    set yaw of {_stage} to 0
+    crownLog("Night of Bells started by %{_host}% for %size of {_viewers::*}% player(s).")
+    play cine scene "crown:night-of-bells" for {_viewers::*} together
+    crownAdminReply({_s}, "The Night of Bells begins for %size of {_viewers::*}% player(s).")
+
+cine scene "crown:night-of-bells":
+    duration: 40 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set {_c} to {_stage} ~ vector(0, 0, 12)
+        set {_focus} to {_c} ~ vector(0, 8, 0)
+        set {_bell1} to a new cine block display of bell at {_c} ~ vector(-6, 6, 0)
+        set {_bell2} to a new cine block display of bell at {_c} ~ vector(-2, 8, 2)
+        set {_bell3} to a new cine block display of bell at {_c} ~ vector(2, 8, 2)
+        set {_bell4} to a new cine block display of bell at {_c} ~ vector(6, 6, 0)
+        set {_bell5} to a new cine block display of bell at {_c} ~ vector(0, 10, 4)
+        add {_bell1}, {_bell2}, {_bell3}, {_bell4} and {_bell5} to {_bells::*}
+        scale cine actors {_bells::*} to 2 over 1 tick
+        set {_banner} to a new cine text display with text "<gradient:yellow:gold><bold>THE NIGHT OF BELLS</bold></gradient>" at {_c} ~ vector(0, 13, 4)
+        hide cine actor {_banner}
+
+        play cine sequence "cam:sky-down" at 0 seconds
+        set {_r} to 14
+        play cine sequence "cam:orbit-slow" at 6 seconds
+        play cine sequence "cam:spiral-rise" at 15 seconds
+        play cine sequence "cam:sky-up" at 30 seconds
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            play cine sound "music_disc.otherside" with volume 0.35
+        at 5 ticks:
+            fade the cine screen in over 3 seconds
+            set {_at} to {_c}
+            set {_len} to 38 seconds
+            play cine sequence "fx:fireflies"
+        at 2 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Once a year, Aurelion remembered how to ring."
+            play cine sequence "say"
+        at 5 seconds:
+            set {_at} to {_c}
+            set {_colour} to light blue
+            play cine sequence "fx:comet"
+        repeat every 1.2 seconds from 8 seconds until 28 seconds:
+            set {_b} to random element out of {_bells::*}
+            spin cine display {_b} around vector(1, 0, 0) by 40 degrees over 10 ticks with easing "ease-out-elastic"
+            play cine sound "block.bell.use" at {_b} with volume 0.7 and pitch random number between 0.6 and 1.2
+            draw a cine ring of "end_rod" at {_b} with radius 1.2 and 14 points
+        at 10 seconds:
+            show cine actor {_banner}
+            set {_at} to {_c} ~ vector(0, 12, 4)
+            play cine preset "legendary-reveal" at {_at} with colour gold and accent yellow lasting 3 seconds
+        at 14 seconds:
+            set {_at} to {_c} ~ vector(-8, 12, 6)
+            set {_colour} to orange
+            play cine sequence "fx:shard-release"
+        at 16 seconds:
+            set {_at} to {_c} ~ vector(-4, 14, 8)
+            set {_colour} to cyan
+            play cine sequence "fx:shard-release"
+        at 18 seconds:
+            set {_at} to {_c} ~ vector(0, 15, 9)
+            set {_colour} to light blue
+            play cine sequence "fx:shard-release"
+        at 20 seconds:
+            set {_at} to {_c} ~ vector(4, 14, 8)
+            set {_colour} to light grey
+            play cine sequence "fx:shard-release"
+        at 22 seconds:
+            set {_at} to {_c} ~ vector(8, 12, 6)
+            set {_colour} to purple
+            play cine sequence "fx:shard-release"
+        at 25 seconds:
+            set {_at} to {_c}
+            play cine sequence "fx:victory"
+            set {_who} to "narrator"
+            set {_line} to "Somewhere a crown, whole or broken, rang along with them."
+            play cine sequence "say"
+        at 31 seconds:
+            set {_at} to {_c}
+            play cine sequence "fx:starfall"
+        at 37 seconds:
+            fade the cine screen out over 3 seconds
+        at 39 seconds even if skipped:
+            loop cine viewers:
+                crownMsg(loop-value, "&eThe bells fall silent. &7Until next year.")
+                if crownStarted(loop-value) is true:
+                    crownUnlockCodex(loop-value, "bells")

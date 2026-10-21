@@ -1,0 +1,27 @@
+# Gradle / build
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+out/
+
+# Integration test working area (downloaded servers, worlds, node_modules, results)
+integration-tests/work/
+integration-tests/bot/node_modules/
+integration-tests/bot/*.log
+integration-tests/bot/bot-test-results.json
+integration-tests/bot/crash-start.json
+integration-tests/bot/crash-ready
+
+# OS
+.DS_Store
+Thumbs.db
+/bot-test-results.json
+integration-tests/__pycache__/
+*.pyc
+.kotlin/

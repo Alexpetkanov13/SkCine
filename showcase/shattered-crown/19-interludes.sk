@@ -1,0 +1,515 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   19-interludes.sk  —  between chapters: back at the Last Library
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Before each chapter (the first time it is played), the story returns to
+#   the Last Library for a short interlude with the Archivist. Watched in
+#   order, they show him changing: with every shard he is a little more solid,
+#   a little more eager, and a little less careful about what he says.
+#
+#     crown:interlude-2   before the Ember     the briefing
+#     crown:interlude-3   before the Tide      "did you see someone?"
+#     crown:interlude-4   before the Gale      the riders' book
+#     crown:interlude-5   before the Stone     impatience
+#     crown:interlude-6   before the Void      a small choice: ask his name
+#     crown:interlude-7   before the Finale    the empty library
+#
+#   The set (shelves, lectern, candles) is built by the "set:library"
+#   sequence from {_lib}. The interlude then calls crownStartChapter() with
+#   the chapter it introduces, so the story flows straight on.
+# ═════════════════════════════════════════════════════════════════════════════
+
+function crownInterludeScene(n: number) :: text:
+    return "crown:interlude-%{_n}%"
+
+function crownHasInterlude(n: number) :: boolean:
+    if {_n} >= 2:
+        if {_n} <= 7:
+            return true
+    return false
+
+# Plays the interlude for chapter n, then the chapter itself.
+function crownPlayInterlude(players: players, n: number, stage: location):
+    set {_chapter} to {_n}
+    set {_replay} to false
+    set {_scene} to crownInterludeScene({_n})
+    loop {_players::*}:
+        crownSeen(loop-value, {_scene})
+    play cine scene {_scene} for {_players::*} together
+
+# Shared tail of every interlude: remember it was seen, then begin the chapter.
+function crownAfterInterlude(players: players, n: number, stage: location, replay: boolean):
+    if {_replay} is true:
+        stop
+    loop {_players::*}:
+        crownSetFlag(loop-value, "interlude::%{_n}%")
+    wait 1 second
+    set {_ready::*} to crownAvailable({_players::*})
+    if size of {_ready::*} is 0:
+        stop
+    crownStartChapter({_ready::*}, {_n}, {_stage}, false)
+
+# The library set, built around {_lib}.
+cine sequence "set:library":
+    set {_s1} to a new cine block display of bookshelf at {_lib} ~ vector(-4, 0, 3)
+    set {_s2} to a new cine block display of bookshelf at {_lib} ~ vector(-4, 1, 3)
+    set {_s3} to a new cine block display of chiseled bookshelf at {_lib} ~ vector(-3, 0, 3.5)
+    set {_s4} to a new cine block display of bookshelf at {_lib} ~ vector(3, 0, 3)
+    set {_s5} to a new cine block display of bookshelf at {_lib} ~ vector(3, 1, 3)
+    set {_s6} to a new cine block display of chiseled bookshelf at {_lib} ~ vector(2, 0, 3.5)
+    set {_s7} to a new cine block display of lectern at {_lib} ~ vector(-0.5, 0, 0.3)
+    set {_s8} to a new cine item display of candle at {_lib} ~ vector(-0.8, 1.2, 0.3)
+    set {_s9} to a new cine item display of candle at {_lib} ~ vector(0.8, 1.2, 0.3)
+    set {_s10} to a new cine block display of cobweb at {_lib} ~ vector(3.2, 2, 3)
+    set {_s11} to a new cine item display of written book at {_lib} ~ vector(1.6, 2.1, 2)
+    set {_s12} to a new cine item display of enchanted book at {_lib} ~ vector(-1.6, 2.3, 2)
+    at 0 seconds:
+        spin cine display {_s11} around vector(0, 1, 0) continuously at 20 degrees per second
+        spin cine display {_s12} around vector(0, 1, 0) continuously at -15 degrees per second
+        set {_at} to {_lib}
+        set {_len} to 60 seconds
+        play cine sequence "fx:fireflies"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Before the Ember
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "crown:interlude-2":
+    duration: 30 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_lib} to {_stage} ~ vector(0, 0, 6)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        play cine sequence "set:library"
+        set {_archivist} to a new cine player actor at {_lib} ~ vector(0, 0, 2) named "archivist" with name tag "<gold>The Archivist"
+        set {_map} to a new cine item display of filled map at {_lib} ~ vector(0, 1.4, 0.3)
+
+        add cine camera keyframe at {_lib} ~ vector(-4, 3, -5) at 0 seconds looking at {_lib} ~ vector(0, 1.5, 1)
+        add cine camera keyframe at {_lib} ~ vector(-1.5, 2, -2.5) at 5 seconds with easing "ease-in-out-sine" looking at {_archivist}
+        make the cine camera watch {_map} from {_lib} ~ vector(0.5, 2.3, -1) between 12 seconds and 18 seconds blending over 1 second
+        make the cine camera watch {_archivist} from {_lib} ~ vector(1.2, 2, -1.5) between 18 seconds and 30 seconds blending over 1 second
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            make cine actor {_archivist} look at {_eye}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            set {_len} to 30 seconds
+            play cine sequence "fx:aura"
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+        at 2 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Before you go: a word about Hadrek. He's going to shout. A lot. It's mostly grief."
+            play cine sequence "say"
+        at 6 seconds:
+            set {_who} to "archivist"
+            set {_line} to "He was my friend, once. Well. He was somebody's friend. I remember it as if he were mine."
+            play cine sequence "say"
+        at 10 seconds:
+            set {_who} to "archivist"
+            set {_line} to "The forge is north of nowhere. Here, I'll show you."
+            play cine sequence "say"
+            animate cine display {_map} to translation vector(0, 0.4, 0) and scale 1.6 over 1.5 seconds with easing "ease-out-back"
+        at 13 seconds:
+            set {_at} to {_map}
+            set {_colour} to orange
+            play cine sequence "fx:shard-release"
+            play cine sound "item.book.page_turn" with volume 1
+        at 18 seconds:
+            set {_who} to "archivist"
+            set {_line} to "One more thing. When you hold a shard, you might hear... someone. Ignore them."
+            play cine sequence "say"
+        at 22 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Shards get lonely. They say things. Off you go!"
+            play cine sequence "say"
+        at 26 seconds:
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            set {_colour} to gold
+            play cine sequence "fx:sigil"
+        at 28 seconds:
+            fade the cine screen out with colour orange over 1.5 seconds
+        at 29.5 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterInterlude({_v::*}, 2, cine variable "stage", crownIsReplay(cine variable "replay"))
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Before the Tide
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "crown:interlude-3":
+    duration: 30 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_lib} to {_stage} ~ vector(0, 0, 6)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        play cine sequence "set:library"
+        set {_archivist} to a new cine player actor at {_lib} ~ vector(-1, 0, 2) named "archivist" with name tag "<gold>The Archivist"
+        set {_echo} to a new cine player actor at {_lib} ~ vector(3, 0, 1) named "echo" with skin of event-player with name tag "<aqua>?"
+        hide cine actor {_echo}
+
+        add cine camera keyframe at {_lib} ~ vector(0, 2.5, -4) at 0 seconds looking at {_archivist}
+        make the cine camera watch {_archivist} from {_lib} ~ vector(-1.5, 2, -1) between 2 seconds and 12 seconds blending over 1 second
+        make the cine camera watch {_echo} from {_lib} ~ vector(1, 2, -1.5) between 12 seconds and 17 seconds blending over 10 ticks
+        make the cine camera watch {_archivist} from {_lib} ~ vector(0, 2, -2) between 17 seconds and 30 seconds blending over 10 ticks
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            make cine actor {_archivist} look at {_eye}
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+        at 2 seconds:
+            set {_who} to "archivist"
+            set {_line} to "The Ember! I can feel it from here. Like sitting next to a fire after a long walk."
+            play cine sequence "say"
+        at 6 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Next is the Tide. Nerys. She sang at my— at Aurelion's coronation. Beautifully."
+            play cine sequence "say"
+        at 10 seconds:
+            show cine actor {_echo}
+            make cine actor {_echo} look at {_archivist}
+            play cine sound "entity.illusioner.mirror_move" with volume 0.6 and pitch 0.8
+        at 12 seconds:
+            set {_who} to "echo"
+            set {_line} to "'At my coronation.' He almost said it. Did you hear?"
+            play cine sequence "whisper"
+        at 15 seconds:
+            hide cine actor {_echo}
+            make cine actor {_archivist} look at {_lib} ~ vector(3, 1.6, 1) for 2 seconds
+        at 17 seconds:
+            set {_who} to "archivist"
+            set {_line} to "...Did you see someone over there? No? Odd. The library plays tricks."
+            play cine sequence "say"
+        at 21 seconds:
+            set {_who} to "archivist"
+            set {_line} to "The sanctuary is underwater, more or less. Hold your breath. Metaphorically."
+            play cine sequence "say"
+        at 25 seconds:
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            set {_colour} to cyan
+            play cine sequence "fx:sigil"
+        at 28 seconds:
+            fade the cine screen out with colour cyan over 1.5 seconds
+        at 29.5 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterInterlude({_v::*}, 3, cine variable "stage", crownIsReplay(cine variable "replay"))
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Before the Gale
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "crown:interlude-4":
+    duration: 32 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_lib} to {_stage} ~ vector(0, 0, 6)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        play cine sequence "set:library"
+        set {_archivist} to a new cine player actor at {_lib} ~ vector(0, 0, 1.5) named "archivist" with name tag "<gold>The Archivist"
+        set {_book} to a new cine item display of book at {_lib} ~ vector(0, 1.5, 0.6)
+        set {_f1} to a new cine item display of feather at {_lib} ~ vector(-1, 3, 0)
+        set {_f2} to a new cine item display of feather at {_lib} ~ vector(1, 3.4, 0.5)
+        set {_f3} to a new cine item display of feather at {_lib} ~ vector(0, 3.8, -0.5)
+        add {_f1}, {_f2} and {_f3} to {_feathers::*}
+
+        add cine camera keyframe at {_lib} ~ vector(2, 2.5, -4) at 0 seconds looking at {_archivist}
+        make the cine camera watch {_book} from {_lib} ~ vector(-0.5, 2.2, -1) between 3 seconds and 12 seconds blending over 1 second
+        set {_focus} to {_lib} ~ vector(0, 2.5, 0)
+        set {_r} to 4
+        play cine sequence "cam:orbit-slow" at 12 seconds
+        make the cine camera watch {_archivist} from {_lib} ~ vector(0, 2, -2) between 20 seconds and 32 seconds blending over 1 second
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            make cine actor {_archivist} look at {_book}
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+            spin cine displays {_feathers::*} around vector(0, 0, 1) continuously at 40 degrees per second
+            rotate cine actors {_feathers::*} around {_lib} ~ vector(0, 3, 0) by 360 degrees over 30 seconds with easing "linear"
+        at 2 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Two shards. I've started sleeping again. Do you know how long it's been since I slept?"
+            play cine sequence "say"
+        at 6 seconds:
+            set {_who} to "archivist"
+            set {_line} to "This is the Riders' Register. Two hundred names. One of them should not still be alive."
+            play cine sequence "say"
+            animate cine display {_book} to scale 1.4 and rotation vector(-50, 0, 0) over 1 second with easing "ease-out-back"
+        at 10 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Kestrel. Rider two hundred. If she's alive, the Gale is keeping her. Be careful with her."
+            play cine sequence "say"
+        at 14 seconds:
+            set {_at} to {_lib}
+            play cine sequence "fx:gale-spiral"
+        at 18 seconds:
+            set {_who} to "archivist"
+            set {_line} to "And bring the shard back. Whatever she says. Whatever she offers."
+            play cine sequence "say"
+            make cine actor {_archivist} look at {_eye}
+        at 22 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Sorry. That sounded... urgent. I'm sure you'll do the kind thing. You usually do."
+            play cine sequence "say"
+        at 27 seconds:
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            set {_colour} to light blue
+            play cine sequence "fx:sigil"
+        at 30 seconds:
+            fade the cine screen out with colour white over 1.5 seconds
+        at 31.5 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterInterlude({_v::*}, 4, cine variable "stage", crownIsReplay(cine variable "replay"))
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Before the Stone
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "crown:interlude-5":
+    duration: 30 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_lib} to {_stage} ~ vector(0, 0, 6)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        play cine sequence "set:library"
+        set {_archivist} to a new cine player actor at {_lib} ~ vector(0, 0, 1.5) named "archivist" with name tag "<gold>The Archivist"
+
+        set {_focus} to {_archivist}
+        set {_from} to {_lib} ~ vector(-3, 2, -3)
+        play cine sequence "cam:dolly-in" at 0 seconds
+        make the cine camera watch {_archivist} from {_lib} ~ vector(1, 2, -1.5) between 5 seconds and 18 seconds blending over 1 second
+        set {_focus} to {_lib} ~ vector(0, 1.5, 1)
+        play cine sequence "cam:pull-back" at 18 seconds
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            make cine actor {_archivist} look at {_eye}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            set {_len} to 30 seconds
+            play cine sequence "fx:aura"
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+        at 2 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Three. Three shards. I can touch the shelves now, did you notice? Look."
+            play cine sequence "say"
+            move cine actor {_archivist} to {_lib} ~ vector(-2.5, 0, 2.5) over 2 seconds facing the movement
+        at 5 seconds:
+            play cine sound "item.book.page_turn" with volume 1
+            set {_who} to "archivist"
+            set {_line} to "The Colossus has the Stone Shard in its chest. Don't let it talk you into anything."
+            play cine sequence "say"
+            make cine actor {_archivist} look at {_eye}
+        at 9 seconds:
+            set {_who} to "archivist"
+            set {_line} to "It's a mountain. Mountains don't need hearts. You'll be doing it a favour."
+            play cine sequence "say"
+        at 13 seconds:
+            set {_at} to {_lib}
+            play cine sequence "fx:quake"
+            set {_who} to "archivist"
+            set {_line} to "...that wasn't me. That was it. It knows you're coming. Hurry."
+            play cine sequence "say"
+        at 18 seconds:
+            set {_who} to "echo"
+            set {_line} to "'Hurry.' He used to say 'take your time'. Notice when that changed."
+            play cine sequence "whisper"
+        at 22 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Go on. And— thank you. Really. I mean that. Whatever else I mean."
+            play cine sequence "say"
+        at 26 seconds:
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            set {_colour} to light grey
+            play cine sequence "fx:sigil"
+        at 28 seconds:
+            fade the cine screen out over 1.5 seconds
+        at 29.5 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterInterlude({_v::*}, 5, cine variable "stage", crownIsReplay(cine variable "replay"))
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Before the Void — a small choice
+# ─────────────────────────────────────────────────────────────────────────────
+#  "Ask his name" is remembered (choice "asked" = yes) and changes one line
+#  in the void intro... and the Echo notices.
+
+cine scene "crown:interlude-6":
+    duration: 44 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_lib} to {_stage} ~ vector(0, 0, 6)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        add cine marker "ask" at 18 seconds
+        add cine marker "go" at 30 seconds
+        add cine marker "after" at 36 seconds
+        play cine sequence "set:library"
+        set {_archivist} to a new cine player actor at {_lib} ~ vector(0, 0, 1.5) named "archivist" with name tag "<gold>The Archivist"
+
+        add cine camera keyframe at {_lib} ~ vector(-2, 2.4, -3.5) at 0 seconds looking at {_archivist}
+        make the cine camera watch {_archivist} from {_lib} ~ vector(0.5, 1.9, -1.5) between 3 seconds and 16 seconds blending over 1 second
+        make the cine camera hold at {_stage} ~ vector(0, 2.3, -2) between 16 seconds and 18 seconds blending over 15 ticks
+        make the cine camera watch {_archivist} from {_lib} ~ vector(0, 1.8, -1) between 18 seconds and 30 seconds blending over 1 second
+        set {_focus} to {_lib} ~ vector(0, 1.5, 1)
+        play cine sequence "cam:pull-back" at 36 seconds
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            make cine actor {_archivist} look at {_eye}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            set {_len} to 44 seconds
+            play cine sequence "fx:aura"
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+        at 2 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Four shards. I'm nearly... nearly myself. Whoever that turns out to be."
+            play cine sequence "say"
+        at 6 seconds:
+            set {_who} to "archivist"
+            set {_line} to "The last one is with Malrec. He'll lie to you. He's very good at it. He lied to his sister."
+            play cine sequence "say"
+        at 10 seconds:
+            set {_who} to "archivist"
+            set {_line} to "He might try to make you doubt me. Ask yourself who kept you alive all this way."
+            play cine sequence "say"
+        at 14 seconds:
+            set {_who} to "echo"
+            set {_line} to "Go on. Ask him his name. I dare you."
+            play cine sequence "whisper"
+        at 16 seconds:
+            present cine choice "<gold>The Archivist waits for you to leave." to cine viewers with options "Ask his name" and "Let's go" with timeout 20 seconds defaulting to "Let's go" as a vote using a menu pausing the scene:
+                if cine choice is "Ask his name":
+                    if crownIsReplay(cine variable "replay") is false:
+                        loop cine viewers:
+                            crownChoose(loop-value, "asked", "yes")
+                    jump the cine scene to marker "ask"
+                else:
+                    jump the cine scene to marker "go"
+        at marker "ask":
+            set {_who} to "archivist"
+            set {_line} to "My name? It's... it's..."
+            play cine sequence "say"
+            play cine sound "entity.warden.heartbeat" with volume 0.6 and pitch 0.8
+        at 21 seconds:
+            set {_at} to {_archivist}
+            set {_colour} to purple
+            play cine sequence "fx:dark-pulse"
+            flash the cine screen with colour dark grey over 6 ticks
+            set {_who} to "crown"
+            set {_line} to "AUREL. AURELION. AURE—"
+            play cine sequence "shout"
+        at 24 seconds:
+            set {_who} to "archivist"
+            set {_line} to "...That's not important right now. Please. Go."
+            play cine sequence "say"
+        at 28 seconds:
+            jump the cine scene to marker "after"
+        at marker "go":
+            set {_who} to "archivist"
+            set {_line} to "Good. Good. Come back whole. Come back with all of it."
+            play cine sequence "say"
+        at 34 seconds:
+            jump the cine scene to marker "after"
+        at marker "after":
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            set {_colour} to purple
+            play cine sequence "fx:sigil"
+        at 42 seconds:
+            fade the cine screen out over 1.5 seconds
+        at 43.5 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterInterlude({_v::*}, 6, cine variable "stage", crownIsReplay(cine variable "replay"))
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Before the Finale
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "crown:interlude-7":
+    duration: 34 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_lib} to {_stage} ~ vector(0, 0, 6)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        set {_archivist} to a new cine player actor at {_lib} ~ vector(0, 0, 1.5) named "archivist" with name tag "<gold>The Archivist"
+        set {_lectern} to a new cine block display of lectern at {_lib} ~ vector(-0.5, 0, 0.3)
+        set {_dust1} to a new cine block display of cobweb at {_lib} ~ vector(-4, 0, 3)
+        set {_dust2} to a new cine block display of cobweb at {_lib} ~ vector(3, 0, 3)
+
+        set {_focus} to {_lib} ~ vector(0, 1.5, 1)
+        play cine sequence "cam:establish" at 0 seconds
+        make the cine camera watch {_archivist} from {_lib} ~ vector(0, 1.9, -2) between 8 seconds and 26 seconds blending over 1 second
+        play cine sequence "cam:sky-up" at 26 seconds
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            make cine actor {_archivist} look at {_eye}
+        at 5 ticks:
+            fade the cine screen in over 2.5 seconds
+            set {_at} to {_lib}
+            set {_len} to 32 seconds
+            play cine sequence "fx:stone-dust"
+        at 3 seconds:
+            set {_who} to "narrator"
+            set {_line} to "The shelves of the Last Library were empty. Every book had been read, and remembered."
+            play cine sequence "say"
+        at 8 seconds:
+            set {_who} to "archivist"
+            set {_line} to "I put them all away. In here. I don't need paper any more."
+            play cine sequence "say"
+            set {_at} to {_archivist}
+            play cine sequence "fx:crown-glow"
+        at 12 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Five shards. It's time. Meet me where it began. The hall. You know the way."
+            play cine sequence "say"
+        at 16 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Whatever you think of me now... thank you for coming this far."
+            play cine sequence "say"
+        at 20 seconds:
+            set {_at} to {_archivist}
+            play cine sequence "fx:vanish"
+            hide cine actor {_archivist}
+        at 22 seconds:
+            set {_who} to "echo"
+            set {_line} to "Last chance to turn back. You won't. I know. I'm coming too."
+            play cine sequence "whisper"
+        at 27 seconds:
+            set {_at} to {_lib} ~ vector(0, 30, 40)
+            set {_colour} to yellow
+            play cine sequence "fx:shard-call"
+        at 32 seconds:
+            fade the cine screen out with colour white over 1.5 seconds
+        at 33.5 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterInterlude({_v::*}, 7, cine variable "stage", crownIsReplay(cine variable "replay"))

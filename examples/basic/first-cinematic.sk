@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: your first cinematic
+#  Copy to plugins/Skript/scripts/ and run: /sk reload first-cinematic
+#  Then type /welcome in game.
+#
+#  Shows: a named scene, three smooth camera keyframes, a title, a sound,
+#  dialogue, completion/cancel callbacks, and automatic camera restoration.
+#  Nothing is hard-coded: the camera path is built around the viewer.
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:welcome":
+    skippable: true
+    timeline:
+        # Runs every time the scene starts. event-player is the viewer.
+        set {_center} to location of event-player
+
+        # Three keyframes; the camera always looks at the viewer's position.
+        add cine camera keyframe at {_center} ~ vector(0, 12, -14) at 0 seconds looking at {_center}
+        add cine camera keyframe at {_center} ~ vector(12, 7, 0) at 4 seconds with easing "ease-in-out-sine" looking at {_center}
+        add cine camera keyframe at {_center} ~ vector(0, 3, 6) at 8 seconds with easing "ease-in-out-sine" looking at {_center}
+
+        at 1 second:
+            show cine title "<gold><bold>Welcome!" with subtitle "<gray>Sneak to skip" for 3 seconds
+            play cine sound "entity.player.levelup"
+
+        at 5 seconds:
+            show cine dialogue "Enjoy your stay, adventurer." from "<aqua>Guide" with typewriter for 2 seconds
+
+    on finish:
+        send "&aWelcome aboard!" to event-player
+
+    on skip:
+        send "&7Intro skipped." to event-player
+
+command /welcome:
+    trigger:
+        play cine scene "examples:welcome" for player

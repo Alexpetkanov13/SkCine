@@ -1,0 +1,379 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   11-chapter-ember.sk  —  Chapter I · The Ember
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   The Last Forge has burned for nine hundred years. Its keeper, Hadrek the
+#   smith who forged Aurelion's crown, has become the Ember Warden: more fire
+#   than man. He will not give up the shard without a fight.
+#
+#   crown:ember-intro   the forge, the Archivist's projection, the Warden rises
+#                       → Trial of Cinders → the Ember Warden (20-bosses.sk)
+#   crown:ember-outro   Hadrek, burnt out, asks for mercy.
+#                       CHOICE  Spare the Warden  (+15, ember = spare)
+#                               Take his flame    (-15, ember = absorb)
+#                       The Echo appears for the first time.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Intro
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "crown:ember-intro":
+    duration: 50 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_f} to {_stage} ~ vector(0, 0, 9)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        # ── The forge ───────────────────────────────────────────────────────
+        set {_anvil} to a new cine block display of anvil at {_f} ~ vector(-0.5, 0, -0.5)
+        set {_hearth1} to a new cine block display of magma block at {_f} ~ vector(-1.5, -1, 1)
+        set {_hearth2} to a new cine block display of magma block at {_f} ~ vector(-0.5, -1, 1)
+        set {_hearth3} to a new cine block display of magma block at {_f} ~ vector(0.5, -1, 1)
+        set {_chimney1} to a new cine block display of polished blackstone bricks at {_f} ~ vector(-1.5, 0, 2)
+        set {_chimney2} to a new cine block display of polished blackstone bricks at {_f} ~ vector(0.5, 0, 2)
+        set {_chimney3} to a new cine block display of polished blackstone bricks at {_f} ~ vector(-1.5, 1, 2)
+        set {_chimney4} to a new cine block display of polished blackstone bricks at {_f} ~ vector(0.5, 1, 2)
+        set {_chimney5} to a new cine block display of cracked polished blackstone bricks at {_f} ~ vector(-0.5, 2, 2)
+        set {_chimney6} to a new cine block display of polished blackstone bricks at {_f} ~ vector(-0.5, 3, 2)
+        set {_coals} to a new cine block display of campfire at {_f} ~ vector(-0.5, 0, 1.2)
+        set {_chain1} to a new cine item display of lantern at {_f} ~ vector(-2.5, 3, 0)
+        set {_chain2} to a new cine item display of lantern at {_f} ~ vector(1.5, 3, 0)
+        set {_hammer} to a new cine item display of mace at {_f} ~ vector(0, 1.3, 0)
+        set {_ring1} to a new cine block display of blackstone at {_f} ~ vector(-4.5, 0, -0.5)
+        set {_ring2} to a new cine block display of blackstone at {_f} ~ vector(3.5, 0, -0.5)
+        set {_ring3} to a new cine block display of gilded blackstone at {_f} ~ vector(-3.5, 0, -3.5)
+        set {_ring4} to a new cine block display of gilded blackstone at {_f} ~ vector(2.5, 0, -3.5)
+        set {_ring5} to a new cine block display of blackstone at {_f} ~ vector(-3.5, 0, 2.5)
+        set {_ring6} to a new cine block display of blackstone at {_f} ~ vector(2.5, 0, 2.5)
+        set {_brazier1} to a new cine block display of soul campfire at {_f} ~ vector(-4.5, 1, -0.5)
+        set {_brazier2} to a new cine block display of soul campfire at {_f} ~ vector(3.5, 1, -0.5)
+        set {_sign} to a new cine text display with text "<gold>THE LAST FORGE</gold><newline><gray>est. Year 0 of Aurelion" at {_f} ~ vector(0, 4.8, 2)
+
+        set {_warden} to a new cine actor of blaze at {_f} ~ vector(0, -2.5, 1) named "warden"
+        set {_archivist} to a new cine player actor at {_stage} ~ vector(-2.5, 0, 2) named "archivist" with name tag "<gold>The Archivist <gray>(projection)"
+        hide cine actors {_warden} and {_archivist}
+
+        # ── Camera ──────────────────────────────────────────────────────────
+        set {_focus} to {_f} ~ vector(0, 1.5, 0)
+        play cine sequence "cam:crane-down" at 0 seconds
+        make the cine camera watch {_archivist} from {_stage} ~ vector(0.5, 2, -1) between 9 seconds and 14 seconds blending over 1 second
+        set {_focus} to {_f} ~ vector(0, 1.8, 1)
+        play cine sequence "cam:hero-low" at 14 seconds
+        make the cine camera watch {_warden} from {_f} ~ vector(-2, 2.2, -4) between 18 seconds and 30 seconds blending over 1 second
+        set {_r} to 7
+        set {_focus} to {_f}
+        play cine sequence "cam:orbit-fast" at 31 seconds
+        play cine sequence "cam:pull-back" at 36 seconds
+        add cine camera keyframe at {_f} ~ vector(0, 16, -24) at 45 seconds with easing "ease-in-out-sine" looking at {_f}
+
+        # ── The forge breathes ──────────────────────────────────────────────
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            play cine sound "music_disc.pigstep" with volume 0.25
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+            set {_at} to {_f}
+            set {_len} to 48 seconds
+            play cine sequence "fx:embers"
+            set {_at} to {_stage}
+            play cine sequence "fx:ashfall"
+            spin cine display {_hammer} around vector(0, 0, 1) continuously at 20 degrees per second
+        at 1 second:
+            set {_title} to "%crownChapterTag(2)%<bold>CHAPTER I"
+            set {_subtitle} to "<gold>The Ember"
+            set {_tone} to 0.7
+            play cine sequence "fx:title-card"
+            play cine sound "block.fire.ambient" at {_f} with volume 1.5
+        at 5 seconds:
+            set {_who} to "narrator"
+            set {_line} to "The Last Forge. It has not gone cold in nine hundred years."
+            play cine sequence "say"
+        at 9 seconds:
+            show cine actor {_archivist}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            play cine sequence "fx:appear"
+            make cine actor {_archivist} look at {_f}
+        at 10 seconds:
+            set {_who} to "archivist"
+            set {_line} to "I can't leave the library, so a projection will have to do. Mind the floor, it's hot."
+            play cine sequence "say"
+        at 14 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Hadrek forged the crown. When it broke, he swore to guard the Ember. He kept that oath... a little too well."
+            play cine sequence "say"
+            play cine sound "block.lava.pop" at {_f} with volume 1
+        at 16 seconds:
+            show cine actor {_warden}
+            add cine actor keyframe for {_warden} at {_f} ~ vector(0, -2.5, 1) at 16 seconds
+            add cine actor keyframe for {_warden} at {_f} ~ vector(0, 2, 1) at 19 seconds with easing "ease-out-back"
+            set {_at} to {_f} ~ vector(0, 0.5, 1)
+            play cine sequence "fx:fire-ring"
+            shake the cine camera with intensity 0.8 for 2 seconds
+        at 19 seconds:
+            make cine actor {_warden} look at {_eye} for 10 seconds
+            set {_who} to "warden"
+            set {_line} to "Another thief wearing a hero's face."
+            play cine sequence "say"
+        at 22 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Not a thief, Hadrek. A bearer. The shard was never yours to keep."
+            play cine sequence "say"
+        at 25 seconds:
+            set {_who} to "warden"
+            set {_line} to "I am HADREK. I beat that crown out of starlight with these hands. I will not see it worn again."
+            play cine sequence "say"
+            set {_at} to {_warden}
+            set {_colour} to orange
+            set {_len} to 25 seconds
+            play cine sequence "fx:aura"
+        at 29 seconds:
+            set {_who} to "warden"
+            set {_line} to "You want the Ember? Then prove you can survive it."
+            play cine sequence "say"
+        at 31 seconds:
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            play cine sequence "fx:fire-ring"
+            play cine sound "entity.blaze.ambient" at {_warden} with volume 1.5 and pitch 0.6
+        at 33 seconds:
+            set {_at} to {_f} ~ vector(6, 0, -3)
+            set {_colour} to orange
+            set {_accent} to red
+            play cine sequence "fx:sigil"
+            set {_at} to {_f} ~ vector(-6, 0, -3)
+            play cine sequence "fx:sigil"
+        at 36 seconds:
+            set {_who} to "archivist"
+            set {_line} to "His thralls are coming. Stand your ground! I'll be... watching. Supportively."
+            play cine sequence "say"
+            set {_at} to {_archivist}
+            play cine sequence "fx:vanish"
+            hide cine actor {_archivist}
+        at 40 seconds:
+            set {_title} to "<gradient:gold:red><bold>TRIAL OF CINDERS</bold></gradient>"
+            set {_subtitle} to "<gray>Survive three waves, then face the Warden"
+            set {_tone} to 0.5
+            play cine sequence "fx:title-card"
+            play cine sound "event.raid.horn" with volume 0.6 and pitch 0.8
+        at 44 seconds:
+            add cine actor keyframe for {_warden} at {_f} ~ vector(0, 2, 1) at 44 seconds
+            add cine actor keyframe for {_warden} at {_f} ~ vector(0, 8, 4) at 47 seconds with easing "ease-in-cubic"
+        at 47 seconds:
+            fade the cine screen out over 2 seconds
+        at 49 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterIntro({_v::*}, 2, cine variable "stage", crownIsReplay(cine variable "replay"))
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    crownUnlockCodex(loop-value, "forge")
+                    crownUnlockCodex(loop-value, "hadrek")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Outro
+# ─────────────────────────────────────────────────────────────────────────────
+#  Timeline
+#     0 – 21   Hadrek, burnt out, at the anvil
+#    21        CHOICE  (pausing)
+#    23 – 33   marker "spare"
+#    35 – 45   marker "absorb"
+#    47 – 64   marker "after": the Echo, the shard, the end of the chapter
+
+cine scene "crown:ember-outro":
+    duration: 64 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set {_f} to {_stage} ~ vector(0, 0, 7)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        add cine marker "spare" at 23 seconds
+        add cine marker "absorb" at 35 seconds
+        add cine marker "after" at 47 seconds
+
+        set {_anvil} to a new cine block display of anvil at {_f} ~ vector(-0.5, 0, 0.5)
+        set {_coals1} to a new cine block display of campfire at {_f} ~ vector(-2.5, 0, 1.5)
+        set {_coals2} to a new cine block display of campfire at {_f} ~ vector(1.5, 0, 1.5)
+        set {_ash1} to a new cine block display of black concrete powder at {_f} ~ vector(-1.5, -0.8, -1)
+        set {_ash2} to a new cine block display of gray concrete powder at {_f} ~ vector(0.5, -0.8, -1.5)
+        set {_hadrek} to a new cine player actor at {_f} ~ vector(1.2, 0, 0) named "hadrek" with name tag "<gold>Hadrek <gray>· the Ember Warden"
+        set {_shard} to a new cine item display of blaze powder at {_f} ~ vector(0, 1.6, 1) named "ember-shard"
+        set {_shardLabel} to a new cine text display with text "<gold>✦ Ember Shard ✦" at {_f} ~ vector(0, 2.3, 1)
+        attach cine actor {_shardLabel} to {_shard} with offset vector(0, 0.7, 0)
+        set {_echo} to a new cine player actor at {_f} ~ vector(-4, 0, 3) named "echo" with skin of event-player with name tag "<aqua>???"
+        hide cine actor {_echo}
+        set {_archivist} to a new cine player actor at {_stage} ~ vector(-2.5, 0, 1) named "archivist" with name tag "<gold>The Archivist <gray>(projection)"
+        hide cine actor {_archivist}
+
+        # Camera
+        set {_focus} to {_hadrek}
+        set {_from} to {_f} ~ vector(-3, 1.8, -4)
+        add cine camera keyframe at {_f} ~ vector(-6, 4, -8) at 0 seconds looking at {_f}
+        add cine camera keyframe at {_f} ~ vector(-3, 1.8, -4) at 4 seconds with easing "ease-in-out-sine" looking at {_hadrek}
+        make the cine camera watch {_hadrek} from {_f} ~ vector(-1, 1.8, -2.5) between 5 seconds and 13 seconds blending over 1 second
+        make the cine camera watch {_archivist} from {_stage} ~ vector(-0.5, 2, -1) between 15 seconds and 20 seconds blending over 1 second
+        make the cine camera hold at {_stage} ~ vector(0, 2.2, -2) between 21 seconds and 23 seconds blending over 15 ticks
+        # spare
+        make the cine camera orbit around {_hadrek} between 23 seconds and 33 seconds with radius 4 and height 1.5 sweeping 120 degrees blending over 1 second
+        # absorb
+        make the cine camera watch {_hadrek} from {_f} ~ vector(2.5, 1.2, -3) between 35 seconds and 45 seconds blending over 1 second
+        # after
+        make the cine camera watch {_echo} from {_f} ~ vector(-1, 2, -2) between 48 seconds and 56 seconds blending over 1 second
+        set {_focus} to {_f} ~ vector(0, 1.5, 1)
+        play cine sequence "cam:pull-back" at 57 seconds
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+            spin cine display {_shard} around vector(0, 1, 0) continuously at 60 degrees per second
+            set {_at} to {_shard}
+            set {_colour} to orange
+            set {_len} to 22 seconds
+            play cine sequence "fx:aura"
+            set {_at} to {_f}
+            set {_len} to 60 seconds
+            play cine sequence "fx:embers"
+            make cine actor {_hadrek} look at {_eye}
+            rotate cine actor {_hadrek} to yaw 200 and pitch 35 over 1 tick
+        at 2 seconds:
+            play cine sound "block.fire.extinguish" at {_f} with volume 1 and pitch 0.6
+        at 5 seconds:
+            set {_who} to "hadrek"
+            set {_line} to "You... endure. As she did, at the very end."
+            play cine sequence "say"
+        at 9 seconds:
+            set {_who} to "hadrek"
+            set {_line} to "The crown takes what it needs. It took my hands. My name. Every fire I ever lit."
+            play cine sequence "say"
+            rotate cine actor {_hadrek} to yaw 180 and pitch 10 over 2 seconds with easing "ease-in-out-sine"
+        at 13 seconds:
+            set {_who} to "hadrek"
+            set {_line} to "Take the Ember if you must. But let an old smith keep his last spark."
+            play cine sequence "say"
+        at 15 seconds:
+            show cine actor {_archivist}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            play cine sequence "fx:appear"
+            make cine actor {_archivist} look at {_hadrek}
+        at 16 seconds:
+            set {_who} to "archivist"
+            set {_line} to "He's fading anyway. Take his flame too: the shard will be whole, and stronger for it."
+            play cine sequence "say"
+        at 21 seconds:
+            present cine choice "<gold>What do you do with Hadrek?" to cine viewers with options "Spare the Warden" and "Take his flame" with timeout 30 seconds defaulting to "Spare the Warden" as a vote using a menu pausing the scene:
+                if cine choice is "Spare the Warden":
+                    set cine variable "ember" to "spare"
+                    if crownIsReplay(cine variable "replay") is false:
+                        crownChooseAll(cine viewers, "ember", "spare", 15, "Spared Hadrek")
+                    jump the cine scene to marker "spare"
+                else:
+                    set cine variable "ember" to "absorb"
+                    if crownIsReplay(cine variable "replay") is false:
+                        crownChooseAll(cine viewers, "ember", "absorb", -15, "Took Hadrek's flame")
+                    jump the cine scene to marker "absorb"
+
+        # ── Spare ───────────────────────────────────────────────────────────
+        at marker "spare":
+            set {_at} to {_hadrek}
+            play cine sequence "fx:blessing"
+            rotate cine actor {_hadrek} to yaw 180 and pitch 0 over 2 seconds with easing "ease-out-sine"
+            set {_who} to "hadrek"
+            set {_line} to "Mercy. I had forgotten the word. Thank you."
+            play cine sequence "say"
+        at 27 seconds:
+            add cine actor keyframe for {_shard} at {_f} ~ vector(0, 1.6, 1) at 27 seconds
+            add cine actor keyframe for {_shard} at {_eye} ~ vector(0, 0, 1) at 30 seconds with easing "ease-in-out-sine"
+            set {_who} to "hadrek"
+            set {_line} to "Go. I will keep the forge lit until you need it. And you will need it."
+            play cine sequence "say"
+        at 30 seconds:
+            set {_at} to {_eye} ~ vector(0, -1, 0)
+            set {_colour} to orange
+            play cine sequence "fx:shard-absorb"
+            hide cine actors {_shard} and {_shardLabel}
+        at 31 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Sentimental. Well. It's your story."
+            play cine sequence "say"
+        at 33 seconds:
+            jump the cine scene to marker "after"
+
+        # ── Absorb ──────────────────────────────────────────────────────────
+        at marker "absorb":
+            set {_at} to {_hadrek}
+            play cine sequence "fx:dark-pulse"
+            set {_who} to "hadrek"
+            set {_line} to "No... no, not the last of it, please..."
+            play cine sequence "say"
+            draw a cine line of "flame" from {_hadrek} to {_eye} with spacing 0.3
+        at 37 seconds:
+            start a cine emitter drawing a spiral of "flame" at {_hadrek} with radius 1 and height 2 and 30 points spinning at 12 degrees per tick expanding by -0.02 per tick lasting 3 seconds
+            play cine sound "block.fire.extinguish" at {_hadrek} with volume 1 and pitch 0.5
+            animate cine display {_shard} to scale 1.8 over 3 seconds with easing "ease-out-elastic"
+        at 40 seconds:
+            set {_at} to {_hadrek}
+            play cine sequence "fx:vanish"
+            hide cine actor {_hadrek}
+            set {_who} to "archivist"
+            set {_line} to "Good. Nothing wasted. The crown will remember this."
+            play cine sequence "say"
+        at 42 seconds:
+            add cine actor keyframe for {_shard} at {_f} ~ vector(0, 1.6, 1) at 42 seconds
+            add cine actor keyframe for {_shard} at {_eye} ~ vector(0, 0, 1) at 44 seconds with easing "ease-in-cubic"
+        at 44 seconds:
+            set {_at} to {_eye} ~ vector(0, -1, 0)
+            set {_colour} to red
+            play cine sequence "fx:shard-absorb"
+            hide cine actors {_shard} and {_shardLabel}
+        at 45 seconds:
+            jump the cine scene to marker "after"
+
+        # ── After: the Echo ────────────────────────────────────────────────
+        at marker "after":
+            set {_at} to {_archivist}
+            play cine sequence "fx:vanish"
+            hide cine actor {_archivist}
+            set {_title} to "<gold><bold>EMBER SHARD RECOVERED"
+            set {_subtitle} to "<gray>1 of 5"
+            set {_tone} to 1.2
+            play cine sequence "fx:title-card"
+        at 49 seconds:
+            show cine actor {_echo}
+            set {_at} to {_echo}
+            set {_colour} to light blue
+            play cine sequence "fx:appear"
+            make cine actor {_echo} look at {_eye}
+            play cine sound "entity.illusioner.mirror_move" with volume 1 and pitch 0.6
+        at 51 seconds:
+            set {_who} to "echo"
+            if cine variable "ember" is "absorb":
+                set {_line} to "You took everything he had left. Did it feel like strength?"
+            else:
+                set {_line} to "You let him keep his spark. I wondered if you would."
+            play cine sequence "say"
+        at 55 seconds:
+            set {_who} to "echo"
+            set {_line} to "Don't look so surprised. I'm what the crown sees when it looks at you."
+            play cine sequence "say"
+        at 58 seconds:
+            set {_at} to {_echo}
+            play cine sequence "fx:vanish"
+            hide cine actor {_echo}
+        at 61 seconds:
+            fade the cine screen out over 2 seconds
+        at 63 seconds even if skipped:
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    if crownChoice(loop-value, "ember") is "none":
+                        crownChoose(loop-value, "ember", "spare")
+                        crownShiftKarma(loop-value, 15, "Spared Hadrek")
+                    crownUnlockCodex(loop-value, "echo")
+                    crownUnlockCodex(loop-value, "ember")
+                crownFinishChapterFor(cine viewers, 2)

@@ -1,0 +1,751 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   18-tales.sk  —  Tales: six memories you can unlock and watch
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Tales are short side cinematics, memories the crown kept. Each unlocks
+#   when its chapter is finished; the last one is a secret. Watch them with
+#   /crown tales (a menu) — solo or, if you lead a party, together.
+#
+#     tale:first-crown          Hadrek forges the crown        (after Ember)
+#     tale:last-verse           the night the temple sank      (after Tide)
+#     tale:two-hundred-riders   the riders' last flight        (after Gale)
+#     tale:first-thought        the Colossus's first thought   (after Stone)
+#     tale:brother-and-sister   Malrec and Aurelion, as kids   (after Void)
+#     tale:aurel                the first king (secret: all four endings
+#                               or every codex page)
+#
+#   Tales never change your story. They are all "replays" by design.
+# ═════════════════════════════════════════════════════════════════════════════
+
+function crownTaleIds() :: texts:
+    return "first-crown", "last-verse", "two-hundred-riders", "first-thought", "brother-and-sister" and "aurel"
+
+function crownTaleTitle(id: text) :: text:
+    if {_id} is "first-crown":
+        return "The First Crown"
+    if {_id} is "last-verse":
+        return "The Last Verse"
+    if {_id} is "two-hundred-riders":
+        return "Two Hundred Riders"
+    if {_id} is "first-thought":
+        return "The First Thought"
+    if {_id} is "brother-and-sister":
+        return "Brother and Sister"
+    if {_id} is "aurel":
+        return "Aurel"
+    return "A Tale"
+
+function crownTaleUnlocked(p: player, id: text) :: boolean:
+    if {_id} is "first-crown":
+        return crownFlag({_p}, "done::2")
+    if {_id} is "last-verse":
+        return crownFlag({_p}, "done::3")
+    if {_id} is "two-hundred-riders":
+        return crownFlag({_p}, "done::4")
+    if {_id} is "first-thought":
+        return crownFlag({_p}, "done::5")
+    if {_id} is "brother-and-sister":
+        return crownFlag({_p}, "done::6")
+    if {_id} is "aurel":
+        if crownEndingCount({_p}) >= 4:
+            return true
+        if crownCodexCount({_p}) >= crownCodexTotal():
+            return true
+    return false
+
+function crownTaleCount(p: player) :: number:
+    set {_n} to 0
+    loop crownTaleIds():
+        if crownTaleUnlocked({_p}, loop-value) is true:
+            add 1 to {_n}
+    return {_n}
+
+function crownTalesMenu(p: player):
+    wait 2 ticks
+    loop crownTaleIds():
+        if crownTaleUnlocked({_p}, loop-value) is true:
+            add crownTaleTitle(loop-value) to {_opts::*}
+    if size of {_opts::*} is 0:
+        crownMsg({_p}, "&7No tales yet. The crown shares its memories as you finish chapters.")
+        stop
+    add "Close" to {_opts::*}
+    present cine choice "<gold>Tales <gray>(%crownTaleCount({_p})%/6)" to {_p} with options {_opts::*} with timeout 60 seconds using a menu:
+        if cine choice is not "Close":
+            loop crownTaleIds():
+                if crownTaleTitle(loop-value) is cine choice:
+                    crownPlayTale(event-player, loop-value)
+
+function crownPlayTale(p: player, id: text):
+    wait 2 ticks
+    if crownTaleUnlocked({_p}, {_id}) is false:
+        crownMsg({_p}, "&8That memory is still locked.")
+        stop
+    if {_p} is watching a cine scene:
+        crownMsg({_p}, "&cYou're already watching something.")
+        stop
+    if crownInTrial({_p}) is true:
+        crownMsg({_p}, "&cNot during a trial.")
+        stop
+    set {_viewers::*} to {_p}
+    if crownInParty({_p}) is true:
+        if crownIsLeader({_p}) is true:
+            set {_viewers::*} to crownAvailable(crownPartyMembers({_p}))
+    set {_stage} to location of {_p}
+    set pitch of {_stage} to 0
+    set yaw of {_stage} to 0
+    set {_replay} to true
+    loop {_viewers::*}:
+        crownBumpStat(loop-value, "tales")
+        crownSetFlag(loop-value, "tale::%{_id}%")
+    play cine scene "tale:%{_id}%" for {_viewers::*} together
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The First Crown
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "tale:first-crown":
+    duration: 48 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set {_f} to {_stage} ~ vector(0, 0, 7)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        set {_anvil} to a new cine block display of anvil at {_f} ~ vector(-0.5, 0, -0.5)
+        set {_forge1} to a new cine block display of blast furnace at {_f} ~ vector(-2.5, 0, 1.5)
+        set {_forge2} to a new cine block display of blast furnace at {_f} ~ vector(1.5, 0, 1.5)
+        set {_coal} to a new cine block display of coal block at {_f} ~ vector(-0.5, 0, 2)
+        set {_fire} to a new cine block display of campfire at {_f} ~ vector(-0.5, 1, 2)
+        set {_young} to a new cine player actor at {_f} ~ vector(1.3, 0, 0) named "young-hadrek" with name tag "<gold>Hadrek <gray>(age 31)"
+        set {_ingot1} to a new cine item display of gold ingot at {_f} ~ vector(0, 12, 0)
+        set {_ingot2} to a new cine item display of gold ingot at {_f} ~ vector(0.3, 14, 0.2)
+        set {_ingot3} to a new cine item display of gold ingot at {_f} ~ vector(-0.3, 16, -0.2)
+        set {_star} to a new cine item display of nether star at {_f} ~ vector(0, 20, 0)
+        set {_crown} to a new cine item display of golden helmet at {_f} ~ vector(0, 1.1, 0)
+        hide cine actor {_crown}
+        set {_queen} to a new cine player actor at {_f} ~ vector(-3, 0, -3) named "young-aurelion" with name tag "<yellow>Princess Aurelion"
+        hide cine actor {_queen}
+
+        # Starlight falls into the forge.
+        add cine actor keyframe for {_ingot1} at {_f} ~ vector(0, 12, 0) at 6 seconds
+        add cine actor keyframe for {_ingot1} at {_f} ~ vector(0, 1.1, 0) at 9 seconds with easing "ease-in-quad"
+        add cine actor keyframe for {_ingot2} at {_f} ~ vector(0.3, 14, 0.2) at 7 seconds
+        add cine actor keyframe for {_ingot2} at {_f} ~ vector(0, 1.1, 0) at 10 seconds with easing "ease-in-quad"
+        add cine actor keyframe for {_ingot3} at {_f} ~ vector(-0.3, 16, -0.2) at 8 seconds
+        add cine actor keyframe for {_ingot3} at {_f} ~ vector(0, 1.1, 0) at 11 seconds with easing "ease-in-quad"
+        add cine actor keyframe for {_star} at {_f} ~ vector(0, 20, 0) at 10 seconds
+        add cine actor keyframe for {_star} at {_f} ~ vector(0, 1.1, 0) at 14 seconds with easing "ease-in-cubic"
+
+        set {_focus} to {_f} ~ vector(0, 6, 0)
+        play cine sequence "cam:sky-down" at 1 second
+        make the cine camera watch {_anvil} from {_f} ~ vector(-2, 2, -3) between 15 seconds and 30 seconds blending over 1 second
+        make the cine camera watch {_young} from {_f} ~ vector(-0.5, 1.8, -2) between 30 seconds and 38 seconds blending over 1 second
+        set {_focus} to {_crown}
+        set {_r} to 4
+        play cine sequence "cam:orbit-slow" at 38 seconds
+
+        at 0 seconds:
+            fade the cine screen out with colour orange over 1 tick
+            make cine actor {_young} look at {_anvil}
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+            set {_at} to {_f}
+            set {_len} to 46 seconds
+            play cine sequence "fx:embers"
+        at 1 second:
+            set {_title} to "<gold><italic>A Tale"
+            set {_subtitle} to "<gray>The First Crown"
+            set {_tone} to 0.9
+            play cine sequence "fx:title-card"
+        at 4 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Nine hundred and forty years ago, a young smith asked the sky for gold."
+            play cine sequence "say"
+        at 6 seconds:
+            set {_at} to {_f}
+            play cine sequence "fx:starfall"
+        at 9 seconds:
+            set {_who} to "hadrek"
+            set {_line} to "Starlight. Actual starlight! Nobody's going to believe this."
+            play cine sequence "say"
+            play cine sound "block.anvil.land" at {_f} with volume 0.5 and pitch 1.6
+        at 14 seconds:
+            set {_at} to {_f} ~ vector(0, 1.1, 0)
+            set {_colour} to yellow
+            play cine sequence "fx:shard-release"
+            hide cine actors {_ingot1}, {_ingot2}, {_ingot3} and {_star}
+        at 15 seconds:
+            set {_who} to "narrator"
+            set {_line} to "He worked for forty days. The bells of Aurelion rang the hours for him."
+            play cine sequence "say"
+        repeat every 15 ticks from 16 seconds until 29 seconds:
+            play cine sound "block.anvil.use" at {_f} with volume 0.5 and pitch 1.2
+            draw a cine sphere of "lava" at {_f} ~ vector(0, 1.2, 0) with radius 0.3 and 4 points
+            draw a cine sphere of "electric_spark" at {_f} ~ vector(0, 1.2, 0) with radius 0.5 and 10 points
+        at 18 seconds:
+            play cine sound "block.bell.use" with volume 0.4 and pitch 0.8
+        at 21 seconds:
+            set {_who} to "hadrek"
+            set {_line} to "Five oaths, she said. Five aspects. One for every promise a ruler makes."
+            play cine sequence "say"
+            play cine sound "block.bell.use" with volume 0.4 and pitch 0.9
+        at 25 seconds:
+            set {_who} to "hadrek"
+            set {_line} to "Funny. It keeps asking me what I'll promise it in return."
+            play cine sequence "say"
+            play cine sound "block.bell.use" with volume 0.4 and pitch 1
+        at 29 seconds:
+            show cine actor {_crown}
+            spin cine display {_crown} around vector(0, 1, 0) continuously at 25 degrees per second
+            set {_at} to {_crown}
+            play cine sequence "fx:crown-glow"
+            add cine actor keyframe for {_crown} at {_f} ~ vector(0, 1.1, 0) at 29 seconds
+            add cine actor keyframe for {_crown} at {_f} ~ vector(0, 2.2, 0) at 33 seconds with easing "ease-out-sine"
+        at 31 seconds:
+            show cine actor {_queen}
+            make cine actor {_queen} look at {_crown}
+            make cine actor {_young} look at {_queen}
+            set {_who} to "aurelion"
+            set {_line} to "Hadrek... it's beautiful. Is it finished?"
+            play cine sequence "say"
+        at 35 seconds:
+            set {_who} to "hadrek"
+            set {_line} to "It's finished, highness. I just... don't think it's done."
+            play cine sequence "say"
+        at 39 seconds:
+            set {_who} to "crown"
+            set {_line} to "...HUNGRY..."
+            play cine sequence "whisper"
+            set {_at} to {_crown}
+            set {_colour} to purple
+            play cine sequence "fx:dark-pulse"
+        at 43 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Hadrek told no one what he had heard. He regretted that for nine hundred years."
+            play cine sequence "say"
+        at 46 seconds:
+            fade the cine screen out with colour orange over 2 seconds
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The Last Verse
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "tale:last-verse":
+    duration: 50 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set {_t} to {_stage} ~ vector(0, 0, 8)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        set {_altar} to a new cine block display of prismarine bricks at {_t} ~ vector(-0.5, 0, 1.5)
+        set {_lamp1} to a new cine block display of sea lantern at {_t} ~ vector(-3.5, 0, 1)
+        set {_lamp2} to a new cine block display of sea lantern at {_t} ~ vector(2.5, 0, 1)
+        set {_nerys} to a new cine player actor at {_t} ~ vector(0, 1, 1.5) named "young-nerys" with name tag "<dark_aqua>Nerys <gray>(the night it sank)"
+        set {_p1} to a new cine actor of villager at {_t} ~ vector(-2, 0, -2) named "priest1"
+        set {_p2} to a new cine actor of villager at {_t} ~ vector(2, 0, -2) named "priest2"
+        set {_p3} to a new cine actor of villager at {_t} ~ vector(0, 0, -3) named "priest3"
+        add {_p1}, {_p2} and {_p3} to {_priests::*}
+        # The sea, rising: rows of water-coloured blocks that lift over time.
+        set {_w1} to a new cine block display of light blue stained glass at {_t} ~ vector(-6, -3, -6)
+        set {_w2} to a new cine block display of light blue stained glass at {_t} ~ vector(5, -3, -6)
+        set {_w3} to a new cine block display of light blue stained glass at {_t} ~ vector(-6, -3, 5)
+        set {_w4} to a new cine block display of light blue stained glass at {_t} ~ vector(5, -3, 5)
+        add {_w1}, {_w2}, {_w3} and {_w4} to {_sea::*}
+        scale cine actors {_sea::*} to 3 over 1 tick
+
+        set {_focus} to {_nerys}
+        add cine camera keyframe at {_t} ~ vector(-5, 3, -8) at 0 seconds looking at {_nerys}
+        add cine camera keyframe at {_t} ~ vector(0, 2.2, -5) at 8 seconds with easing "ease-in-out-sine" looking at {_nerys}
+        set {_a} to {_nerys}
+        set {_b} to {_p3}
+        play cine sequence "cam:dialogue" at 12 seconds
+        set {_focus} to {_t}
+        play cine sequence "cam:spiral-rise" at 26 seconds
+        play cine sequence "cam:sky-up" at 36 seconds
+        add cine camera keyframe at {_t} ~ vector(0, 14, -10) at 50 seconds with easing "ease-in-out-sine" looking at {_t} ~ vector(0, 30, 10)
+
+        at 0 seconds:
+            fade the cine screen out with colour cyan over 1 tick
+            make cine actors {_priests::*} look at {_nerys}
+            make cine actor {_nerys} look at {_eye}
+        at 5 ticks:
+            fade the cine screen in over 2.5 seconds
+            set {_at} to {_t}
+            set {_len} to 48 seconds
+            play cine sequence "fx:fireflies"
+        at 1 second:
+            set {_title} to "<dark_aqua><italic>A Tale"
+            set {_subtitle} to "<gray>The Last Verse"
+            set {_tone} to 0.7
+            play cine sequence "fx:title-card"
+        at 5 seconds:
+            set {_who} to "narrator"
+            set {_line} to "The night the crown broke, the sea came to the temple to listen."
+            play cine sequence "say"
+        at 9 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "<italic>♪ Home, little sailor, the harbour is near... the lamps are all lit, and your mother is here... ♪"
+            set {_hold} to 4 seconds
+            play cine sequence "say"
+            delete {_hold}
+        at 14 seconds:
+            set {_who} to "soul"
+            set {_line} to "Nerys! The water — it's at the steps! We have to go!"
+            play cine sequence "say"
+            play cine sound "ambient.underwater.enter" with volume 0.6
+        at 17 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "Go. I can't leave in the middle of a verse. They'd never find their way."
+            play cine sequence "say"
+            move cine actors {_priests::*} to {_t} ~ vector(0, 0, -14) over 6 seconds with easing "ease-in-sine" facing the movement
+        at 20 seconds:
+            add cine actor keyframe for {_w1} at {_t} ~ vector(-6, -3, -6) at 20 seconds
+            add cine actor keyframe for {_w1} at {_t} ~ vector(-6, 2, -6) at 34 seconds with easing "ease-in-out-sine"
+            add cine actor keyframe for {_w2} at {_t} ~ vector(5, -3, -6) at 20 seconds
+            add cine actor keyframe for {_w2} at {_t} ~ vector(5, 2, -6) at 34 seconds with easing "ease-in-out-sine"
+            add cine actor keyframe for {_w3} at {_t} ~ vector(-6, -3, 5) at 21 seconds
+            add cine actor keyframe for {_w3} at {_t} ~ vector(-6, 2, 5) at 35 seconds with easing "ease-in-out-sine"
+            add cine actor keyframe for {_w4} at {_t} ~ vector(5, -3, 5) at 21 seconds
+            add cine actor keyframe for {_w4} at {_t} ~ vector(5, 2, 5) at 35 seconds with easing "ease-in-out-sine"
+            set {_at} to {_t}
+            play cine sequence "fx:tide-pool"
+        at 22 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "<italic>♪ ...and if the tide should take you away, I'll sing you home on another day... ♪"
+            set {_hold} to 4 seconds
+            play cine sequence "say"
+            delete {_hold}
+        at 26 seconds:
+            set {_at} to {_t}
+            play cine sequence "fx:tidal-wave"
+            hide cine actors {_priests::*}
+        at 28 seconds:
+            set {_at} to {_t} ~ vector(0, 8, 0)
+            set {_colour} to cyan
+            play cine sequence "fx:shard-call"
+            set {_who} to "narrator"
+            set {_line} to "Something fell out of the sky into the water. It was warm, and it was listening."
+            play cine sequence "say"
+        at 33 seconds:
+            set {_who} to "crown"
+            set {_line} to "...KEEP THEM. KEEP THEM ALL. YOU NEVER HAVE TO SAY GOODBYE..."
+            play cine sequence "whisper"
+        at 37 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "...I never have to say goodbye."
+            play cine sequence "say"
+            set {_at} to {_nerys}
+            set {_colour} to cyan
+            set {_len} to 12 seconds
+            play cine sequence "fx:aura"
+        at 41 seconds:
+            set {_who} to "narrator"
+            set {_line} to "She never finished the verse. For nine hundred years, nobody got home."
+            play cine sequence "say"
+        at 47 seconds:
+            fade the cine screen out with colour cyan over 2.5 seconds
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Two Hundred Riders
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "tale:two-hundred-riders":
+    duration: 46 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set {_w} to {_stage} ~ vector(0, 0, 10)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        set {_tower1} to a new cine block display of calcite at {_w} ~ vector(-0.5, 0, -0.5)
+        set {_tower2} to a new cine block display of calcite at {_w} ~ vector(-0.5, 1, -0.5)
+        set {_tower3} to a new cine block display of calcite at {_w} ~ vector(-0.5, 2, -0.5)
+        set {_tower4} to a new cine block display of smooth quartz at {_w} ~ vector(-0.5, 3, -0.5)
+        set {_kestrel} to a new cine player actor at {_w} ~ vector(0, 4, 0) named "young-kestrel" with name tag "<aqua>Kestrel <gray>(rider #200)"
+        set {_kw} to a new cine item display of elytra at {_w} ~ vector(0, 5, 0)
+        attach cine actor {_kw} to {_kestrel} with offset vector(0, 1.1, -0.3) and rotate with it
+
+        # Six riders stand for two hundred: a formation sweeping past the tower.
+        set {_i} to 0
+        loop 6 times:
+            add 1 to {_i}
+            set {_x} to ({_i} - 3.5) * 3
+            set {_r} to a new cine actor of armor stand at {_w} ~ vector({_x}, 14, -30) named "rider-%{_i}%"
+            set {_rw} to a new cine item display of elytra at {_w} ~ vector({_x}, 15, -30)
+            attach cine actor {_rw} to {_r} with offset vector(0, 1.3, -0.3) and rotate with it
+            set {_t0} to "%2 + {_i} * 0.4% seconds" parsed as timespan
+            set {_t1} to "%8 + {_i} * 0.4% seconds" parsed as timespan
+            set {_t2} to "%14 + {_i} * 0.4% seconds" parsed as timespan
+            add cine actor keyframe for {_r} at {_w} ~ vector({_x}, 14, -30) at {_t0}
+            add cine actor keyframe for {_r} at {_w} ~ vector({_x} * 0.6, 10, 0) at {_t1} with easing "ease-in-out-sine"
+            add cine actor keyframe for {_r} at {_w} ~ vector({_x} * 1.5, 16, 30) at {_t2} with easing "ease-in-out-sine"
+            add {_r} to {_riders::*}
+
+        set {_focus} to {_w} ~ vector(0, 10, 0)
+        play cine sequence "cam:establish" at 0 seconds
+        make the cine camera watch {_riders::3} from {_w} ~ vector(0, 6, -6) between 8 seconds and 15 seconds blending over 1 second
+        make the cine camera watch {_kestrel} from {_w} ~ vector(-2, 5.5, -3) between 15 seconds and 30 seconds blending over 1 second
+        set {_focus} to {_w} ~ vector(0, 12, 0)
+        play cine sequence "cam:sky-up" at 30 seconds
+        add cine camera keyframe at {_w} ~ vector(0, 8, -14) at 46 seconds with easing "ease-in-out-sine" looking at {_w} ~ vector(0, 30, 20)
+
+        at 0 seconds:
+            fade the cine screen out with colour white over 1 tick
+            make cine actor {_kestrel} look at {_w} ~ vector(0, 14, -30)
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+            set {_at} to {_w}
+            set {_len} to 44 seconds
+            play cine sequence "fx:sky-drift"
+        at 1 second:
+            set {_title} to "<aqua><italic>A Tale"
+            set {_subtitle} to "<gray>Two Hundred Riders"
+            set {_tone} to 1.1
+            play cine sequence "fx:title-card"
+        at 4 seconds:
+            set {_who} to "narrator"
+            set {_line} to "On the morning of the coronation, two hundred riders flew over Aurelion."
+            play cine sequence "say"
+            play cine sound "entity.phantom.flap" with volume 0.8 and pitch 1.4
+        at 8 seconds:
+            play cine sound "entity.ender_dragon.flap" with volume 0.6 and pitch 1.6
+            set {_who} to "kestrel"
+            set {_line} to "Wait for me! Rider two hundred, coming through! Make room!"
+            play cine sequence "say"
+        at 12 seconds:
+            add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 4, 0) at 12 seconds
+            add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 10, 6) at 15 seconds with easing "ease-out-sine"
+            set {_at} to {_w} ~ vector(0, 4, 0)
+            play cine sequence "fx:gale-spiral"
+        at 16 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "Ha! Look at them all down there! Look at the bells! I can see the WHOLE—"
+            play cine sequence "say"
+        at 20 seconds:
+            set {_at} to {_w} ~ vector(0, 30, 10)
+            set {_colour} to light blue
+            play cine sequence "fx:shard-call"
+            play cine sound "entity.lightning_bolt.thunder" with volume 0.6 and pitch 0.6
+            shake the cine camera with intensity 1 for 1.5 seconds
+        at 22 seconds:
+            set {_who} to "narrator"
+            set {_line} to "When the crown broke, the Gale Shard fell into the sky, and the sky closed around it."
+            play cine sequence "say"
+            hide cine actors {_riders::*}
+        at 26 seconds:
+            set {_at} to {_kestrel}
+            set {_from} to {_w} ~ vector(2, 30, 10)
+            play cine sequence "fx:strike"
+            delete {_from}
+            add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 10, 6) at 26 seconds
+            add cine actor keyframe for {_kestrel} at {_w} ~ vector(0, 4, 0) at 29 seconds with easing "ease-in-quad"
+        at 30 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "...hello? Wren? Talon? ...anyone?"
+            play cine sequence "say"
+        at 34 seconds:
+            set {_who} to "narrator"
+            set {_line} to "One hundred and ninety-nine riders flew into the storm. One was too slow to follow them."
+            play cine sequence "say"
+        at 39 seconds:
+            set {_who} to "kestrel"
+            set {_line} to "...I'm always last. Always. Wait for me. Please."
+            play cine sequence "whisper"
+        at 44 seconds:
+            fade the cine screen out with colour white over 2 seconds
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The First Thought
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "tale:first-thought":
+    duration: 44 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set {_g} to {_stage} ~ vector(0, 0, 12)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        set {_peak1} to a new cine block display of stone at {_g} ~ vector(-1.5, 0, -1.5)
+        set {_peak2} to a new cine block display of stone at {_g} ~ vector(-1.5, 3, -1.5)
+        set {_peak3} to a new cine block display of andesite at {_g} ~ vector(-1.5, 6, -1.5)
+        set {_snow} to a new cine block display of snow block at {_g} ~ vector(-1.5, 9, -1.5)
+        add {_peak1}, {_peak2}, {_peak3} and {_snow} to {_mountain::*}
+        scale cine actors {_mountain::*} to 3 over 1 tick
+        set {_shard} to a new cine item display of flint at {_g} ~ vector(0, 30, 0)
+        set {_eyeL} to a new cine text display with text "<gray>●" at {_g} ~ vector(-0.6, 7, -1.7)
+        set {_eyeR} to a new cine text display with text "<gray>●" at {_g} ~ vector(0.6, 7, -1.7)
+        hide cine actors {_eyeL} and {_eyeR}
+        add cine actor keyframe for {_shard} at {_g} ~ vector(0, 30, 0) at 4 seconds
+        add cine actor keyframe for {_shard} at {_g} ~ vector(0, 5, 0) at 7 seconds with easing "ease-in-quad"
+
+        set {_focus} to {_g} ~ vector(0, 6, 0)
+        play cine sequence "cam:establish" at 0 seconds
+        add cine camera keyframe at {_g} ~ vector(0, 6, -16) at 10 seconds with easing "ease-in-out-sine" looking at {_g} ~ vector(0, 6, 0)
+        add cine camera keyframe at {_g} ~ vector(0, 6.5, -12) at 40 seconds with easing "linear" looking at {_g} ~ vector(0, 7, 0)
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+            set {_at} to {_g}
+            set {_len} to 42 seconds
+            play cine sequence "fx:stone-dust"
+        at 1 second:
+            set {_title} to "<gray><italic>A Tale"
+            set {_subtitle} to "<gray>The First Thought"
+            set {_tone} to 0.5
+            play cine sequence "fx:title-card"
+        at 4 seconds:
+            set {_who} to "narrator"
+            set {_line} to "This is a mountain. It is not thinking. Mountains do not think."
+            play cine sequence "say"
+        at 7 seconds:
+            set {_at} to {_g} ~ vector(0, 5, 0)
+            play cine sequence "fx:quake"
+            hide cine actor {_shard}
+        at 9 seconds:
+            set {_who} to "narrator"
+            set {_line} to "The Stone Shard fell into it. And then, for a very long time, nothing happened."
+            play cine sequence "say"
+        # A century, compressed: day and night flicker past.
+        repeat every 1.5 seconds from 13 seconds until 30 seconds:
+            fade the cine screen out with colour dark grey over 10 ticks
+        repeat every 1.5 seconds from 13.75 seconds until 30 seconds:
+            fade the cine screen in over 10 ticks
+        at 14 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Ten years. Snow. Fifty years. Rain. Ninety years. A goat, briefly."
+            play cine sequence "say"
+        at 20 seconds:
+            play cine sound "entity.goat.ambient" with volume 0.6
+        at 24 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Ninety-nine years, three hundred and sixty-four days..."
+            play cine sequence "say"
+        at 31 seconds:
+            fade the cine screen in over 10 ticks
+            show cine actors {_eyeL} and {_eyeR}
+            play cine sound "block.stone.break" with volume 1 and pitch 0.3
+            shake the cine camera with intensity 0.5 for 2 seconds
+        at 33 seconds:
+            set {_who} to "colossus"
+            set {_line} to "...HEAVY..."
+            play cine sequence "proclaim"
+        at 38 seconds:
+            set {_who} to "narrator"
+            set {_line} to "It would take another eight hundred years to think of a second word."
+            play cine sequence "say"
+        at 42 seconds:
+            fade the cine screen out over 2 seconds
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Brother and Sister
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "tale:brother-and-sister":
+    duration: 50 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set {_g} to {_stage} ~ vector(0, 0, 7)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        set {_tree} to a new cine block display of flowering azalea at {_g} ~ vector(2.5, 0, 2.5)
+        set {_tree2} to a new cine block display of azalea leaves at {_g} ~ vector(2.5, 1, 2.5)
+        set {_flower1} to a new cine block display of allium at {_g} ~ vector(-2, 0, 1)
+        set {_flower2} to a new cine block display of lily of the valley at {_g} ~ vector(-1, 0, 2)
+        set {_flower3} to a new cine block display of blue orchid at {_g} ~ vector(1, 0, -1)
+        set {_bench} to a new cine block display of oak stairs at {_g} ~ vector(-0.5, 0, 2.5)
+        set {_kidA} to a new cine player actor at {_g} ~ vector(-0.8, 0, 0) named "kid-aurelion" with name tag "<yellow>Aurelion <gray>(8)"
+        set {_kidM} to a new cine player actor at {_g} ~ vector(0.8, 0, 0) named "kid-malrec" with name tag "<dark_purple>Malrec <gray>(10)"
+        set {_toy} to a new cine item display of golden helmet at {_g} ~ vector(0.8, 1, 0.4)
+        scale cine actors {_kidA} and {_kidM} to 0.6 over 1 tick
+
+        set {_a} to {_kidA}
+        set {_b} to {_kidM}
+        add cine camera keyframe at {_g} ~ vector(-4, 2, -5) at 0 seconds looking at {_g} ~ vector(0, 0.8, 0)
+        add cine camera keyframe at {_g} ~ vector(-1.5, 1.2, -3) at 6 seconds with easing "ease-in-out-sine" looking at {_g} ~ vector(0, 0.8, 0)
+        play cine sequence "cam:dialogue" at 8 seconds
+        make the cine camera watch {_toy} from {_g} ~ vector(0, 1.4, -2) between 20 seconds and 28 seconds blending over 1 second
+        set {_a} to {_kidM}
+        set {_b} to {_kidA}
+        play cine sequence "cam:dialogue" at 28 seconds
+        set {_focus} to {_g} ~ vector(0, 1, 0)
+        play cine sequence "cam:pull-back" at 42 seconds
+
+        at 0 seconds:
+            fade the cine screen out with colour yellow over 1 tick
+            make cine actor {_kidA} look at {_kidM}
+            make cine actor {_kidM} look at {_kidA}
+        at 5 ticks:
+            fade the cine screen in over 2.5 seconds
+            set {_at} to {_g}
+            set {_len} to 48 seconds
+            play cine sequence "fx:petals"
+            play cine sequence "fx:fireflies"
+        at 1 second:
+            set {_title} to "<yellow><italic>A Tale"
+            set {_subtitle} to "<gray>Brother and Sister"
+            set {_tone} to 1.3
+            play cine sequence "fx:title-card"
+        at 5 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Long before the crown, there was a garden, and two children who were not allowed in it."
+            play cine sequence "say"
+        at 9 seconds:
+            set {_who} to "aurelion"
+            set {_line} to "Give it back, Mal! It's MY turn to be queen!"
+            play cine sequence "say"
+        at 12 seconds:
+            set {_who} to "malrec"
+            set {_line} to "It's made of tin, Rel. And it's too big for you. It'd fall over your eyes."
+            play cine sequence "say"
+            animate cine display {_toy} to translation vector(0, 0.3, 0) over 1 second with easing "ease-out-back"
+        at 16 seconds:
+            set {_who} to "aurelion"
+            set {_line} to "Then I'll grow into it. Queens grow into things."
+            play cine sequence "say"
+        at 20 seconds:
+            move cine actor {_toy} to {_g} ~ vector(-0.8, 1.15, 0) over 2 seconds with easing "ease-in-out-sine"
+            set {_who} to "malrec"
+            set {_line} to "...Fine. But if it ever gets heavy, you give it to me, okay? I'll carry it."
+            play cine sequence "say"
+        at 23 seconds:
+            attach cine actor {_toy} to {_kidA} with offset vector(0, 1.25, 0)
+            set {_at} to {_kidA}
+            set {_colour} to yellow
+            play cine sequence "fx:blessing"
+            play cine sound "entity.allay.ambient_with_item" with volume 0.6 and pitch 1.2
+        at 26 seconds:
+            set {_who} to "aurelion"
+            set {_line} to "Promise?"
+            play cine sequence "say"
+        at 28 seconds:
+            set {_who} to "malrec"
+            set {_line} to "Promise."
+            play cine sequence "say"
+        at 31 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Twenty years later, the crown got heavy. He kept his promise the only way he could."
+            set {_hold} to 4 seconds
+            play cine sequence "say"
+            delete {_hold}
+        at 36 seconds:
+            set {_at} to {_g}
+            play cine sequence "fx:blink"
+        at 37 seconds:
+            set {_who} to "malrec"
+            set {_line} to "...I carried it, Rel. I carried it as far as I could."
+            play cine sequence "whisper"
+        at 41 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Some promises break the people who keep them."
+            play cine sequence "say"
+        at 47 seconds:
+            fade the cine screen out with colour yellow over 2.5 seconds
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Aurel (secret)
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "tale:aurel":
+    duration: 54 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set {_c} to {_stage} ~ vector(0, 0, 8)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        set {_stone} to a new cine block display of chiseled stone bricks at {_c} ~ vector(-0.5, 0, -0.5)
+        set {_aurel} to a new cine player actor at {_c} ~ vector(0, 1, 0) named "aurel" with name tag "<gold>Aurel <gray>(the first)"
+        set {_crown} to a new cine item display of golden helmet at {_c} ~ vector(0, 3.6, 0)
+        set {_villager1} to a new cine actor of villager at {_c} ~ vector(-3, 0, -3) named "v1"
+        set {_villager2} to a new cine actor of villager at {_c} ~ vector(3, 0, -3) named "v2"
+        set {_villager3} to a new cine actor of villager at {_c} ~ vector(0, 0, -4.5) named "v3"
+        add {_villager1}, {_villager2} and {_villager3} to {_people::*}
+        set {_kings::*} to {_aurel}
+
+        set {_focus} to {_c} ~ vector(0, 2.5, 0)
+        play cine sequence "cam:hero-low" at 0 seconds
+        make the cine camera watch {_aurel} from {_c} ~ vector(0, 2.2, -3) between 4 seconds and 18 seconds blending over 1 second
+        make the cine camera watch {_crown} from {_c} ~ vector(1.5, 3, -2.5) between 18 seconds and 26 seconds blending over 1 second
+        set {_r} to 7
+        play cine sequence "cam:spiral-rise" at 26 seconds
+        add cine camera keyframe at {_c} ~ vector(0, 3, -5) at 40 seconds with easing "ease-in-out-sine" looking at {_aurel}
+        add cine camera keyframe at {_c} ~ vector(0, 2.4, -2.5) at 54 seconds with easing "ease-in-out-sine" looking at {_aurel}
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            make cine actors {_people::*} look at {_aurel}
+            make cine actor {_aurel} look at {_eye}
+            spin cine display {_crown} around vector(0, 1, 0) continuously at 15 degrees per second
+        at 5 ticks:
+            fade the cine screen in over 3 seconds
+            set {_at} to {_c}
+            set {_len} to 52 seconds
+            play cine sequence "fx:fireflies"
+        at 1 second:
+            set {_title} to "<gold><italic>A Secret Tale"
+            set {_subtitle} to "<gray>Aurel"
+            set {_tone} to 0.6
+            play cine sequence "fx:title-card"
+        at 5 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Before Aurelion was a city, it was a village. Before it had a queen, it had a man called Aurel."
+            set {_hold} to 4 seconds
+            play cine sequence "say"
+            delete {_hold}
+        at 10 seconds:
+            set {_who} to "archivist"
+            set {_line} to "I just wanted to remember things for them. Harvests. Names. Who owed whom a goat."
+            play cine sequence "say"
+        at 14 seconds:
+            set {_who} to "archivist"
+            set {_line} to "So I made something to remember with. And I put it on."
+            play cine sequence "say"
+        at 18 seconds:
+            add cine actor keyframe for {_crown} at {_c} ~ vector(0, 3.6, 0) at 18 seconds
+            add cine actor keyframe for {_crown} at {_c} ~ vector(0, 3.25, 0) at 21 seconds with easing "ease-in-out-sine"
+        at 21 seconds:
+            attach cine actor {_crown} to {_aurel} with offset vector(0, 2.25, 0)
+            set {_at} to {_aurel}
+            play cine sequence "fx:crown-glow"
+            set {_who} to "crown"
+            set {_line} to "...REMEMBER..."
+            play cine sequence "proclaim"
+        at 26 seconds:
+            set {_who} to "archivist"
+            set {_line} to "It worked. I never forgot anything again. Not one name. Not one face."
+            play cine sequence "say"
+        at 30 seconds:
+            hide cine actors {_people::*}
+            set {_at} to {_c}
+            play cine sequence "fx:blink"
+            set {_who} to "archivist"
+            set {_line} to "Then they died. All of them. And I still remembered every single one."
+            play cine sequence "say"
+        at 35 seconds:
+            set {_who} to "archivist"
+            set {_line} to "So I gave the crown to my daughter, so I could stop. But it kept me. It keeps everyone."
+            set {_hold} to 4 seconds
+            play cine sequence "say"
+            delete {_hold}
+        at 40 seconds:
+            set {_at} to {_aurel}
+            set {_colour} to gold
+            set {_len} to 14 seconds
+            play cine sequence "fx:aura"
+            set {_who} to "archivist"
+            set {_line} to "That's the secret, bearer. The crown was never hungry. I was. For someone to remember WITH."
+            set {_hold} to 4 seconds
+            play cine sequence "say"
+            delete {_hold}
+        at 46 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Thank you for listening. It's been so long since anyone just... listened."
+            play cine sequence "say"
+        at 51 seconds:
+            fade the cine screen out over 2.5 seconds

@@ -1,0 +1,64 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: timeline control — markers, speed, seeking, pausing, loops,
+#  guaranteed vs. cosmetic events, and scene variables.
+#  /sk reload cinematic-timeline
+#  /tl play | pause | resume | slow | fast | seek | climax | info | stop
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:timeline":
+    duration: 20 seconds
+    loops: 1
+    timeline:
+        set {_c} to location of event-player
+        set cine camera interpolation to "catmull-rom"
+        add cine camera keyframe at {_c} ~ vector(0, 6, -10) at 0 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(10, 6, 0) at 5 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(0, 6, 10) at 10 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(-10, 6, 0) at 15 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(0, 6, -10) at 20 seconds looking at {_c}
+        add cine marker "climax" at 15 seconds
+
+        # Default: runs once when reached; dropped if the viewer skips or seeks past it.
+        at 5 seconds:
+            show cine title "" with subtitle "<gray>Quarter way" for 1 second
+        # Runs once even if the scene is skipped. Use this for important gameplay; it is never duplicated by rewinding.
+        at 19 seconds even if skipped:
+            set {_n} to cine variable "completions"
+            set cine variable "completions" to ({_n} ? 0) + 1
+        # Cosmetic: may run again after rewinding with /tl seek.
+        at 8 seconds cosmetically:
+            play cine preset "heart-burst" at event-player lasting 1 second
+        repeat every 2 seconds:
+            draw a cine circle of "end_rod" at {_c} with radius 2 and 24 points
+
+on cine marker "climax":
+    send "&6Climax reached!" to event-player
+
+on cine scene loop:
+    send "&7Looping..." to event-player
+
+command /tl <text>:
+    trigger:
+        if arg-1 is "play":
+            play cine scene "examples:timeline" for player
+            stop
+        if player is not watching a cine scene:
+            send "&cYou are not watching a scene."
+            stop
+        set {_p} to cine playback of player
+        if arg-1 is "pause":
+            pause cine playback {_p}
+        else if arg-1 is "resume":
+            resume cine playback {_p}
+        else if arg-1 is "slow":
+            set cine speed of {_p} to 0.5
+        else if arg-1 is "fast":
+            set cine speed of {_p} to 2
+        else if arg-1 is "seek":
+            set cine elapsed time of {_p} to 2 seconds
+        else if arg-1 is "climax":
+            jump cine playback {_p} to marker "climax"
+        else if arg-1 is "info":
+            send "&e%cine id of {_p}% &7state=&f%cine state of {_p}% &7elapsed=&f%cine elapsed time of {_p}% &7of &f%cine duration of {_p}% &7(%cine progress of {_p}%) loop %cine loop count of {_p}%"
+        else if arg-1 is "stop":
+            stop cine playback {_p}

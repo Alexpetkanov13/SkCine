@@ -1,0 +1,604 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN  ·  a cinematic campaign for SkCine
+#   00-core.sk  —  player profiles, progression, karma, settings and helpers
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Everything in this campaign is written in Skript on top of SkCine.
+#   This file is the foundation the other files build on. It owns:
+#
+#     • the player profile   {crown::p::<uuid>::...}   (saved to disk)
+#     • chapter progression  (prologue → five shard chapters → finale)
+#     • karma, oaths and remembered choices
+#     • per-player settings  (text speed, dialogue channel, ambient effects)
+#     • stage locations      (where chapters are performed)
+#     • shared formatting    (prefixes, progress bars, roman numerals)
+#
+#   Variables that start with "-" ({-crown::...}) live in memory only: parties,
+#   running trials and boss state never survive a restart, by design.
+#
+#   Chapter numbers used everywhere:
+#     0  not started        4  III · The Gale
+#     1  Prologue           5  IV  · The Stone
+#     2  I   · The Ember    6  V   · The Void
+#     3  II  · The Tide     7  Finale (the Crown reforged)
+#     8  campaign complete (an ending has been reached)
+# ═════════════════════════════════════════════════════════════════════════════
+
+on load:
+    set {-crown::loaded} to now
+    crownLog("Core loaded. %crownChapterCount()% chapters, %size of crownShardNames()% shards.")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Identity and raw profile access
+# ─────────────────────────────────────────────────────────────────────────────
+
+# The key every profile variable hangs from.
+function crownId(p: player) :: text:
+    return "%uuid of {_p}%"
+
+# Generic profile getter: {crown::p::<uuid>::<key>}.
+function crownGet(p: player, key: text) :: object:
+    return {crown::p::%crownId({_p})%::%{_key}%}
+
+# Generic profile setter. Passing nothing as the value is not possible in
+# Skript, so use crownClear() to delete a key.
+function crownSet(p: player, key: text, value: object):
+    set {crown::p::%crownId({_p})%::%{_key}%} to {_value}
+
+function crownClear(p: player, key: text):
+    delete {crown::p::%crownId({_p})%::%{_key}%}
+
+# Numeric profile value, 0 when unset.
+function crownNum(p: player, key: text) :: number:
+    set {_v} to {crown::p::%crownId({_p})%::%{_key}%}
+    if {_v} is not set:
+        return 0
+    return {_v}
+
+# Adds to a numeric profile value and returns the new total.
+function crownAdd(p: player, key: text, amount: number) :: number:
+    set {_id} to crownId({_p})
+    add {_amount} to {crown::p::%{_id}%::%{_key}%}
+    return {crown::p::%{_id}%::%{_key}%}
+
+# True when a boolean flag is set on the profile.
+function crownFlag(p: player, key: text) :: boolean:
+    if {crown::p::%crownId({_p})%::%{_key}%} is true:
+        return true
+    return false
+
+function crownSetFlag(p: player, key: text):
+    set {crown::p::%crownId({_p})%::%{_key}%} to true
+
+# Has this player ever started the campaign?
+function crownStarted(p: player) :: boolean:
+    if crownNum({_p}, "chapter") > 0:
+        return true
+    if crownFlag({_p}, "begun") is true:
+        return true
+    return false
+
+# Wipes a profile completely (admin reset, or /crown reset confirm).
+function crownResetProfile(p: player):
+    set {_id} to crownId({_p})
+    delete {crown::p::%{_id}%::*}
+    crownLog("Profile of %{_p}% (%{_id}%) was reset.")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Logging and messaging
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownLog(msg: text):
+    send "[ShatteredCrown] %{_msg}%" to console
+
+function crownPrefix() :: text:
+    return "&8[&6✦ &eCrown&8] &7"
+
+function crownMsg(p: player, msg: text):
+    send "%crownPrefix()%%{_msg}%" to {_p}
+
+function crownMsgAll(players: players, msg: text):
+    loop {_players::*}:
+        crownMsg(loop-value, {_msg})
+
+# A centred-looking divider for long chat panels.
+function crownRule(p: player, title: text):
+    send "&8&m          &r &6✦ &e%{_title}% &6✦ &8&m          " to {_p}
+
+function crownBlank(p: player):
+    send " " to {_p}
+
+# A small chime that accompanies important notifications.
+function crownChime(p: player, kind: text):
+    if {_kind} is "good":
+        play cine sound "entity.player.levelup" with volume 0.6 and pitch 1.4 to {_p}
+    else if {_kind} is "bad":
+        play cine sound "block.note_block.bass" with volume 0.8 and pitch 0.6 to {_p}
+    else if {_kind} is "shard":
+        play cine sound "block.amethyst_block.resonate" with volume 1 and pitch 0.8 to {_p}
+    else if {_kind} is "codex":
+        play cine sound "item.book.page_turn" with volume 1 and pitch 1 to {_p}
+    else if {_kind} is "achievement":
+        play cine sound "ui.toast.challenge_complete" with volume 0.7 and pitch 1 to {_p}
+    else if {_kind} is "click":
+        play cine sound "ui.button.click" with volume 0.5 and pitch 1.2 to {_p}
+    else:
+        play cine sound "block.note_block.chime" with volume 0.7 and pitch 1.2 to {_p}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Formatting helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+# A progress bar of `length` segments: crownBar(3, 10, 20, "&a", "&8") → ██████░░░░...
+function crownBar(value: number, max: number, length: number, on: text, off: text) :: text:
+    if {_max} <= 0:
+        set {_max} to 1
+    set {_filled} to round(({_value} / {_max}) * {_length})
+    if {_filled} > {_length}:
+        set {_filled} to {_length}
+    if {_filled} < 0:
+        set {_filled} to 0
+    set {_bar} to "%{_on}%"
+    loop {_filled} times:
+        set {_bar} to "%{_bar}%|"
+    set {_bar} to "%{_bar}%%{_off}%"
+    loop ({_length} - {_filled}) times:
+        set {_bar} to "%{_bar}%|"
+    return {_bar}
+
+function crownRoman(n: number) :: text:
+    if {_n} is 1:
+        return "I"
+    if {_n} is 2:
+        return "II"
+    if {_n} is 3:
+        return "III"
+    if {_n} is 4:
+        return "IV"
+    if {_n} is 5:
+        return "V"
+    if {_n} is 6:
+        return "VI"
+    if {_n} is 7:
+        return "VII"
+    if {_n} is 8:
+        return "VIII"
+    if {_n} is 9:
+        return "IX"
+    if {_n} is 10:
+        return "X"
+    return "%{_n}%"
+
+# 125 seconds → "2m 05s"
+function crownClock(seconds: number) :: text:
+    set {_s} to floor({_seconds})
+    set {_m} to floor({_s} / 60)
+    set {_r} to mod({_s}, 60)
+    if {_r} < 10:
+        return "%{_m}%m 0%{_r}%s"
+    return "%{_m}%m %{_r}%s"
+
+# Percentage with no decimals.
+function crownPercent(value: number, max: number) :: text:
+    if {_max} <= 0:
+        return "0%%"
+    return "%round(({_value} / {_max}) * 100)%%%"
+
+# Plural helper: crownPlural(3, "shard") → "3 shards".
+function crownPlural(n: number, word: text) :: text:
+    if {_n} is 1:
+        return "1 %{_word}%"
+    return "%{_n}% %{_word}%s"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Chapters
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownChapterCount() :: number:
+    return 7
+
+function crownChapterName(n: number) :: text:
+    if {_n} is 1:
+        return "Prologue · The Fall of Aurelion"
+    if {_n} is 2:
+        return "Chapter I · The Ember"
+    if {_n} is 3:
+        return "Chapter II · The Tide"
+    if {_n} is 4:
+        return "Chapter III · The Gale"
+    if {_n} is 5:
+        return "Chapter IV · The Stone"
+    if {_n} is 6:
+        return "Chapter V · The Void"
+    if {_n} is 7:
+        return "Finale · The Crown Reforged"
+    return "The Shattered Crown"
+
+# Short name used in compact HUD lines.
+function crownChapterShort(n: number) :: text:
+    if {_n} is 1:
+        return "Prologue"
+    if {_n} is 2:
+        return "Ember"
+    if {_n} is 3:
+        return "Tide"
+    if {_n} is 4:
+        return "Gale"
+    if {_n} is 5:
+        return "Stone"
+    if {_n} is 6:
+        return "Void"
+    if {_n} is 7:
+        return "Finale"
+    return "Epilogue"
+
+# Legacy colour code for a chapter.
+function crownChapterColour(n: number) :: text:
+    if {_n} is 1:
+        return "&e"
+    if {_n} is 2:
+        return "&6"
+    if {_n} is 3:
+        return "&3"
+    if {_n} is 4:
+        return "&b"
+    if {_n} is 5:
+        return "&7"
+    if {_n} is 6:
+        return "&5"
+    if {_n} is 7:
+        return "&d"
+    return "&f"
+
+# MiniMessage colour tag for a chapter (used inside SkCine titles/dialogue).
+function crownChapterTag(n: number) :: text:
+    if {_n} is 1:
+        return "<yellow>"
+    if {_n} is 2:
+        return "<gold>"
+    if {_n} is 3:
+        return "<dark_aqua>"
+    if {_n} is 4:
+        return "<aqua>"
+    if {_n} is 5:
+        return "<gray>"
+    if {_n} is 6:
+        return "<dark_purple>"
+    if {_n} is 7:
+        return "<light_purple>"
+    return "<white>"
+
+# Skript colour for a chapter, for particles and presets.
+function crownChapterColor(n: number) :: color:
+    if {_n} is 1:
+        return yellow
+    if {_n} is 2:
+        return orange
+    if {_n} is 3:
+        return cyan
+    if {_n} is 4:
+        return light blue
+    if {_n} is 5:
+        return light grey
+    if {_n} is 6:
+        return purple
+    if {_n} is 7:
+        return pink
+    return white
+
+# The scene that opens a chapter.
+function crownChapterScene(n: number) :: text:
+    if {_n} is 1:
+        return "crown:prologue"
+    if {_n} is 2:
+        return "crown:ember-intro"
+    if {_n} is 3:
+        return "crown:tide-intro"
+    if {_n} is 4:
+        return "crown:gale-intro"
+    if {_n} is 5:
+        return "crown:stone-intro"
+    if {_n} is 6:
+        return "crown:void-intro"
+    if {_n} is 7:
+        return "crown:finale-intro"
+    return "crown:credits"
+
+# The shard each chapter guards (prologue and finale guard none).
+function crownChapterShard(n: number) :: text:
+    if {_n} is 2:
+        return "ember"
+    if {_n} is 3:
+        return "tide"
+    if {_n} is 4:
+        return "gale"
+    if {_n} is 5:
+        return "stone"
+    if {_n} is 6:
+        return "void"
+    return "none"
+
+# Highest chapter the player may play next.
+function crownNextChapter(p: player) :: number:
+    set {_c} to crownNum({_p}, "chapter")
+    if {_c} >= 7:
+        return 7
+    return {_c} + 1
+
+# Marks a chapter complete and announces it. Never moves progress backwards.
+function crownCompleteChapter(p: player, n: number):
+    if crownNum({_p}, "chapter") < {_n}:
+        crownSet({_p}, "chapter", {_n})
+    crownSetFlag({_p}, "done::%{_n}%")
+    crownAdd({_p}, "stat::chapters", 1)
+    crownHookChapter({_p}, {_n})
+    crownChime({_p}, "good")
+    crownMsg({_p}, "%crownChapterColour({_n})%%crownChapterName({_n})% &7complete.")
+    if {_n} < 7:
+        set {_next} to {_n} + 1
+        crownMsg({_p}, "&7Next: %crownChapterColour({_next})%%crownChapterName({_next})% &8— &f/crown play")
+    crownCheckAchievements({_p})
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Shards
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownShardNames() :: texts:
+    return "ember", "tide", "gale", "stone" and "void"
+
+function crownShardTitle(s: text) :: text:
+    if {_s} is "ember":
+        return "&6Ember Shard"
+    if {_s} is "tide":
+        return "&3Tide Shard"
+    if {_s} is "gale":
+        return "&bGale Shard"
+    if {_s} is "stone":
+        return "&7Stone Shard"
+    if {_s} is "void":
+        return "&5Void Shard"
+    return "&fUnknown Shard"
+
+function crownShardColor(s: text) :: color:
+    if {_s} is "ember":
+        return orange
+    if {_s} is "tide":
+        return cyan
+    if {_s} is "gale":
+        return light blue
+    if {_s} is "stone":
+        return light grey
+    if {_s} is "void":
+        return purple
+    return white
+
+function crownShardItem(s: text) :: itemtype:
+    if {_s} is "ember":
+        return blaze powder
+    if {_s} is "tide":
+        return prismarine crystals
+    if {_s} is "gale":
+        return feather
+    if {_s} is "stone":
+        return flint
+    if {_s} is "void":
+        return echo shard
+    return amethyst shard
+
+function crownHasShard(p: player, s: text) :: boolean:
+    return crownFlag({_p}, "shard::%{_s}%")
+
+function crownShardCount(p: player) :: number:
+    set {_n} to 0
+    loop crownShardNames():
+        if crownHasShard({_p}, loop-value) is true:
+            add 1 to {_n}
+    return {_n}
+
+# Grants a shard (once) with a chime and a chat line.
+function crownGiveShard(p: player, s: text):
+    if crownHasShard({_p}, {_s}) is true:
+        stop
+    crownSetFlag({_p}, "shard::%{_s}%")
+    crownSet({_p}, "lastshard", {_s})
+    crownChime({_p}, "shard")
+    crownMsg({_p}, "%crownShardTitle({_s})% &7recovered. &8(%crownShardCount({_p})%/5)")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Karma, oaths and choices
+# ─────────────────────────────────────────────────────────────────────────────
+#  Karma runs from -100 (Tyrant) to +100 (Radiant). Choices nudge it; the
+#  finale reads it to decide which ending is possible.
+
+function crownKarma(p: player) :: number:
+    return crownNum({_p}, "karma")
+
+function crownShiftKarma(p: player, amount: number, reason: text):
+    set {_k} to crownKarma({_p}) + {_amount}
+    if {_k} > 100:
+        set {_k} to 100
+    if {_k} < -100:
+        set {_k} to -100
+    crownSet({_p}, "karma", {_k})
+    if {_amount} > 0:
+        crownMsg({_p}, "&e☀ +%{_amount}% Light &8· &7%{_reason}%")
+    else if {_amount} < 0:
+        crownMsg({_p}, "&5☾ %{_amount}% Shadow &8· &7%{_reason}%")
+    crownAdd({_p}, "stat::karmashifts", 1)
+
+function crownKarmaTier(p: player) :: text:
+    set {_k} to crownKarma({_p})
+    if {_k} >= 60:
+        return "&eRadiant"
+    if {_k} >= 20:
+        return "&6Kindled"
+    if {_k} > -20:
+        return "&7Balanced"
+    if {_k} > -60:
+        return "&5Shadowed"
+    return "&4Tyrant"
+
+# A -100..100 karma gauge: dark on the left, light on the right.
+function crownKarmaGauge(p: player) :: text:
+    set {_k} to crownKarma({_p})
+    set {_pos} to round(({_k} + 100) / 10)
+    set {_g} to "&5"
+    loop 21 times:
+        if loop-number - 1 is {_pos}:
+            set {_g} to "%{_g}%&f◆"
+        else if loop-number - 1 < 10:
+            set {_g} to "%{_g}%&5-"
+        else if loop-number - 1 is 10:
+            set {_g} to "%{_g}%&7|"
+        else:
+            set {_g} to "%{_g}%&e-"
+    return {_g}
+
+function crownOathTitle(o: text) :: text:
+    if {_o} is "valor":
+        return "&cOath of Valor"
+    if {_o} is "wisdom":
+        return "&9Oath of Wisdom"
+    if {_o} is "shadow":
+        return "&8Oath of Shadow"
+    return "&7No oath sworn"
+
+# Remembers a story choice: crownChoose(p, "ember", "spare").
+function crownChoose(p: player, key: text, value: text):
+    crownSet({_p}, "choice::%{_key}%", {_value})
+    crownAdd({_p}, "stat::choices", 1)
+
+function crownChoice(p: player, key: text) :: text:
+    set {_v} to crownGet({_p}, "choice::%{_key}%")
+    if {_v} is not set:
+        return "none"
+    return "%{_v}%"
+
+# How many "mercy" choices the player made across the five chapters.
+function crownMercyCount(p: player) :: number:
+    set {_n} to 0
+    if crownChoice({_p}, "ember") is "spare":
+        add 1 to {_n}
+    if crownChoice({_p}, "tide") is "free":
+        add 1 to {_n}
+    if crownChoice({_p}, "gale") is "trust":
+        add 1 to {_n}
+    if crownChoice({_p}, "stone") is "wake":
+        add 1 to {_n}
+    if crownChoice({_p}, "void") is "forgive":
+        add 1 to {_n}
+    return {_n}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Settings
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Typewriter speed in characters per second.
+function crownCps(p: player) :: number:
+    set {_s} to crownGet({_p}, "set::speed")
+    if {_s} is "slow":
+        return 18
+    if {_s} is "fast":
+        return 55
+    if {_s} is "instant":
+        return 400
+    return 32
+
+function crownSpeedName(p: player) :: text:
+    set {_s} to crownGet({_p}, "set::speed")
+    if {_s} is not set:
+        return "normal"
+    return "%{_s}%"
+
+# Where dialogue lines are shown: subtitle (default), title, actionbar, chat.
+function crownChannel(p: player) :: text:
+    set {_c} to crownGet({_p}, "set::channel")
+    if {_c} is not set:
+        return "subtitle"
+    return "%{_c}%"
+
+function crownAmbientOn(p: player) :: boolean:
+    if crownGet({_p}, "set::ambient") is false:
+        return false
+    return true
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Stages: where a chapter is performed
+# ─────────────────────────────────────────────────────────────────────────────
+#  Admins can pin a chapter to a location with /crown admin stage set <n>.
+#  Otherwise the chapter plays where the leader stands, a few blocks ahead.
+
+function crownStage(p: player, n: number) :: location:
+    if {crown::stage::%{_n}%} is set:
+        set {_l} to {crown::stage::%{_n}%}
+    else if {crown::stage::default} is set:
+        set {_l} to {crown::stage::default}
+    else:
+        set {_l} to location of {_p}
+    # Sets are built along world axes: +z is "forward", actors face back (-z).
+    set pitch of {_l} to 0
+    set yaw of {_l} to 0
+    return {_l}
+
+function crownStageIsPinned(n: number) :: boolean:
+    if {crown::stage::%{_n}%} is set:
+        return true
+    return false
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Stats
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownStat(p: player, name: text) :: number:
+    return crownNum({_p}, "stat::%{_name}%")
+
+function crownBumpStat(p: player, name: text):
+    crownAdd({_p}, "stat::%{_name}%", 1)
+
+# Records that a scene was watched, for the gallery.
+function crownSeen(p: player, scene: text):
+    if crownFlag({_p}, "seen::%{_scene}%") is false:
+        crownSetFlag({_p}, "seen::%{_scene}%")
+        crownBumpStat({_p}, "uniquescenes")
+    crownBumpStat({_p}, "scenes")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Viewer helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Removes players who are already watching something, offline or dead.
+function crownAvailable(players: players) :: players:
+    loop {_players::*}:
+        if loop-value is online:
+            if loop-value is not watching a cine scene:
+                if health of loop-value > 0:
+                    add loop-value to {_ok::*}
+    return {_ok::*}
+
+# Applies a choice result to every viewer of a shared choice.
+function crownChooseAll(players: players, key: text, value: text, karma: number, reason: text):
+    loop {_players::*}:
+        crownChoose(loop-value, {_key}, {_value})
+        if {_karma} is not 0:
+            crownShiftKarma(loop-value, {_karma}, {_reason})
+
+# Per-viewer reward: a shard, chapter completion and a stat bump.
+function crownFinishChapterFor(players: players, n: number):
+    loop {_players::*}:
+        set {_s} to crownChapterShard({_n})
+        if {_s} is not "none":
+            crownGiveShard(loop-value, {_s})
+        crownCompleteChapter(loop-value, {_n})
+
+# Fresh players get a gentle hint the first time they join.
+on join:
+    wait 3 seconds
+    player is online
+    if crownStarted(player) is false:
+        if crownFlag(player, "hinted") is false:
+            crownSetFlag(player, "hinted")
+            crownMsg(player, "&7A crown lies shattered somewhere in this world... &f/crown &7to begin.")
+    else:
+        set {_n} to crownNextChapter(player)
+        if crownNum(player, "chapter") < 8:
+            crownMsg(player, "&7Welcome back. Your story continues with %crownChapterColour({_n})%%crownChapterName({_n})%&7. &f/crown play")

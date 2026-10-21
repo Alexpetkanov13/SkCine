@@ -1,0 +1,337 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   10-prologue.sk  —  Prologue · The Fall of Aurelion
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Part one, a VISION (0–25 s): nine hundred years ago, Queen Aurelion is
+#   crowned. Her brother Malrec steps forward and shatters the crown; five
+#   shards streak across the sky.
+#
+#   Part two, the PRESENT (25–80 s): the player wakes in the ruins of the Last
+#   Library. The Archivist explains what was lost and asks which oath the
+#   player will swear. The answer is remembered for the rest of the campaign.
+#
+#   Timeline
+#     0 – 25   vision: hall, coronation, the shattering
+#    25 – 44   present: the library, the Archivist
+#    44        CHOICE (oath), pausing the scene
+#    46 – 51   marker "valor"      52 – 57 marker "wisdom"
+#    58 – 63   marker "shadow"     64 – 80 marker "after": the five beams
+# ═════════════════════════════════════════════════════════════════════════════
+
+cine scene "crown:prologue":
+    duration: 80 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set {_c} to {_stage} ~ vector(0, 0, 10)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        add cine marker "valor" at 46 seconds
+        add cine marker "wisdom" at 52 seconds
+        add cine marker "shadow" at 58 seconds
+        add cine marker "after" at 64 seconds
+
+        # ── The vision: the coronation hall ─────────────────────────────────
+        set {_throne} to a new cine block display of gold block at {_c} ~ vector(-0.5, 0, 1.5)
+        set {_seat} to a new cine block display of quartz stairs at {_c} ~ vector(-0.5, 1, 1.5)
+        set {_pillarL1} to a new cine block display of quartz pillar at {_c} ~ vector(-4.5, 0, -2)
+        set {_pillarL2} to a new cine block display of quartz pillar at {_c} ~ vector(-4.5, 1, -2)
+        set {_pillarL3} to a new cine block display of quartz pillar at {_c} ~ vector(-4.5, 2, -2)
+        set {_pillarR1} to a new cine block display of quartz pillar at {_c} ~ vector(3.5, 0, -2)
+        set {_pillarR2} to a new cine block display of quartz pillar at {_c} ~ vector(3.5, 1, -2)
+        set {_pillarR3} to a new cine block display of quartz pillar at {_c} ~ vector(3.5, 2, -2)
+        set {_carpet1} to a new cine block display of yellow carpet at {_c} ~ vector(-0.5, 0, -1)
+        set {_carpet2} to a new cine block display of yellow carpet at {_c} ~ vector(-0.5, 0, -2)
+        set {_carpet3} to a new cine block display of yellow carpet at {_c} ~ vector(-0.5, 0, -3)
+        set {_carpet4} to a new cine block display of yellow carpet at {_c} ~ vector(-0.5, 0, -4)
+        set {_carpet5} to a new cine block display of yellow carpet at {_c} ~ vector(-0.5, 0, -5)
+        set {_bannerL} to a new cine item display of yellow banner at {_c} ~ vector(-3.4, 3, -1.5)
+        set {_bannerR} to a new cine item display of yellow banner at {_c} ~ vector(2.4, 3, -1.5)
+
+        set {_queen} to a new cine player actor at {_c} ~ vector(0, 0, 0.6) named "aurelion" with name tag "<yellow>Queen Aurelion"
+        set {_malrec} to a new cine player actor at {_c} ~ vector(-3, 0, -4) named "malrec" with name tag "<dark_purple>Prince Malrec"
+        set {_guard1} to a new cine actor of armor stand at {_c} ~ vector(-2.5, 0, -3) named "guard1"
+        set {_guard2} to a new cine actor of armor stand at {_c} ~ vector(1.5, 0, -3) named "guard2"
+        set {_guard3} to a new cine actor of armor stand at {_c} ~ vector(-2.5, 0, -5.5) named "guard3"
+        set {_guard4} to a new cine actor of armor stand at {_c} ~ vector(1.5, 0, -5.5) named "guard4"
+        set {_crown} to a new cine item display of golden helmet at {_c} ~ vector(0, 3.2, 0.6) named "crown"
+        set {_crownLabel} to a new cine text display with text "<gradient:yellow:gold>The Crown of Aurelion</gradient>" at {_c} ~ vector(0, 4, 0.6)
+        attach cine actor {_crownLabel} to {_crown} with offset vector(0, 0.8, 0)
+        add {_throne}, {_seat}, {_pillarL1}, {_pillarL2}, {_pillarL3}, {_pillarR1}, {_pillarR2} and {_pillarR3} to {_vision::*}
+        add {_carpet1}, {_carpet2}, {_carpet3}, {_carpet4}, {_carpet5}, {_bannerL} and {_bannerR} to {_vision::*}
+        add {_queen}, {_malrec}, {_guard1}, {_guard2}, {_guard3}, {_guard4}, {_crown} and {_crownLabel} to {_vision::*}
+
+        # ── The present: the Last Library (hidden until the vision ends) ────
+        set {_lib} to {_stage} ~ vector(0, 0, 7)
+        set {_archivist} to a new cine player actor at {_lib} ~ vector(0, 0, 2) named "archivist" with name tag "<gold>The Archivist"
+        set {_lectern} to a new cine block display of lectern at {_lib} ~ vector(-0.5, 0, 0.3)
+        set {_shelf1} to a new cine block display of bookshelf at {_lib} ~ vector(-4, 0, 3)
+        set {_shelf2} to a new cine block display of bookshelf at {_lib} ~ vector(-4, 1, 3)
+        set {_shelf3} to a new cine block display of chiseled bookshelf at {_lib} ~ vector(-3, 0, 3.5)
+        set {_shelf4} to a new cine block display of bookshelf at {_lib} ~ vector(3, 0, 3)
+        set {_shelf5} to a new cine block display of bookshelf at {_lib} ~ vector(3, 1, 3)
+        set {_shelf6} to a new cine block display of chiseled bookshelf at {_lib} ~ vector(2, 0, 3.5)
+        set {_fallen1} to a new cine block display of bookshelf at {_lib} ~ vector(-2.2, 0, -1.5)
+        set {_fallen2} to a new cine block display of cobweb at {_lib} ~ vector(3.2, 2, 3)
+        set {_candle1} to a new cine item display of candle at {_lib} ~ vector(-0.8, 1.2, 0.3)
+        set {_candle2} to a new cine item display of candle at {_lib} ~ vector(0.8, 1.2, 0.3)
+        set {_book1} to a new cine item display of written book at {_lib} ~ vector(1.5, 2, 2)
+        set {_book2} to a new cine item display of enchanted book at {_lib} ~ vector(-1.5, 2.3, 2)
+        set {_book3} to a new cine item display of book at {_lib} ~ vector(0, 2.6, 3.2)
+        add {_archivist}, {_lectern}, {_shelf1}, {_shelf2}, {_shelf3}, {_shelf4}, {_shelf5} and {_shelf6} to {_present::*}
+        add {_fallen1}, {_fallen2}, {_candle1}, {_candle2}, {_book1}, {_book2} and {_book3} to {_present::*}
+        hide cine actors {_present::*}
+
+        # ── Camera ──────────────────────────────────────────────────────────
+        set {_focus} to {_c} ~ vector(0, 2, 0)
+        play cine sequence "cam:establish" at 0 seconds
+        add cine camera keyframe at {_c} ~ vector(0, 2.2, -8) at 9 seconds with easing "ease-in-out-sine" looking at {_queen}
+        add cine camera keyframe at {_c} ~ vector(0, 2.4, -3) at 13 seconds with easing "ease-in-out-cubic" looking at {_c} ~ vector(0, 3, 0.6)
+        make the cine camera watch {_malrec} from {_c} ~ vector(-1, 2, 0) between 14 seconds and 18 seconds blending over 15 ticks
+        make the cine camera watch {_crown} from {_c} ~ vector(2, 2.5, -3) between 18 seconds and 22 seconds blending over 10 ticks
+        set {_focus} to {_c} ~ vector(0, 3, 0)
+        play cine sequence "cam:pull-back" at 22 seconds
+        # Present day
+        set {_focus} to {_archivist}
+        set {_from} to {_lib} ~ vector(3, 2.5, -6)
+        add cine camera keyframe at {_lib} ~ vector(0, 6, -10) at 28 seconds looking at {_lib}
+        add cine camera keyframe at {_lib} ~ vector(2, 2.2, -5) at 32 seconds with easing "ease-in-out-sine" looking at {_lib} ~ vector(0, 1.6, 2)
+        make the cine camera watch {_archivist} from {_lib} ~ vector(-1.5, 2, -2.5) between 34 seconds and 44 seconds blending over 1 second
+        set {_from} to {_lib} ~ vector(0, 2, -3)
+        set {_focus} to {_lib} ~ vector(0, 1.6, 2)
+        play cine sequence "cam:breathe" at 44 seconds
+        make the cine camera orbit around {_lib} ~ vector(0, 1, 2) between 46 seconds and 63 seconds with radius 5 and height 2.5 sweeping 160 degrees blending over 1 second
+        set {_focus} to {_lib} ~ vector(0, 1.5, 2)
+        play cine sequence "cam:sky-up" at 64 seconds
+        add cine camera keyframe at {_lib} ~ vector(0, 30, -20) at 72 seconds with easing "ease-in-out-sine" looking at {_lib} ~ vector(0, 20, 60)
+        add cine camera keyframe at {_lib} ~ vector(0, 34, -18) at 80 seconds with easing "ease-out-sine" looking at {_lib} ~ vector(0, 24, 80)
+
+        # ── The vision ──────────────────────────────────────────────────────
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            play cine sound "music_disc.otherside" with volume 0.35
+            make cine actors {_queen}, {_guard1}, {_guard2}, {_guard3} and {_guard4} look at {_c} ~ vector(0, 1.6, -10)
+            make cine actor {_malrec} look at {_queen}
+        at 10 ticks:
+            fade the cine screen in over 3 seconds
+            spin cine display {_crown} around vector(0, 1, 0) continuously at 30 degrees per second
+            set {_at} to {_crown}
+            set {_len} to 20 seconds
+            play cine sequence "fx:aura"
+        at 1 second:
+            set {_title} to "<gray>Nine hundred years ago"
+            set {_subtitle} to "<dark_gray>the city of Aurelion"
+            set {_tone} to 0.6
+            play cine sequence "fx:title-card"
+        at 3 seconds:
+            set {_at} to {_c}
+            set {_len} to 20 seconds
+            play cine sequence "fx:fireflies"
+        at 5 seconds:
+            set {_who} to "narrator"
+            set {_line} to "On the day of her crowning, every bell in Aurelion rang at once."
+            play cine sequence "say"
+            play cine sound "block.bell.use" with volume 0.7 and pitch 0.7
+        at 6 seconds:
+            play cine sound "block.bell.use" with volume 0.6 and pitch 0.9
+        at 7 seconds:
+            play cine sound "block.bell.use" with volume 0.5 and pitch 1.1
+        at 9 seconds:
+            set {_who} to "aurelion"
+            set {_line} to "Five aspects. Five oaths. I will carry them all, for all of you."
+            play cine sequence "say"
+            set {_at} to {_crown}
+            play cine sequence "fx:crown-glow"
+        at 13 seconds:
+            move cine actor {_malrec} to {_c} ~ vector(-1.2, 0, -1) over 2.5 seconds with easing "ease-in-out-sine" facing the movement
+            set {_who} to "narrator"
+            set {_line} to "Only her brother saw what the crown asked in return."
+            play cine sequence "say"
+        at 15.5 seconds:
+            make cine actor {_malrec} look at {_crown}
+            make cine actor {_queen} look at {_malrec}
+        at 16 seconds:
+            set {_who} to "malrec"
+            set {_line} to "Sister, take it off. It is not a crown. It is a mouth."
+            play cine sequence "say"
+        at 18.5 seconds:
+            set {_who} to "aurelion"
+            set {_line} to "Malrec... what are you doing?"
+            set {_hold} to 2 seconds
+            play cine sequence "say"
+            delete {_hold}
+            animate cine display {_crown} to scale 1.4 over 2 seconds with easing "ease-in-cubic"
+            set {_at} to {_crown}
+            set {_colour} to purple
+            play cine sequence "fx:dark-pulse"
+            play cine sound "entity.elder_guardian.curse" with volume 0.6 and pitch 0.8
+        at 20.5 seconds:
+            set {_at} to {_c} ~ vector(0, 3.2, 0.6)
+            play cine sequence "fx:crown-shatter"
+            hide cine actors {_crown} and {_crownLabel}
+            shake the cine camera with intensity 1.6 for 2 seconds
+        at 21 seconds:
+            set {_who} to "narrator"
+            set {_line} to "And the crown of Aurelion broke into five."
+            play cine sequence "say"
+            set {_at} to {_c}
+            play cine sequence "fx:starfall"
+        at 23 seconds:
+            fade the cine screen out with colour white over 1.5 seconds
+        at 25 seconds:
+            hide cine actors {_vision::*}
+            show cine actors {_present::*}
+            spin cine display {_book1} around vector(0, 1, 0) continuously at 25 degrees per second
+            spin cine display {_book2} around vector(0, 1, 0) continuously at -20 degrees per second
+            spin cine display {_book3} around vector(1, 0, 0) continuously at 15 degrees per second
+            make cine actor {_archivist} look at {_eye}
+            stop cine sound "music_disc.otherside"
+        at 26 seconds:
+            fade the cine screen in over 2.5 seconds
+            play cine sound "ambient.cave" with volume 0.6
+            set {_at} to {_lib}
+            set {_len} to 50 seconds
+            play cine sequence "fx:fireflies"
+
+        # ── The present ─────────────────────────────────────────────────────
+        at 27 seconds:
+            set {_title} to "%crownChapterTag(1)%<bold>PROLOGUE"
+            set {_subtitle} to "<gray>The Fall of Aurelion"
+            set {_tone} to 0.8
+            play cine sequence "fx:title-card"
+        at 31 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Ah. You're awake. Good. The crown has been calling you for some time."
+            play cine sequence "say"
+        at 34 seconds:
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            play cine sequence "fx:appear"
+            rotate cine actors {_book1}, {_book2} and {_book3} around {_archivist} by 360 degrees over 10 seconds with easing "ease-in-out-sine"
+        at 36 seconds:
+            set {_who} to "archivist"
+            set {_line} to "I keep the Last Library. I remember everything... except, it seems, my own name."
+            play cine sequence "say"
+        at 40 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Five shards: Ember, Tide, Gale, Stone and Void. Each one has found a guardian."
+            play cine sequence "say"
+        at 43 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Before you go after them, you must swear an oath. Choose carefully."
+            play cine sequence "say"
+        at 44 seconds:
+            present cine choice "<gold>Which oath will you swear?" to cine viewers with options "Valor", "Wisdom" and "Shadow" with timeout 30 seconds defaulting to "Wisdom" as a vote using a menu pausing the scene:
+                set cine variable "oath" to cine choice
+                if crownIsReplay(cine variable "replay") is false:
+                    if cine choice is "Valor":
+                        crownChooseAll(cine viewers, "oath", "valor", 5, "Swore the Oath of Valor")
+                    else if cine choice is "Wisdom":
+                        crownChooseAll(cine viewers, "oath", "wisdom", 5, "Swore the Oath of Wisdom")
+                    else:
+                        crownChooseAll(cine viewers, "oath", "shadow", -5, "Swore the Oath of Shadow")
+                    loop cine viewers:
+                        crownSet(loop-value, "oath", crownChoice(loop-value, "oath"))
+                if cine choice is "Valor":
+                    jump the cine scene to marker "valor"
+                else if cine choice is "Shadow":
+                    jump the cine scene to marker "shadow"
+                else:
+                    jump the cine scene to marker "wisdom"
+
+        # ── Branch: Valor ───────────────────────────────────────────────────
+        at marker "valor":
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            set {_colour} to red
+            play cine sequence "fx:sigil"
+            set {_who} to "archivist"
+            set {_line} to "Valor. The Ember will like you. Try not to let it burn too brightly."
+            play cine sequence "say"
+        at 50 seconds:
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            play cine preset "fire-burst" at {_at} with colour red and accent orange
+        at 51 seconds:
+            jump the cine scene to marker "after"
+
+        # ── Branch: Wisdom ──────────────────────────────────────────────────
+        at marker "wisdom":
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            set {_colour} to blue
+            play cine sequence "fx:sigil"
+            set {_who} to "archivist"
+            set {_line} to "Wisdom. A rare choice. The Tide remembers those who listen."
+            play cine sequence "say"
+        at 56 seconds:
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            play cine preset "magic-reveal" at {_at} with colour blue and accent white
+        at 57 seconds:
+            jump the cine scene to marker "after"
+
+        # ── Branch: Shadow ──────────────────────────────────────────────────
+        at marker "shadow":
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            set {_colour} to purple
+            play cine sequence "fx:sigil"
+            play cine sequence "fx:dark-pulse"
+            set {_who} to "archivist"
+            set {_line} to "Shadow. Hm. Honest, at least. The Void will be... interested in you."
+            play cine sequence "say"
+        at 62 seconds:
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            play cine preset "secret-reveal" at {_at} with colour purple and accent dark grey
+        at 63 seconds:
+            jump the cine scene to marker "after"
+
+        # ── After the oath: the five beams ──────────────────────────────────
+        at marker "after":
+            set {_who} to "archivist"
+            set {_line} to "Look up. Can you see them? They have been waiting nine hundred years."
+            play cine sequence "say"
+        at 66 seconds:
+            set {_at} to {_lib} ~ vector(40, 0, 60)
+            set {_colour} to orange
+            play cine sequence "fx:shard-call"
+        at 67 seconds:
+            set {_at} to {_lib} ~ vector(-45, 0, 55)
+            set {_colour} to cyan
+            play cine sequence "fx:shard-call"
+        at 68 seconds:
+            set {_at} to {_lib} ~ vector(10, 0, 80)
+            set {_colour} to light blue
+            play cine sequence "fx:shard-call"
+        at 69 seconds:
+            set {_at} to {_lib} ~ vector(-15, 0, 90)
+            set {_colour} to light grey
+            play cine sequence "fx:shard-call"
+        at 70 seconds:
+            set {_at} to {_lib} ~ vector(30, 0, 100)
+            set {_colour} to purple
+            play cine sequence "fx:shard-call"
+            set {_who} to "archivist"
+            set {_line} to "Bring them home. And whatever the guardians tell you... remember who sent you."
+            play cine sequence "say"
+        at 74 seconds:
+            set {_who} to "echo"
+            set {_line} to "...remember who sent you."
+            play cine sequence "whisper"
+        at 76 seconds:
+            set {_title} to "<gold>✦ <yellow>Echoes of the Shattered Crown <gold>✦"
+            set {_subtitle} to "<gray>Chapter I · The Ember awaits"
+            set {_tone} to 1
+            play cine sequence "fx:title-card"
+        at 78 seconds:
+            fade the cine screen out over 2 seconds
+        at 79 seconds even if skipped:
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    if crownChoice(loop-value, "oath") is "none":
+                        crownChoose(loop-value, "oath", "wisdom")
+                        crownSet(loop-value, "oath", "wisdom")
+                    crownSetFlag(loop-value, "begun")
+                crownFinishChapterFor(cine viewers, 1)
+                loop cine viewers:
+                    crownUnlockCodex(loop-value, "aurelion")
+                    crownUnlockCodex(loop-value, "crown")
+                    crownUnlockCodex(loop-value, "archivist")

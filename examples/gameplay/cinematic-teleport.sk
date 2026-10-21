@@ -1,0 +1,34 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: cinematic teleport (portals, warps, fast travel)
+#  /sk reload cinematic-teleport   then   /warpto <x> <y> <z>
+#
+#  The player ends the scene at the destination instead of returning home:
+#  `cine end location` overrides "restore location".
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:teleport":
+    duration: 5 seconds
+    timeline:
+        # {_destination} is passed in by the caller's local variables.
+        set {_from} to location of event-player
+        set cine end location to {_destination}
+        add cine camera keyframe at {_from} ~ vector(0, 2, -4) at 0 seconds looking at {_from} ~ vector(0, 1, 0)
+        add cine camera keyframe at {_from} ~ vector(0, 12, -2) at 2 seconds with easing "ease-in-cubic" looking at {_from}
+        at 0 seconds:
+            play cine preset "teleport" at {_from} lasting 2 seconds
+            play cine sound "block.portal.trigger" with volume 0.6
+        at 2 seconds:
+            fade cine screen out with colour black over 10 ticks
+        at 3 seconds:
+            # The camera jumps to the destination while the screen is black.
+            add cine camera keyframe at {_destination} ~ vector(0, 12, -2) at 3 seconds looking at {_destination}
+            add cine camera keyframe at {_destination} ~ vector(0, 2, -4) at 5 seconds with easing "ease-out-cubic" looking at {_destination} ~ vector(0, 1, 0)
+            fade cine screen in over 15 ticks
+            play cine preset "portal-opening" at {_destination} lasting 2 seconds
+            play cine sound "entity.enderman.teleport"
+
+command /warpto <number> <number> <number>:
+    permission: op
+    trigger:
+        set {_destination} to location(arg-1, arg-2, arg-3, world of player)
+        play cine scene "examples:teleport" for player

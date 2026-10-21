@@ -1,0 +1,400 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   12-chapter-tide.sk  —  Chapter II · The Tide
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Beneath a drowned temple, Nerys, once a priestess of the tide, has become
+#   the Drowned Matriarch. The Tide Shard lets her keep every soul that ever
+#   drowned near Aurelion "safe" — asleep, forever, singing.
+#
+#   crown:tide-intro   the sanctuary, the sleeping souls, the Matriarch's song
+#                      → Trial of the Deep → the Drowned Matriarch
+#   crown:tide-outro   Nerys, awake for the first time in centuries.
+#                      CHOICE  Free the drowned souls  (+15, tide = free)
+#                              Command them            (-15, tide = command)
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Intro
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "crown:tide-intro":
+    duration: 52 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_t} to {_stage} ~ vector(0, 0, 10)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        # ── The sanctuary ───────────────────────────────────────────────────
+        set {_p1a} to a new cine block display of prismarine bricks at {_t} ~ vector(-5.5, 0, -2)
+        set {_p1b} to a new cine block display of prismarine bricks at {_t} ~ vector(-5.5, 1, -2)
+        set {_p1c} to a new cine block display of sea lantern at {_t} ~ vector(-5.5, 2, -2)
+        set {_p2a} to a new cine block display of prismarine bricks at {_t} ~ vector(4.5, 0, -2)
+        set {_p2b} to a new cine block display of prismarine bricks at {_t} ~ vector(4.5, 1, -2)
+        set {_p2c} to a new cine block display of sea lantern at {_t} ~ vector(4.5, 2, -2)
+        set {_p3a} to a new cine block display of dark prismarine at {_t} ~ vector(-5.5, 0, 3)
+        set {_p3b} to a new cine block display of dark prismarine at {_t} ~ vector(-5.5, 1, 3)
+        set {_p3c} to a new cine block display of sea lantern at {_t} ~ vector(-5.5, 2, 3)
+        set {_p4a} to a new cine block display of dark prismarine at {_t} ~ vector(4.5, 0, 3)
+        set {_p4b} to a new cine block display of dark prismarine at {_t} ~ vector(4.5, 1, 3)
+        set {_p4c} to a new cine block display of sea lantern at {_t} ~ vector(4.5, 2, 3)
+        set {_altar} to a new cine block display of conduit at {_t} ~ vector(-0.5, 1, 2.5)
+        set {_altarBase} to a new cine block display of prismarine brick slab at {_t} ~ vector(-0.5, 0, 2.5)
+        set {_kelp1} to a new cine item display of kelp at {_t} ~ vector(-3, 1, 0)
+        set {_kelp2} to a new cine item display of kelp at {_t} ~ vector(2.5, 1, 1)
+        set {_kelp3} to a new cine item display of kelp at {_t} ~ vector(-1.5, 1, 4)
+        set {_coral1} to a new cine block display of tube coral block at {_t} ~ vector(-3.5, -0.6, 4)
+        set {_coral2} to a new cine block display of brain coral block at {_t} ~ vector(2.5, -0.6, 4)
+        set {_coral3} to a new cine block display of horn coral block at {_t} ~ vector(-4, -0.6, -4)
+        set {_shell} to a new cine item display of nautilus shell at {_t} ~ vector(0, 2.5, 2.5) named "tide-shard"
+
+        set {_soul1} to a new cine actor of drowned at {_t} ~ vector(-3, 0, -1) named "soul1"
+        set {_soul2} to a new cine actor of drowned at {_t} ~ vector(-1.5, 0, -3) named "soul2"
+        set {_soul3} to a new cine actor of drowned at {_t} ~ vector(1.5, 0, -3) named "soul3"
+        set {_soul4} to a new cine actor of drowned at {_t} ~ vector(3, 0, -1) named "soul4"
+        set {_matriarch} to a new cine player actor at {_t} ~ vector(0, 0, 4) named "matriarch" with name tag "<dark_aqua>The Drowned Matriarch"
+        set {_archivist} to a new cine player actor at {_stage} ~ vector(2.5, 0, 2) named "archivist" with name tag "<gold>The Archivist <gray>(projection)"
+        hide cine actors {_matriarch} and {_archivist}
+        add {_soul1}, {_soul2}, {_soul3} and {_soul4} to {_souls::*}
+
+        # ── Camera ──────────────────────────────────────────────────────────
+        set {_focus} to {_t} ~ vector(0, 1, 1)
+        play cine sequence "cam:sky-down" at 0 seconds
+        set {_path::1} to {_t} ~ vector(-7, 2, -7)
+        set {_path::2} to {_t} ~ vector(-6, 1.5, 0)
+        set {_path::3} to {_t} ~ vector(-4, 2, 5)
+        set {_path::4} to {_t} ~ vector(0, 3, 7)
+        play cine sequence "cam:fly-path" at 5 seconds
+        make the cine camera watch {_matriarch} from {_t} ~ vector(0, 2, -2) between 16 seconds and 27 seconds blending over 1 second
+        set {_a} to {_archivist}
+        set {_b} to {_matriarch}
+        play cine sequence "cam:dialogue" at 27 seconds
+        set {_focus} to {_t} ~ vector(0, 1.5, 1)
+        set {_r} to 8
+        play cine sequence "cam:orbit-slow" at 39 seconds
+        add cine camera keyframe at {_t} ~ vector(0, 14, -14) at 50 seconds with easing "ease-in-out-sine" looking at {_t}
+
+        # ── The sanctuary sleeps ────────────────────────────────────────────
+        at 0 seconds:
+            fade the cine screen out with colour cyan over 1 tick
+            play cine sound "ambient.underwater.loop" with volume 0.8
+            make cine actors {_souls::*} look at {_t} ~ vector(0, 1.6, 4)
+        at 5 ticks:
+            fade the cine screen in over 3 seconds
+            set {_at} to {_t}
+            set {_len} to 50 seconds
+            play cine sequence "fx:tide-pool"
+            spin cine display {_shell} around vector(0, 1, 0) continuously at 40 degrees per second
+            spin cine display {_altar} around vector(0, 1, 0) continuously at 15 degrees per second
+        at 1 second:
+            set {_title} to "%crownChapterTag(3)%<bold>CHAPTER II"
+            set {_subtitle} to "<dark_aqua>The Tide"
+            set {_tone} to 0.6
+            play cine sequence "fx:title-card"
+        at 5 seconds:
+            set {_who} to "narrator"
+            set {_line} to "The Drowned Sanctuary. Once a temple of the sea. Now a lullaby that never ends."
+            play cine sequence "say"
+        at 8 seconds:
+            set {_at} to {_soul1}
+            set {_colour} to cyan
+            set {_len} to 40 seconds
+            play cine sequence "fx:aura"
+            set {_at} to {_soul4}
+            play cine sequence "fx:aura"
+        at 10 seconds:
+            set {_who} to "soul"
+            set {_line} to "...so quiet... so quiet down here..."
+            play cine sequence "whisper"
+            play cine sound "entity.drowned.ambient_water" with volume 0.6 and pitch 0.8
+        at 13 seconds:
+            set {_who} to "soul"
+            set {_line} to "...she sings, and we sleep..."
+            play cine sequence "whisper"
+        at 16 seconds:
+            show cine actor {_matriarch}
+            set {_at} to {_matriarch}
+            set {_colour} to cyan
+            play cine sequence "fx:appear"
+            make cine actor {_matriarch} look at {_eye} for 10 seconds
+            play cine sound "block.conduit.activate" at {_t} with volume 1 and pitch 0.8
+        at 17 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "<italic>♪ Hush, little one, the tide is low... the deep is kind, the deep is slow... ♪"
+            set {_hold} to 4 seconds
+            play cine sequence "say"
+            delete {_hold}
+            play cine sound "entity.allay.ambient_without_item" with volume 0.5 and pitch 0.6
+        at 22 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "A living heart, in my sanctuary? How loud it beats. How frightened."
+            play cine sequence "say"
+        at 26 seconds:
+            show cine actor {_archivist}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            play cine sequence "fx:appear"
+            make cine actor {_archivist} look at {_matriarch}
+        at 27 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Nerys. You were a priestess. You sang the drowned HOME, not to sleep."
+            play cine sequence "say"
+        at 30 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "Home was gone, Archivist. The city drowned in its own grief. I keep them safe."
+            play cine sequence "say"
+        at 33 seconds:
+            set {_who} to "archivist"
+            set {_line} to "You keep them. That isn't the same thing."
+            play cine sequence "say"
+        at 36 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "Then let this one learn how gentle the deep can be."
+            play cine sequence "say"
+            make cine actors {_souls::*} look at {_eye}
+            move cine actors {_souls::*} to {_t} ~ vector(0, 0, -6) over 6 seconds with easing "ease-in-sine"
+        at 39 seconds:
+            set {_at} to {_t}
+            play cine sequence "fx:tidal-wave"
+            shake the cine camera with intensity 0.7 for 2 seconds
+        at 41 seconds:
+            set {_at} to {_archivist}
+            play cine sequence "fx:vanish"
+            hide cine actor {_archivist}
+            set {_who} to "archivist"
+            set {_line} to "Don't let them pull you under. I mean that literally."
+            play cine sequence "say"
+        at 44 seconds:
+            set {_title} to "<gradient:dark_aqua:aqua><bold>TRIAL OF THE DEEP</bold></gradient>"
+            set {_subtitle} to "<gray>Wake from the lullaby"
+            set {_tone} to 0.5
+            play cine sequence "fx:title-card"
+            play cine sound "item.trident.thunder" with volume 0.6 and pitch 0.6
+        at 49 seconds:
+            fade the cine screen out with colour cyan over 2 seconds
+        at 51 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterIntro({_v::*}, 3, cine variable "stage", crownIsReplay(cine variable "replay"))
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    crownUnlockCodex(loop-value, "sanctuary")
+                    crownUnlockCodex(loop-value, "nerys")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Outro
+# ─────────────────────────────────────────────────────────────────────────────
+#  Timeline
+#     0 – 22   Nerys, awake; the souls; the Archivist
+#    22        CHOICE (pausing)
+#    24 – 36   marker "free"      38 – 50 marker "command"
+#    52 – 66   marker "after"
+
+cine scene "crown:tide-outro":
+    duration: 66 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set {_t} to {_stage} ~ vector(0, 0, 8)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        add cine marker "free" at 24 seconds
+        add cine marker "command" at 38 seconds
+        add cine marker "after" at 52 seconds
+
+        set {_nerys} to a new cine player actor at {_t} ~ vector(0, 0, 1) named "nerys" with name tag "<dark_aqua>Nerys <gray>· once the Matriarch"
+        set {_shard} to a new cine item display of prismarine crystals at {_t} ~ vector(0, 1.8, 2.5) named "tide-shard"
+        set {_shardLabel} to a new cine text display with text "<dark_aqua>✦ Tide Shard ✦" at {_t} ~ vector(0, 2.6, 2.5)
+        attach cine actor {_shardLabel} to {_shard} with offset vector(0, 0.7, 0)
+        set {_conduit} to a new cine block display of conduit at {_t} ~ vector(-0.5, 0, 2)
+        set {_soul1} to a new cine actor of drowned at {_t} ~ vector(-4, 0, -1) named "soul1"
+        set {_soul2} to a new cine actor of drowned at {_t} ~ vector(-2, 0, -2.5) named "soul2"
+        set {_soul3} to a new cine actor of drowned at {_t} ~ vector(2, 0, -2.5) named "soul3"
+        set {_soul4} to a new cine actor of drowned at {_t} ~ vector(4, 0, -1) named "soul4"
+        set {_soul5} to a new cine actor of drowned at {_t} ~ vector(0, 0, -4) named "soul5"
+        add {_soul1}, {_soul2}, {_soul3}, {_soul4} and {_soul5} to {_souls::*}
+        set {_echo} to a new cine player actor at {_t} ~ vector(5, 0, 3) named "echo" with skin of event-player with name tag "<aqua>Your Echo"
+        set {_archivist} to a new cine player actor at {_stage} ~ vector(-2.5, 0, 1.5) named "archivist" with name tag "<gold>The Archivist <gray>(projection)"
+        hide cine actors {_echo} and {_archivist}
+
+        # Camera
+        add cine camera keyframe at {_t} ~ vector(-7, 5, -8) at 0 seconds looking at {_t}
+        add cine camera keyframe at {_t} ~ vector(-2.5, 2, -3) at 5 seconds with easing "ease-in-out-sine" looking at {_nerys}
+        make the cine camera watch {_nerys} from {_t} ~ vector(-1.2, 1.9, -1.5) between 6 seconds and 15 seconds blending over 1 second
+        make the cine camera watch {_archivist} from {_stage} ~ vector(0, 2, -1) between 16 seconds and 21 seconds blending over 1 second
+        make the cine camera hold at {_stage} ~ vector(0, 2.5, -3) between 22 seconds and 24 seconds blending over 15 ticks
+        set {_focus} to {_t}
+        set {_r} to 7
+        play cine sequence "cam:spiral-rise" at 25 seconds
+        make the cine camera watch {_nerys} from {_t} ~ vector(2, 1.4, -3) between 38 seconds and 50 seconds blending over 1 second
+        make the cine camera watch {_echo} from {_t} ~ vector(2, 2, -1) between 54 seconds and 61 seconds blending over 1 second
+        set {_focus} to {_t}
+        play cine sequence "cam:pull-back" at 61 seconds
+
+        at 0 seconds:
+            fade the cine screen out with colour cyan over 1 tick
+            make cine actors {_souls::*} look at {_nerys}
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+            set {_at} to {_t}
+            set {_len} to 64 seconds
+            play cine sequence "fx:tide-pool"
+            spin cine display {_shard} around vector(0, 1, 0) continuously at 50 degrees per second
+            make cine actor {_nerys} look at {_eye}
+        at 3 seconds:
+            play cine sound "block.conduit.deactivate" at {_t} with volume 1 and pitch 0.8
+        at 6 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "The song... stopped. I can hear the surface again. Rain. Gulls."
+            play cine sequence "say"
+        at 10 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "Nine hundred years I sang. I thought I was protecting them from the grief."
+            play cine sequence "say"
+        at 13 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "But I was protecting myself from the silence after."
+            play cine sequence "say"
+        at 16 seconds:
+            show cine actor {_archivist}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            play cine sequence "fx:appear"
+            make cine actor {_archivist} look at {_shard}
+            set {_who} to "archivist"
+            set {_line} to "The souls are still bound to the shard. Release them and it will be weaker."
+            play cine sequence "say"
+        at 19 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Or keep them. A shard with an army is a shard no one will take from you."
+            play cine sequence "say"
+        at 22 seconds:
+            present cine choice "<dark_aqua>What becomes of the drowned?" to cine viewers with options "Free the drowned souls" and "Command them" with timeout 30 seconds defaulting to "Free the drowned souls" as a vote using a menu pausing the scene:
+                if cine choice is "Free the drowned souls":
+                    set cine variable "tide" to "free"
+                    if crownIsReplay(cine variable "replay") is false:
+                        crownChooseAll(cine viewers, "tide", "free", 15, "Freed the drowned")
+                    jump the cine scene to marker "free"
+                else:
+                    set cine variable "tide" to "command"
+                    if crownIsReplay(cine variable "replay") is false:
+                        crownChooseAll(cine viewers, "tide", "command", -15, "Bound the drowned to you")
+                    jump the cine scene to marker "command"
+
+        # ── Free ────────────────────────────────────────────────────────────
+        at marker "free":
+            set {_who} to "matriarch"
+            set {_line} to "Then let me sing one last song. The right one, this time."
+            play cine sequence "say"
+            play cine sound "block.amethyst_block.chime" with volume 1 and pitch 0.6
+        at 27 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "<italic>♪ Rise, little ones, the tide is high... the surface waits, so say goodbye... ♪"
+            set {_hold} to 4 seconds
+            play cine sequence "say"
+            delete {_hold}
+            add cine actor keyframe for {_soul1} at {_t} ~ vector(-4, 0, -1) at 27 seconds
+            add cine actor keyframe for {_soul1} at {_t} ~ vector(-4, 12, -1) at 33 seconds with easing "ease-in-sine"
+            add cine actor keyframe for {_soul2} at {_t} ~ vector(-2, 0, -2.5) at 28 seconds
+            add cine actor keyframe for {_soul2} at {_t} ~ vector(-2, 12, -2.5) at 34 seconds with easing "ease-in-sine"
+            add cine actor keyframe for {_soul3} at {_t} ~ vector(2, 0, -2.5) at 29 seconds
+            add cine actor keyframe for {_soul3} at {_t} ~ vector(2, 12, -2.5) at 35 seconds with easing "ease-in-sine"
+        at 28 seconds:
+            set {_at} to {_soul1}
+            play cine sequence "fx:blessing"
+            set {_at} to {_soul5}
+            play cine sequence "fx:blessing"
+        at 30 seconds:
+            set {_at} to {_soul4}
+            play cine sequence "fx:blessing"
+            move cine actors {_soul4} and {_soul5} to {_t} ~ vector(0, 14, 2) over 5 seconds with easing "ease-in-sine"
+        at 33 seconds:
+            set {_at} to {_t} ~ vector(0, 12, 0)
+            set {_colour} to cyan
+            play cine sequence "fx:shard-call"
+            hide cine actors {_souls::*}
+        at 35 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "Thank you. Take the shard. Its song is yours now."
+            play cine sequence "say"
+        at 36 seconds:
+            jump the cine scene to marker "after"
+
+        # ── Command ─────────────────────────────────────────────────────────
+        at marker "command":
+            set {_at} to {_eye} ~ vector(0, -1.6, 0)
+            set {_colour} to purple
+            play cine sequence "fx:dark-pulse"
+            make cine actors {_souls::*} look at {_eye}
+            move cine actors {_souls::*} to {_stage} ~ vector(0, 0, 3) over 4 seconds with easing "ease-in-out-sine" facing the movement
+            set {_who} to "matriarch"
+            set {_line} to "No... they've only just woken. They don't know what you are."
+            play cine sequence "say"
+        at 42 seconds:
+            make cine actors {_souls::*} look at {_eye}
+            set {_who} to "soul"
+            set {_line} to "...yes... we hear you now... we will follow..."
+            play cine sequence "whisper"
+        at 45 seconds:
+            set {_who} to "archivist"
+            set {_line} to "An honour guard. Every ruler needs one."
+            play cine sequence "say"
+            set {_at} to {_stage} ~ vector(0, 0, 3)
+            set {_colour} to dark grey
+            play cine sequence "fx:sigil"
+        at 48 seconds:
+            set {_who} to "matriarch"
+            set {_line} to "I sang them to sleep. You've done something worse. You've given them a master."
+            play cine sequence "say"
+        at 50 seconds:
+            jump the cine scene to marker "after"
+
+        # ── After ───────────────────────────────────────────────────────────
+        at marker "after":
+            add cine actor keyframe for {_shard} at {_t} ~ vector(0, 1.8, 2.5) at 52 seconds
+            add cine actor keyframe for {_shard} at {_eye} ~ vector(0, 0, 1) at 54 seconds with easing "ease-in-out-sine"
+            set {_at} to {_archivist}
+            play cine sequence "fx:vanish"
+            hide cine actor {_archivist}
+        at 54 seconds:
+            set {_at} to {_eye} ~ vector(0, -1, 0)
+            set {_colour} to cyan
+            play cine sequence "fx:shard-absorb"
+            hide cine actors {_shard} and {_shardLabel}
+            show cine actor {_echo}
+            set {_at} to {_echo}
+            set {_colour} to light blue
+            play cine sequence "fx:appear"
+            make cine actor {_echo} look at {_eye}
+        at 56 seconds:
+            set {_who} to "echo"
+            if cine variable "tide" is "command":
+                set {_line} to "An army of the drowned. I'll admit, I didn't see that coming. The crown did."
+            else:
+                set {_line} to "They were so loud when they rose. Like children let out of school."
+            play cine sequence "say"
+        at 59 seconds:
+            set {_who} to "echo"
+            set {_line} to "Ask the Archivist what his name is. Watch his face when you do."
+            play cine sequence "say"
+        at 62 seconds:
+            set {_at} to {_echo}
+            play cine sequence "fx:vanish"
+            hide cine actor {_echo}
+            set {_title} to "<dark_aqua><bold>TIDE SHARD RECOVERED"
+            set {_subtitle} to "<gray>2 of 5"
+            set {_tone} to 1.1
+            play cine sequence "fx:title-card"
+        at 64 seconds:
+            fade the cine screen out with colour cyan over 2 seconds
+        at 65.5 seconds even if skipped:
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    if crownChoice(loop-value, "tide") is "none":
+                        crownChoose(loop-value, "tide", "free")
+                        crownShiftKarma(loop-value, 15, "Freed the drowned")
+                    crownUnlockCodex(loop-value, "tide")
+                crownFinishChapterFor(cine viewers, 3)

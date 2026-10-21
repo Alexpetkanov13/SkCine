@@ -1,0 +1,135 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   33-gauntlet.sk  —  post-game: the Trial of Echoes, and leaderboards
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Once the story is finished, the crown offers one last challenge: fight
+#   echoes of all five guardians, back to back, with every intro, rage and
+#   fall cinematic, as fast as you can. Parties are welcome.
+#
+#     /crown gauntlet           start (the party leader starts it for all)
+#     /crown leaderboard        the ten fastest gauntlet runs on the server
+#     /crown leaderboard <id>   fastest times for one trial (ember, tide…)
+#
+#   The gauntlet reuses the trial engine (05-trials.sk) and the guardians
+#   (20-bosses.sk). It has no waves: each guardian is the whole round.
+#
+#   Memory:  {-crown::trial::<key>::gstage}   current guardian, 1–5
+#   Saved:   {crown::board::<trial>::<uuid>}  best seconds per player
+#            {crown::boardname::<uuid>}        last known player name
+# ═════════════════════════════════════════════════════════════════════════════
+
+function crownGauntletOrder(n: number) :: text:
+    if {_n} is 1:
+        return "ember"
+    if {_n} is 2:
+        return "tide"
+    if {_n} is 3:
+        return "gale"
+    if {_n} is 4:
+        return "stone"
+    return "void"
+
+function crownGauntletUnlocked(p: player) :: boolean:
+    if crownNum({_p}, "chapter") >= 8:
+        return true
+    return false
+
+function crownStartGauntlet(p: player):
+    if crownGauntletUnlocked({_p}) is false:
+        crownMsg({_p}, "&8The crown has no echoes to offer you yet. &7(Finish the story first.)")
+        stop
+    if crownInTrial({_p}) is true:
+        crownMsg({_p}, "&cYou're already in a trial.")
+        stop
+    if {_p} is watching a cine scene:
+        crownMsg({_p}, "&cYou're watching a scene.")
+        stop
+    if crownInParty({_p}) is true:
+        if crownIsLeader({_p}) is false:
+            crownMsg({_p}, "&cOnly the party leader can start the gauntlet.")
+            stop
+    set {_players::*} to crownAvailable(crownPartyMembers({_p}))
+    set {_stage} to crownStage({_p}, 7)
+    crownMsgAll({_players::*}, "&dThe Trial of Echoes begins. &7Five guardians. No rest. Good luck.")
+    crownStartTrial({_players::*}, "gauntlet", {_stage})
+
+# Which guardian a trial is fighting now (the shard id for normal trials).
+function crownTrialBossId(k: text) :: text:
+    set {_id} to {-crown::trial::%{_k}%::id}
+    if {_id} is "gauntlet":
+        set {_n} to {-crown::trial::%{_k}%::gstage} ? 1
+        return crownGauntletOrder({_n})
+    return "%{_id}%"
+
+# Called when a gauntlet guardian falls. True if another one follows.
+function crownGauntletAdvance(k: text) :: boolean:
+    set {_n} to ({-crown::trial::%{_k}%::gstage} ? 1) + 1
+    if {_n} > 5:
+        return false
+    set {-crown::trial::%{_k}%::gstage} to {_n}
+    return true
+
+function crownGauntletNextBoss(k: text):
+    crownBossForget({_k})
+    set {_n} to {-crown::trial::%{_k}%::gstage}
+    set {_players::*} to crownTrialPlayers({_k})
+    loop {_players::*}:
+        heal loop-value
+    crownMsgAll({_players::*}, "&dGuardian %{_n}%/5 &7— %crownBossLegacy(crownGauntletOrder({_n}))%%crownBossName(crownGauntletOrder({_n}))%")
+    wait 3 seconds
+    if {-crown::trials::%{_k}%} is not set:
+        stop
+    set {-crown::trial::%{_k}%::phase} to "waves"
+    crownTrialBossPhase({_k})
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Leaderboards
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Records a time; returns the player's rank afterwards (1 = fastest).
+function crownBoardSubmit(p: player, board: text, seconds: number) :: number:
+    set {_id} to crownId({_p})
+    set {crown::boardname::%{_id}%} to "%{_p}%"
+    set {_old} to {crown::board::%{_board}%::%{_id}%}
+    if {_old} is not set:
+        set {crown::board::%{_board}%::%{_id}%} to {_seconds}
+    else if {_seconds} < {_old}:
+        set {crown::board::%{_board}%::%{_id}%} to {_seconds}
+    set {_mine} to {crown::board::%{_board}%::%{_id}%}
+    set {_rank} to 1
+    loop {crown::board::%{_board}%::*}:
+        if loop-value < {_mine}:
+            add 1 to {_rank}
+    return {_rank}
+
+function crownBoardShow(p: player, board: text):
+    set {_title} to "Leaderboard · Trial of Echoes"
+    if {_board} is not "gauntlet":
+        set {_title} to "Leaderboard · %uncoloured crownTrialName({_board})%"
+    crownRule({_p}, {_title})
+    set {_n} to size of {crown::board::%{_board}%::*}
+    if {_n} is 0:
+        send " &8No times yet. Be the first." to {_p}
+        stop
+    # Selection sort on a copy: boards are small (one entry per player).
+    loop {crown::board::%{_board}%::*}:
+        set {_left::%loop-index%} to loop-value
+    set {_place} to 0
+    while size of {_left::*} > 0:
+        set {_bestId} to ""
+        set {_best} to 999999
+        loop {_left::*}:
+            if loop-value < {_best}:
+                set {_best} to loop-value
+                set {_bestId} to loop-index
+        delete {_left::%{_bestId}%}
+        add 1 to {_place}
+        if {_place} <= 10:
+            set {_name} to {crown::boardname::%{_bestId}%} ? "someone"
+            if {_bestId} is crownId({_p}):
+                send " &6#%{_place}% &e%{_name}% &8— &f%crownClock({_best})% &7(you)" to {_p}
+            else:
+                send " &6#%{_place}% &f%{_name}% &8— &7%crownClock({_best})%" to {_p}
+    set {_count} to crownPlural({_n}, "runner")
+    send "&8 %{_count}% on the board" to {_p}

@@ -1,0 +1,95 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine examples: story moments
+#  (quest introduction, dungeon introduction, horror sequence, story cutscene)
+#  /sk reload story-moments    then   /teststory <quest|dungeon|horror|cutscene>
+#  Locations are passed in by your own code; nothing is hard-coded.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Quest introduction: title card + objective dialogue ──
+cine scene "generic:quest-intro":
+    duration: 6 seconds
+    timeline:
+        set {_c} to location of event-player
+        add cine camera keyframe at {_c} ~ vector(0, 3, -5) at 0 seconds looking at {_c} ~ vector(0, 1.5, 0)
+        add cine camera keyframe at {_c} ~ vector(0, 10, -2) at 6 seconds with easing "ease-in-out-sine" looking at {_c}
+        at 0 seconds:
+            fade cine screen in over 15 ticks
+            show cine title {_questName} with subtitle "<gray>New quest" for 3 seconds
+            play cine sound "item.goat_horn.sound.0" with volume 0.7
+        at 3 seconds:
+            show cine dialogue {_objective} in action bar with typewriter for 3 seconds
+
+# ── Dungeon introduction: fly through the entrance toward the boss room ──
+cine scene "generic:dungeon-intro":
+    skippable: true
+    timeline:
+        set cine camera interpolation to "catmull-rom"
+        add cine camera keyframe at {_entrance} ~ vector(0, 6, -10) at 0 seconds looking at {_entrance}
+        add cine camera keyframe at {_entrance} ~ vector(0, 2, 2) at 4 seconds with easing "ease-in-sine"
+        add cine camera keyframe at {_bossRoom} ~ vector(0, 4, -8) at 9 seconds looking at {_bossRoom}
+        at 0 seconds:
+            show cine title "<dark_purple><bold>%{_dungeonName}%" for 3 seconds
+            play cine sound "ambient.cave" with volume 1
+        at 8 seconds:
+            play cine preset "smoke-cloud" at {_bossRoom} lasting 2 seconds
+            shake the cine camera with intensity 0.6 for 1 second
+
+# ── Horror: slow creep, darkness, a jump scare ──
+cine scene "generic:horror":
+    skippable: false
+    duration: 10 seconds
+    timeline:
+        set {_c} to location of event-player
+        set {_ghost} to a new cine actor of skeleton at {_c} ~ vector(0, 0, 8)
+        hide cine actor {_ghost}
+        add cine camera keyframe at {_c} ~ vector(0, 1.7, 0) at 0 seconds looking at {_c} ~ vector(0, 1.7, 8)
+        add cine camera keyframe at {_c} ~ vector(0, 1.7, 1.5) at 8 seconds with easing "ease-in-sine" looking at {_c} ~ vector(0, 1.7, 8)
+        at 0 seconds:
+            fade cine screen out with colour black over 3 seconds
+            play cine sound "ambient.cave" with volume 1.5 and pitch 0.6
+        at 3 seconds:
+            fade cine screen in over 2 seconds
+        at 7 seconds:
+            show cine actor {_ghost}
+            move cine actor {_ghost} to {_c} ~ vector(0, 0, 3) over 10 ticks with easing "ease-in-expo"
+        at 7.5 seconds:
+            play cine sound "entity.ghast.scream" with volume 2
+            shake the cine camera with intensity 3 for 1 second
+            flash cine screen with colour dark red over 10 ticks
+
+# ── Story cutscene: two characters talk; subtitles and shot changes ──
+cine scene "generic:cutscene":
+    skippable: true
+    timeline:
+        set {_c} to location of event-player
+        set {_a} to a new cine actor of villager at {_c} ~ vector(-1.5, 0, 4) named "mira"
+        set {_b} to a new cine actor of pillager at {_c} ~ vector(1.5, 0, 4) named "rook"
+        make cine actor {_a} look at {_b}
+        make cine actor {_b} look at {_a}
+        # Shot 1: wide. Shot 2/3: over-the-shoulder on each speaker (hold shots with blends).
+        make the cine camera hold at {_c} ~ vector(0, 2, 0) between 0 seconds and 3 seconds
+        make the cine camera watch {_a} from {_c} ~ vector(1, 2.2, 6) between 3 seconds and 6 seconds blending over 10 ticks
+        make the cine camera watch {_b} from {_c} ~ vector(-1, 2.2, 6) between 6 seconds and 9 seconds blending over 10 ticks
+        at 1 second:
+            show cine dialogue "You came back." from "<aqua>Mira" with typewriter for 2 seconds
+        at 3.5 seconds:
+            show cine dialogue "I had no choice." from "<red>Rook" with typewriter for 2 seconds
+        at 6.5 seconds:
+            show cine dialogue "Then let's finish this together." from "<aqua>Mira" with typewriter for 2.5 seconds
+
+command /teststory <text>:
+    permission: op
+    trigger:
+        if arg-1 is "quest":
+            set {_questName} to "<gold><bold>The Lost Lantern"
+            set {_objective} to "Find the lantern in the old lighthouse"
+            play cine scene "generic:quest-intro" for player
+        else if arg-1 is "dungeon":
+            set {_entrance} to (location of player) ~ vector(0, 0, 10)
+            set {_bossRoom} to (location of player) ~ vector(0, 0, 30)
+            set {_dungeonName} to "The Crypt"
+            play cine scene "generic:dungeon-intro" for player
+        else if arg-1 is "horror":
+            play cine scene "generic:horror" for player
+        else if arg-1 is "cutscene":
+            play cine scene "generic:cutscene" for player

@@ -1,0 +1,155 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   31-ambient.sk  —  the world remembers: ambient events outside the story
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Small things that happen in the world while you play normally, for players
+#   who have started the campaign and have ambient effects on:
+#
+#     • Shard resonance   a faint ring at your feet in the colour of the last
+#                         shard you recovered (seen by everyone near you)
+#     • Echo sightings    now and then, your Echo stands at a distance and
+#                         watches you. It is visible only to you.
+#     • The Crown Comet   on some nights, a comet crosses the sky
+#     • The bells         when someone finishes the story, the whole server
+#                         hears a bell
+#
+#   Everything here uses SkCine outside of scenes: public actors that are
+#   hidden from everyone except one player, and particles sent to chosen
+#   players. Nothing modifies the world.
+# ═════════════════════════════════════════════════════════════════════════════
+
+function crownAmbientEligible(p: player) :: boolean:
+    if crownStarted({_p}) is false:
+        return false
+    if crownAmbientOn({_p}) is false:
+        return false
+    if {_p} is watching a cine scene:
+        return false
+    if crownInTrial({_p}) is true:
+        return false
+    return true
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Shard resonance
+# ─────────────────────────────────────────────────────────────────────────────
+
+every 3 seconds:
+    loop all players:
+        if crownAmbientEligible(loop-player) is true:
+            set {_s} to crownGet(loop-player, "lastshard")
+            if {_s} is set:
+                if loop-player is not sneaking:
+                    set {_viewers::*} to all players in radius 24 around loop-player
+                    draw a cine ring of "dust" at loop-player ~ vector(0, 0.1, 0) with radius 0.7 and 12 points to {_viewers::*} with colour crownShardColor("%{_s}%")
+                    if crownShardCount(loop-player) >= 5:
+                        draw a cine ring of "end_rod" at loop-player ~ vector(0, 2.3, 0) with radius 0.35 and 6 points to {_viewers::*}
+                delete {_viewers::*}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Echo sightings
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownEchoLine() :: text:
+    set {_r} to random integer between 1 and 10
+    if {_r} is 1:
+        return "...you walk like someone who's carrying something."
+    if {_r} is 2:
+        return "...I was about to say the same thing."
+    if {_r} is 3:
+        return "...don't turn around. Oh. You turned around."
+    if {_r} is 4:
+        return "...the crown dreams about you, you know."
+    if {_r} is 5:
+        return "...nice day. Somewhere."
+    if {_r} is 6:
+        return "...you forgot something. No, not that. The other thing."
+    if {_r} is 7:
+        return "...I'm not following you. We're just going the same way."
+    if {_r} is 8:
+        return "...the Archivist asked about you. I said nothing. Mostly."
+    if {_r} is 9:
+        return "...you look tired. I would know."
+    return "..."
+
+every 4 minutes:
+    loop all players:
+        if crownAmbientEligible(loop-player) is true:
+            if crownHasCodex(loop-player, "echo") is true:
+                if chance of 25%:
+                    crownEchoSighting(loop-player)
+
+function crownEchoSighting(p: player):
+    set {_angle} to random number between 0 and 360
+    set {_at} to location of {_p} ~ vector(cos({_angle}) * 11, 0, sin({_angle}) * 11)
+    set {_actor} to a new public cine player actor at {_at} named "echo-%crownId({_p})%" with skin of {_p} with name tag "<aqua>?"
+    if {_actor} is not set:
+        stop
+    hide cine actor {_actor}
+    show cine actor {_actor} to {_p}
+    make cine actor {_actor} look at {_p} for 6 seconds
+    draw a cine cylinder of "dust" at {_at} with radius 0.6 and height 2 and 20 points to {_p} with colour light blue
+    play cine sound "entity.illusioner.mirror_move" at {_at} with volume 0.5 and pitch 0.8 to {_p}
+    crownBark({_p}, "echo", crownEchoLine())
+    crownUnlockCodex({_p}, "sightings")
+    crownBumpStat({_p}, "sightings")
+    wait 6 seconds
+    if {_actor} is valid:
+        draw a cine cylinder of "large_smoke" at {_actor} with radius 0.6 and height 2 and 20 points to {_p}
+        remove cine actor {_actor}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The Crown Comet
+# ─────────────────────────────────────────────────────────────────────────────
+
+every 10 minutes:
+    loop all worlds:
+        set {_time} to time of loop-world
+        if {_time} is between 13:30 and 22:30:
+            if chance of 50%:
+                crownComet(loop-world)
+
+function crownComet(w: world):
+    set {_witnesses::*} to all players in {_w}
+    loop {_witnesses::*}:
+        if crownAmbientEligible(loop-value) is true:
+            add loop-value to {_seen::*}
+    if size of {_seen::*} is 0:
+        stop
+    loop {_seen::*}:
+        set {_c} to location of loop-value
+        set {_a} to {_c} ~ vector(-60, 70, -30)
+        set {_b} to {_c} ~ vector(-10, 55, 0)
+        set {_d} to {_c} ~ vector(40, 45, 30)
+        draw a cine line of "end_rod" from {_a} to {_b} with spacing 0.6 to loop-value
+        draw a cine line of "dust" from {_a} to {_b} with spacing 0.8 to loop-value with colour light blue
+        play cine sound "entity.firework_rocket.launch" with volume 0.3 and pitch 0.6 to loop-value
+    wait 1 second
+    loop {_seen::*}:
+        if loop-value is online:
+            set {_c} to location of loop-value
+            draw a cine line of "end_rod" from {_c} ~ vector(-10, 55, 0) to {_c} ~ vector(40, 45, 30) with spacing 0.6 to loop-value
+            draw a cine line of "firework" from {_c} ~ vector(-10, 55, 0) to {_c} ~ vector(40, 45, 30) with spacing 1.4 to loop-value
+            play cine sound "entity.firework_rocket.twinkle_far" with volume 0.5 and pitch 0.7 to loop-value
+            crownMsg(loop-value, "&bA comet crosses the sky above you. &7The crown remembers its breaking.")
+            crownUnlockCodex(loop-value, "comet")
+            crownGrantAchievement(loop-value, "night-sky")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The bells of Aurelion
+# ─────────────────────────────────────────────────────────────────────────────
+
+on cine scene finish of "crown:credits":
+    set {_p} to event-player
+    {_p} is set
+    if {-crown::belled::%crownId({_p})%} is set:
+        stop
+    set {-crown::belled::%crownId({_p})%} to true
+    loop all players:
+        crownMsg(loop-player, "&eSomewhere, a bell that hasn't rung in nine hundred years rings for &f%{_p}%&e.")
+        play cine sound "block.bell.use" with volume 0.6 and pitch 0.7 to loop-player
+        if crownStarted(loop-player) is true:
+            crownUnlockCodex(loop-player, "bells")
+    wait 1 second
+    loop all players:
+        play cine sound "block.bell.resonate" with volume 0.5 and pitch 0.7 to loop-player

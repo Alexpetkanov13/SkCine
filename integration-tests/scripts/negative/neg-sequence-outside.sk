@@ -1,0 +1,3 @@
+command /neg5:
+    trigger:
+        play cine sequence "anything"

@@ -1,0 +1,95 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   36-tips.sk  —  the Archivist's advice when a fight goes badly
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Trials can be hard. When a player is downed, the Archivist barks one short
+#   tip about the guardian or the wave they are facing (at most once every
+#   20 seconds). When a trial fails, the whole party gets a short briefing
+#   on that guardian, and /crown tips <shard> shows it any time.
+#
+#   Tips describe the telegraphs from 20-bosses.sk: every attack is announced
+#   by a ring on the ground 1.5 seconds before it lands.
+# ═════════════════════════════════════════════════════════════════════════════
+
+function crownTips(id: text) :: texts:
+    if {_id} is "ember":
+        add "&6Flame Nova&7: an orange ring around the Warden. Step outside it before it burns." to {_t::*}
+        add "&6Cinder Rain&7: red rings appear under everyone. Keep moving and they miss." to {_t::*}
+        add "&6Thralls&7: husks join the fight. Deal with them first or they'll swarm you." to {_t::*}
+        add "&7Blazes fly. A bow helps; so does fighting near cover." to {_t::*}
+    else if {_id} is "tide":
+        add "&3Tidal Slam&7: a cyan ring around the Matriarch. Get out or get thrown." to {_t::*}
+        add "&3Whirlpool&7: you'll be pulled towards her. Walk away from the centre, not sideways." to {_t::*}
+        add "&3The Faithful&7: drowned arrive in pairs. Tridents hurt; keep your distance." to {_t::*}
+    else if {_id} is "gale":
+        add "&bUpdraft&7: a white ring under your feet launches you. Step off it." to {_t::*}
+        add "&bThunder&7: yellow rings everywhere. Stand between them, never inside." to {_t::*}
+        add "&bGust&7: close to the Sovereign? You'll be blown back. Fight at mid range." to {_t::*}
+        add "&7Fall damage counts. Water buckets are a rider's best friend." to {_t::*}
+    else if {_id} is "stone":
+        add "&7Quake&7: waves ripple outwards in three rings. Jump each one as it passes." to {_t::*}
+        add "&7Rockfall&7: brown rings mark falling rock. One under you, too. Move!" to {_t::*}
+        add "&7Stone Skin&7: for 8 seconds it takes half damage. Use that time to heal." to {_t::*}
+    else if {_id} is "void":
+        add "&5Void Step&7: 'Behind you.' He means it. Turn around and step aside." to {_t::*}
+        add "&5Hollow Nova&7: a huge purple ring. Run to its edge immediately." to {_t::*}
+        add "&5Shades&7: vexes fly through walls. Kill them fast; they hit hard." to {_t::*}
+        add "&7He doubles his pace at half health. Save your strength for that." to {_t::*}
+    else:
+        add "&7Watch the ground: every attack is announced by a ring 1.5 seconds early." to {_t::*}
+        add "&7A lethal hit only downs you. Three downs and you're out of the trial." to {_t::*}
+    return {_t::*}
+
+# A single short tip, for barks.
+function crownTipFor(id: text, phase: text) :: text:
+    if {_phase} is "waves":
+        if {_id} is "ember":
+            return "Blazes first. They'll keep setting you alight otherwise."
+        if {_id} is "tide":
+            return "Guardians shoot lasers. Break their line of sight."
+        if {_id} is "gale":
+            return "Skeletons in the open are trouble. Close the distance."
+        if {_id} is "stone":
+            return "Vindicators hit hard. Don't let them corner you."
+        if {_id} is "void":
+            return "Endermen hate being looked at. Choose your battles."
+        return "Back up and let them come to you."
+    set {_tips::*} to crownTips({_id})
+    set {_t} to random element out of {_tips::*}
+    return uncoloured {_t}
+
+# Barks a tip when a player is downed (rate-limited).
+function crownTipOnDown(p: player, k: text):
+    set {_last} to {-crown::tipat::%crownId({_p})%}
+    if {_last} is set:
+        if difference between {_last} and now < 20 seconds:
+            stop
+    set {-crown::tipat::%crownId({_p})%} to now
+    set {_id} to crownTrialBossId({_k})
+    set {_phase} to {-crown::trial::%{_k}%::phase} ? "waves"
+    wait 2 seconds
+    {_p} is online
+    crownBark({_p}, "archivist", crownTipFor({_id}, "%{_phase}%"))
+
+# The briefing after a failed trial.
+function crownTipBriefing(players: players, id: text):
+    loop {_players::*}:
+        add 1 to {crown::p::%crownId(loop-value)%::fails::%{_id}%}
+    wait 3 seconds
+    loop {_players::*}:
+        if loop-value is online:
+            crownRule(loop-value, "The Archivist's advice")
+            loop crownTips({_id}):
+                send " %loop-value-2%" to loop-value-1
+            if crownNum(loop-value-1, "fails::%{_id}%") >= 3:
+                send " &8(Tip: lower the difficulty with &f/difficulty easy&8, or bring a friend: &f/crown party&8)" to loop-value-1
+
+function crownTipsCommand(p: player, id: text):
+    if crownShardNames() does not contain {_id}:
+        crownMsg({_p}, "&7Usage: &f/crown tips <ember|tide|gale|stone|void>")
+        stop
+    crownRule({_p}, "%uncoloured crownBossName({_id})%")
+    loop crownTips({_id}):
+        send " %loop-value%" to {_p}
+    send " &8General: every attack is announced by a ring on the ground 1.5 seconds early." to {_p}

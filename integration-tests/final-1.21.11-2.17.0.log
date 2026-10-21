@@ -1,0 +1,144 @@
+﻿
+=== Preparing server in C:\Java Projects\SkCine\integration-tests\work\1.21.11-2.17.0 ===
+Paper 1.21.11 build 132
+
+=== Installing test client ===
+
+=== Starting Paper 1.21.11 with Skript 2.17.0 ===
+
+=== parse/diagnostics/reload tests ===
+PASS parse-error neg-keyframe-outside
+PASS parse-error neg-bad-id
+PASS parse-error neg-wrong-type
+PASS parse-error neg-missing-arg
+PASS parse-error neg-at-no-section
+PASS parse-error neg-skip-mode
+PASS parse-error neg-speed
+PASS parse-error neg-choice-outside
+PASS parse-error neg-playback-no-context
+PASS parse-error neg-unknown-entry
+PASS parse-error neg-sequence-outside
+PASS parse-error neg-display-nothing
+PASS duplicate-id rejected
+PASS duplicate-id freed after owner unload
+PASS runtime error names script + line
+PASS repeated runtime error is rate limited
+PASS reload x25 keeps registry size stable
+PASS reload x25 produces no errors
+FAIL reload x25 re-ran load assertions each time — count=4
+PASS health ok after tests
+
+19/20 checks passed
+
+=== in-game suite ===
+PASS welcome: not watching before — {"watching":"false","gamemode":"survival","camera":"false"}
+PASS welcome: camera attach event
+PASS welcome: watching + spectator + camera — {"watching":"true","id":"examples:welcome","state":"playing","elapsed":"1.6","progress":"0.2","speed":"1","camera":"true","gamemode":"spectator","actors":"0","built":"<none>","seq":"<none>","started":"<none>"}
+PASS welcome: client is in spectator — spectator
+PASS welcome: client received camera packet for a display entity — id=3 name=item_display
+PASS welcome: camera moves along its path — moved 10.53 blocks in 1.5s
+PASS welcome: title/dialogue reached client
+PASS welcome: scene finished
+PASS welcome: restored to survival, not watching — {"watching":"false","gamemode":"survival","camera":"false"}
+PASS welcome: client back in survival — survival
+PASS welcome: location restored — (0.5, -60, 0.5) vs (0.5, -60, 0.5)
+PASS welcome: on finish callback chat — Welcome aboard!
+PASS skip: sneak skips skippable scene
+PASS skip: restored after skip — {"watching":"false","gamemode":"survival","camera":"false"}
+PASS skip: on skip callback chat — Intro skipped.
+PASS full: prepare event
+PASS full: start event with player + id
+PASS full: timeline built (variable set in timeline:) — {"watching":"true","id":"test:all-syntax","state":"playing","elapsed":"1.45","progress":"0.24","speed":"1","camera":"true","gamemode":"spectator","actors":"4","built":"true","seq":"true","started":"true"}
+PASS full: on start callback ran
+PASS full: sequence inlined
+PASS full: actors spawned — actors=4
+PASS full: pause event
+PASS full: clock frozen while paused — 1.6 -> 1.6 (paused)
+PASS full: resume event
+PASS full: marker event
+PASS full: dialogue start/finish
+PASS full: actor spawn event
+PASS full: on finish structure callback
+PASS full: on end structure callback
+PASS full: actor despawn event
+PASS full: all temporary actors removed — before=0 after=0
+PASS full: no SkCine errors during playback
+PASS dynamic: section added to runtime definition fired
+PASS dynamic: not skippable ignores sneak — {"watching":"true","id":"test:dynamic","state":"playing","elapsed":"1.25","progress":"0.63","speed":"1","camera":"true","gamemode":"spectator","actors":"0","built":"<none>","seq":"<none>","started":"<none>"}
+PASS dynamic: finished
+PASS control: seek moves the playhead — elapsed=3
+PASS control: stop cancels
+PASS control: restored after stop — {"watching":"false","gamemode":"survival","camera":"false"}
+PASS choice: prompt delivered to client
+PASS choice: clickable options delivered — Pick one |  [1] Accept |  [2] Decline | Click an option or type its number.
+PASS choice: scene waits for input — state=waiting
+PASS choice: typed reply resolves section with option
+PASS choice: global choice event
+PASS choice: scene resumes and ends with variable
+PASS multi: two independent playbacks — examples:welcome/examples:welcome
+PASS multi: one viewer skipping does not end the other scene — true/false
+PASS group: one vote of two does not skip — {"watching":"true","id":"test:all-syntax","state":"playing","elapsed":"2.8","progress":"0.47","speed":"1","camera":"true","gamemode":"spectator","actors":"4","built":"true","seq":"true","started":"true"}
+PASS group: vote message shown — Intro skipped. | Chat line | CineBot wants to skip (1/2). Sneak to vote.
+PASS group: majority vote skips for everyone
+PASS group: both viewers restored — survival/survival
+PASS reload: script reloads while its scene plays — §7[§6Skript§7] §rReloading §6first-cinematic.sk§r...
+§7[§6Skript§7] §aSuccessfully reloaded §6first-cinematic.sk§a. §7(§
+PASS reload: playing scene cancelled by unload
+PASS reload: viewer restored — {"watching":"false","gamemode":"survival","camera":"false"}
+PASS reload: reloaded scene plays again
+PASS late join: joins the running shared playback — test:all-syntax/test:all-syntax spectator
+PASS late join: private scene actors become visible to the late joiner — pig,pig,pig,chicken,chicken,chicken,chicken,chicken,sheep,sheep,player,villager,item_display,block_display,text_display,item_display
+FAIL late join: late joiner restored — {"watching":"true","id":"test:all-syntax","state":"playing","elapsed":"4.15","progress":"0.69","speed":"1","camera":"true","gamemode":"spectator","actors":"4","built":"true","seq":"true","started":"true"}
+PASS disconnect: scene ends when its only viewer leaves
+PASS disconnect: rejoins in survival — survival
+PASS disconnect: rejoins at original location — (0.5, -60, 0.5) vs (0.5, -60, 0.5)
+
+59/60 checks passed
+
+=== examples smoke test ===
+PASS /welcome
+PASS /flyover
+PASS /orbitme
+PASS /quake
+PASS /displays
+PASS /actors
+PASS /testboss zombie
+PASS /warpto 40 -60 40
+PASS /testreveal
+PASS /quest
+PASS /tour
+PASS /testvictory
+PASS /groupscene
+PASS /solo
+PASS /together
+PASS /story
+PASS /tl play
+PASS /reveal
+PASS /testprogress rank
+PASS /testprogress rebirth
+PASS /testprogress hatch
+PASS /teststory quest
+PASS /teststory dungeon
+PASS /teststory horror
+PASS /teststory cutscene
+PASS /testprogress level
+PASS /vfx legendary-reveal
+PASS /vfxshapes
+PASS /aura
+PASS /auraoff
+
+30/30 examples ran cleanly
+
+=== Crash recovery ===
+FAIL crash: restored gamemode=spectator (expected survival), distance=33.54
+
+=== Stopping server ===
+
+=== Summary: Paper 1.21.11, Skript 2.17.0, client 1.21.11 ===
+PASS plugin enabled
+PASS all scripts loaded without errors
+PASS load assertions
+FAIL parse/diagnostics/reload tests
+FAIL in-game suite
+PASS examples smoke test
+FAIL crash recovery

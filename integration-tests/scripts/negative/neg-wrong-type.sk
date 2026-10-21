@@ -1,0 +1,3 @@
+command /neg2:
+    trigger:
+        play cine scene "x" for 5

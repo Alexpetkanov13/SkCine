@@ -1,0 +1,349 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   14-chapter-stone.sk  —  Chapter IV · The Stone
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   In the Greyhold pass sleeps the Colossus, a mountain that learned to walk.
+#   The Stone Shard lodged in its chest nine hundred years ago, and it has
+#   been dreaming ever since. When it dreams angrily, its dreams walk.
+#
+#   crown:stone-intro  the pass, the sleeping giant (an iron golem, scaled up
+#                      to four times its size), the Archivist's impatience
+#                      → Trial of the Mountain → The Colossus (its anger)
+#   crown:stone-outro  the giant wakes, calm for the first time.
+#                      CHOICE  Let it walk free         (+15, stone = wake)
+#                              Break its heart           (-15, stone = break)
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Intro
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "crown:stone-intro":
+    duration: 52 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set cine variable "stage" to {_stage}
+        set {_g} to {_stage} ~ vector(0, 0, 14)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+
+        # ── The Greyhold pass ───────────────────────────────────────────────
+        set {_rock1} to a new cine block display of stone at {_g} ~ vector(-8, 0, -4)
+        set {_rock2} to a new cine block display of cobblestone at {_g} ~ vector(-8, 1, -4)
+        set {_rock3} to a new cine block display of mossy cobblestone at {_g} ~ vector(-7, 0, -3)
+        set {_rock4} to a new cine block display of andesite at {_g} ~ vector(7, 0, -4)
+        set {_rock5} to a new cine block display of tuff at {_g} ~ vector(7, 1, -4)
+        set {_rock6} to a new cine block display of tuff bricks at {_g} ~ vector(6, 0, -5)
+        set {_rock7} to a new cine block display of deepslate at {_g} ~ vector(-5, 0, 5)
+        set {_rock8} to a new cine block display of cobbled deepslate at {_g} ~ vector(5, 0, 5)
+        set {_moss1} to a new cine block display of moss block at {_g} ~ vector(-2, -0.7, 2)
+        set {_moss2} to a new cine block display of moss block at {_g} ~ vector(1, -0.7, 2)
+        set {_vine} to a new cine block display of vine at {_g} ~ vector(-8, 1, -5)
+        set {_lantern} to a new cine item display of lantern at {_stage} ~ vector(-1.5, 1.5, 3)
+        scale cine actors {_rock1}, {_rock4}, {_rock7} and {_rock8} to 2.5 over 1 tick
+
+        set {_colossus} to a new cine actor of iron golem at {_g} named "colossus"
+        set {_heart} to a new cine item display of flint at {_g} ~ vector(0, 6, -1.6) named "heart"
+        set {_heartLight} to a new cine text display with text "<gray>✦" at {_g} ~ vector(0, 6.3, -1.8)
+        set {_archivist} to a new cine player actor at {_stage} ~ vector(2.5, 0, 2) named "archivist" with name tag "<gold>The Archivist <gray>(projection)"
+        hide cine actor {_archivist}
+
+        # ── Camera ──────────────────────────────────────────────────────────
+        set {_focus} to {_g} ~ vector(0, 5, 0)
+        play cine sequence "cam:rise-reveal" at 0 seconds
+        add cine camera keyframe at {_g} ~ vector(-6, 3, -14) at 8 seconds with easing "ease-in-out-sine" looking at {_g} ~ vector(0, 6, 0)
+        add cine camera keyframe at {_g} ~ vector(6, 4, -12) at 15 seconds with easing "ease-in-out-sine" looking at {_g} ~ vector(0, 7, 0)
+        make the cine camera watch {_archivist} from {_stage} ~ vector(0, 2, -1.5) between 16 seconds and 24 seconds blending over 1 second
+        make the cine camera watch {_heart} from {_g} ~ vector(0, 5, -6) between 24 seconds and 29 seconds blending over 1 second
+        set {_focus} to {_g} ~ vector(0, 6, 0)
+        play cine sequence "cam:hero-low" at 29 seconds
+        set {_r} to 14
+        play cine sequence "cam:orbit-fast" at 34 seconds
+        play cine sequence "cam:pull-back" at 40 seconds
+        add cine camera keyframe at {_g} ~ vector(0, 20, -32) at 50 seconds with easing "ease-in-out-sine" looking at {_g}
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            play cine sound "ambient.basalt_deltas.mood" with volume 0.8 and pitch 0.6
+            make cine actor {_colossus} look at {_eye}
+        at 5 ticks:
+            scale cine actor {_colossus} to 4 over 1 tick
+            fade the cine screen in over 2.5 seconds
+            set {_at} to {_g}
+            set {_len} to 50 seconds
+            play cine sequence "fx:stone-dust"
+            spin cine display {_heart} around vector(0, 1, 0) continuously at 20 degrees per second
+        at 1 second:
+            set {_title} to "%crownChapterTag(5)%<bold>CHAPTER IV"
+            set {_subtitle} to "<gray>The Stone"
+            set {_tone} to 0.5
+            play cine sequence "fx:title-card"
+        at 5 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Greyhold. A mountain pass that was, until nine hundred years ago, a mountain."
+            play cine sequence "say"
+        at 9 seconds:
+            set {_who} to "narrator"
+            set {_line} to "The Colossus sleeps here. When it dreams angrily, its dreams walk."
+            play cine sequence "say"
+            play cine sound "entity.iron_golem.step" at {_g} with volume 1 and pitch 0.3
+        at 12 seconds:
+            set {_at} to {_g}
+            play cine sequence "fx:quake"
+        at 16 seconds:
+            show cine actor {_archivist}
+            set {_at} to {_archivist}
+            set {_colour} to gold
+            play cine sequence "fx:appear"
+            make cine actor {_archivist} look at {_colossus}
+        at 17 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Magnificent, isn't it? And entirely unnecessary. The shard is in its chest."
+            play cine sequence "say"
+        at 20 seconds:
+            set {_who} to "archivist"
+            set {_line} to "Don't wake it. Walk up, take the heart-stone, and it will simply... stop."
+            play cine sequence "say"
+        at 23 seconds:
+            set {_who} to "echo"
+            set {_line} to "Stop. He means die. He always picks the gentlest word for the worst thing."
+            play cine sequence "whisper"
+        at 25 seconds:
+            set {_at} to {_heart}
+            set {_colour} to light grey
+            set {_len} to 20 seconds
+            play cine sequence "fx:aura"
+            play cine sound "block.amethyst_block.resonate" at {_heart} with volume 1 and pitch 0.5
+        at 28 seconds:
+            set {_who} to "colossus"
+            set {_line} to "...WHO... STEPS... ON... MY... DREAM..."
+            play cine sequence "shout"
+            rotate cine actor {_colossus} to yaw 180 and pitch 10 over 2 seconds with easing "ease-in-out-sine"
+        at 31 seconds:
+            set {_at} to {_g}
+            play cine sequence "fx:quake"
+            set {_who} to "archivist"
+            set {_line} to "Ah. Well. Its dreams are waking first. Mind the ones with axes."
+            play cine sequence "say"
+        at 34 seconds:
+            set {_at} to {_g} ~ vector(-8, 0, -8)
+            set {_colour} to light grey
+            play cine sequence "fx:sigil"
+            set {_at} to {_g} ~ vector(8, 0, -8)
+            play cine sequence "fx:sigil"
+            set {_at} to {_archivist}
+            play cine sequence "fx:vanish"
+            hide cine actor {_archivist}
+        at 38 seconds:
+            set {_title} to "<gradient:gray:white><bold>TRIAL OF THE MOUNTAIN</bold></gradient>"
+            set {_subtitle} to "<gray>Its dreams have teeth"
+            set {_tone} to 0.4
+            play cine sequence "fx:title-card"
+            play cine sound "event.raid.horn" with volume 0.6 and pitch 0.6
+        at 43 seconds:
+            set {_at} to {_g}
+            play cine sequence "fx:quake"
+        at 49 seconds:
+            fade the cine screen out over 2 seconds
+        at 51 seconds even if skipped:
+            loop cine viewers:
+                add loop-value to {_v::*}
+            crownAfterIntro({_v::*}, 5, cine variable "stage", crownIsReplay(cine variable "replay"))
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    crownUnlockCodex(loop-value, "greyhold")
+                    crownUnlockCodex(loop-value, "colossus")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Outro
+# ─────────────────────────────────────────────────────────────────────────────
+#  Timeline
+#     0 – 20   the giant wakes, calm; it speaks
+#    20        CHOICE (pausing)
+#    22 – 36   marker "wake"      38 – 50 marker "break"
+#    52 – 66   marker "after"
+
+cine scene "crown:stone-outro":
+    duration: 66 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "replay" to {_replay}
+        set {_g} to {_stage} ~ vector(0, 0, 12)
+        set {_eye} to {_stage} ~ vector(0, 1.6, 0)
+        add cine marker "wake" at 22 seconds
+        add cine marker "break" at 38 seconds
+        add cine marker "after" at 52 seconds
+
+        set {_colossus} to a new cine actor of iron golem at {_g} named "colossus"
+        set {_heart} to a new cine item display of flint at {_g} ~ vector(0, 6, -1.6) named "stone-shard"
+        set {_heartLabel} to a new cine text display with text "<gray>✦ Stone Shard ✦" at {_g} ~ vector(0, 6.8, -1.6)
+        attach cine actor {_heartLabel} to {_heart} with offset vector(0, 0.7, 0)
+        set {_flower1} to a new cine block display of poppy at {_g} ~ vector(-2, 0, -3)
+        set {_flower2} to a new cine block display of cornflower at {_g} ~ vector(1, 0, -3.5)
+        set {_flower3} to a new cine block display of oxeye daisy at {_g} ~ vector(3, 0, -2)
+        hide cine actors {_flower1}, {_flower2} and {_flower3}
+        set {_echo} to a new cine player actor at {_stage} ~ vector(-4, 0, 4) named "echo" with skin of event-player with name tag "<aqua>Your Echo"
+        hide cine actor {_echo}
+
+        # Camera
+        set {_focus} to {_g} ~ vector(0, 6, 0)
+        play cine sequence "cam:hero-low" at 0 seconds
+        add cine camera keyframe at {_g} ~ vector(-5, 4, -10) at 5 seconds with easing "ease-in-out-sine" looking at {_g} ~ vector(0, 6, 0)
+        make the cine camera watch {_heart} from {_g} ~ vector(2, 5, -6) between 6 seconds and 20 seconds blending over 1 second
+        make the cine camera hold at {_stage} ~ vector(0, 2.5, -3) between 20 seconds and 22 seconds blending over 15 ticks
+        set {_r} to 13
+        set {_focus} to {_g} ~ vector(0, 4, 0)
+        play cine sequence "cam:orbit-slow" at 22 seconds
+        add cine camera keyframe at {_g} ~ vector(0, 8, -16) at 31 seconds with easing "ease-in-out-sine" looking at {_g} ~ vector(0, 4, 8)
+        make the cine camera watch {_heart} from {_g} ~ vector(-3, 4, -6) between 38 seconds and 50 seconds blending over 1 second
+        make the cine camera watch {_echo} from {_stage} ~ vector(-2, 2, 1) between 53 seconds and 61 seconds blending over 1 second
+        set {_focus} to {_g}
+        play cine sequence "cam:pull-back" at 61 seconds
+
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            make cine actor {_colossus} look at {_eye}
+        at 5 ticks:
+            scale cine actor {_colossus} to 4 over 1 tick
+            fade the cine screen in over 2 seconds
+            set {_at} to {_g}
+            set {_len} to 60 seconds
+            play cine sequence "fx:stone-dust"
+            spin cine display {_heart} around vector(0, 1, 0) continuously at 30 degrees per second
+            play cine sound "entity.iron_golem.repair" at {_g} with volume 1 and pitch 0.4
+        at 3 seconds:
+            set {_who} to "colossus"
+            set {_line} to "...THE... DREAM... IS... QUIET... NOW..."
+            play cine sequence "say"
+        at 7 seconds:
+            set {_who} to "colossus"
+            set {_line} to "...SMALL... ONE... YOU... FOUGHT... MY... ANGER... AND... NOT... ME..."
+            play cine sequence "say"
+        at 11 seconds:
+            set {_who} to "colossus"
+            set {_line} to "...I... HAVE... NOT... SEEN... THE... SKY... IN... NINE... HUNDRED... YEARS..."
+            play cine sequence "say"
+            rotate cine actor {_colossus} to yaw 180 and pitch -40 over 3 seconds with easing "ease-in-out-sine"
+        at 15 seconds:
+            set {_who} to "colossus"
+            set {_line} to "...THE... STONE... IN... MY... CHEST... IS... YOURS... IF... YOU... TAKE... IT..."
+            play cine sequence "say"
+            rotate cine actor {_colossus} to yaw 180 and pitch 15 over 2 seconds with easing "ease-in-out-sine"
+        at 18 seconds:
+            set {_who} to "echo"
+            set {_line} to "It can live without the shard, you know. Barely. Slowly. But it can."
+            play cine sequence "whisper"
+        at 20 seconds:
+            present cine choice "<gray>The Colossus waits." to cine viewers with options "Let it walk free" and "Break its heart" with timeout 30 seconds defaulting to "Let it walk free" as a vote using a menu pausing the scene:
+                if cine choice is "Let it walk free":
+                    set cine variable "stone" to "wake"
+                    if crownIsReplay(cine variable "replay") is false:
+                        crownChooseAll(cine viewers, "stone", "wake", 15, "Let the Colossus walk free")
+                    jump the cine scene to marker "wake"
+                else:
+                    set cine variable "stone" to "break"
+                    if crownIsReplay(cine variable "replay") is false:
+                        crownChooseAll(cine viewers, "stone", "break", -15, "Broke the Colossus' heart")
+                    jump the cine scene to marker "break"
+
+        # ── Wake ────────────────────────────────────────────────────────────
+        at marker "wake":
+            add cine actor keyframe for {_heart} at {_g} ~ vector(0, 6, -1.6) at 22 seconds
+            add cine actor keyframe for {_heart} at {_eye} ~ vector(0, 0, 1.5) at 26 seconds with easing "ease-in-out-sine"
+            set {_who} to "colossus"
+            set {_line} to "...THEN... I... WILL... GO... AND... LOOK... AT... THE... SKY..."
+            play cine sequence "say"
+            show cine actors {_flower1}, {_flower2} and {_flower3}
+            set {_at} to {_g} ~ vector(0, 0, -3)
+            play cine sequence "fx:blessing"
+        at 26 seconds:
+            set {_at} to {_eye} ~ vector(0, -1, 0)
+            set {_colour} to light grey
+            play cine sequence "fx:shard-absorb"
+            hide cine actors {_heart} and {_heartLabel}
+        at 28 seconds:
+            move cine actor {_colossus} to {_g} ~ vector(0, 0, 30) over 9 seconds with easing "ease-in-sine" facing the movement
+            play cine sound "entity.iron_golem.step" at {_g} with volume 1 and pitch 0.3
+        at 30 seconds:
+            play cine sound "entity.iron_golem.step" at {_g} ~ vector(0, 0, 6) with volume 1 and pitch 0.3
+            set {_at} to {_g} ~ vector(0, 0, 6)
+            play cine sequence "fx:quake"
+        at 33 seconds:
+            play cine sound "entity.iron_golem.step" at {_g} ~ vector(0, 0, 14) with volume 1 and pitch 0.3
+            set {_who} to "narrator"
+            set {_line} to "Every step of the Colossus was a little lighter than the last."
+            play cine sequence "say"
+        at 36 seconds:
+            jump the cine scene to marker "after"
+
+        # ── Break ───────────────────────────────────────────────────────────
+        at marker "break":
+            set {_at} to {_heart}
+            play cine sequence "fx:dark-pulse"
+            set {_who} to "colossus"
+            set {_line} to "...SO... THE... SKY... WAS... ONLY... A... DREAM... TOO..."
+            play cine sequence "say"
+            add cine actor keyframe for {_heart} at {_g} ~ vector(0, 6, -1.6) at 38 seconds
+            add cine actor keyframe for {_heart} at {_g} ~ vector(0, 6, -4) at 41 seconds with easing "ease-in-quad"
+            add cine actor keyframe for {_heart} at {_eye} ~ vector(0, 0, 1.5) at 44 seconds with easing "ease-in-out-sine"
+        at 41 seconds:
+            set {_at} to {_g}
+            play cine sequence "fx:quake"
+            scale cine actor {_colossus} to 0.2 over 4 seconds with easing "ease-in-cubic"
+            play cine sound "block.stone.break" at {_g} with volume 1 and pitch 0.4
+        at 44 seconds:
+            set {_at} to {_eye} ~ vector(0, -1, 0)
+            set {_colour} to dark grey
+            play cine sequence "fx:shard-absorb"
+            hide cine actors {_heart} and {_heartLabel}
+        at 45 seconds:
+            set {_at} to {_colossus}
+            play cine sequence "fx:vanish"
+            hide cine actor {_colossus}
+            draw a cine hemisphere of "large_smoke" at {_g} with radius 5 and 80 points
+        at 47 seconds:
+            set {_who} to "narrator"
+            set {_line} to "Where the Colossus had knelt, there was only a small hill. It has not moved since."
+            play cine sequence "say"
+        at 50 seconds:
+            jump the cine scene to marker "after"
+
+        # ── After ───────────────────────────────────────────────────────────
+        at marker "after":
+            show cine actor {_echo}
+            set {_at} to {_echo}
+            set {_colour} to light blue
+            play cine sequence "fx:appear"
+            make cine actor {_echo} look at {_eye}
+        at 54 seconds:
+            set {_who} to "echo"
+            if cine variable "stone" is "break":
+                set {_line} to "Four shards. Feel how quiet it is? That's what the crown wants. Quiet."
+            else:
+                set {_line} to "It walked. Nine hundred years, and it walked. You did that."
+            play cine sequence "say"
+        at 58 seconds:
+            set {_who} to "echo"
+            set {_line} to "One shard left. The Hollow King has it. And he's been waiting for you."
+            play cine sequence "say"
+        at 61 seconds:
+            set {_at} to {_echo}
+            play cine sequence "fx:vanish"
+            hide cine actor {_echo}
+            set {_title} to "<gray><bold>STONE SHARD RECOVERED"
+            set {_subtitle} to "<dark_gray>4 of 5"
+            set {_tone} to 0.7
+            play cine sequence "fx:title-card"
+        at 64 seconds:
+            fade the cine screen out over 2 seconds
+        at 65.5 seconds even if skipped:
+            if crownIsReplay(cine variable "replay") is false:
+                loop cine viewers:
+                    if crownChoice(loop-value, "stone") is "none":
+                        crownChoose(loop-value, "stone", "wake")
+                        crownShiftKarma(loop-value, 15, "Let the Colossus walk free")
+                    crownUnlockCodex(loop-value, "stone")
+                crownFinishChapterFor(cine viewers, 5)

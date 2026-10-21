@@ -1,0 +1,38 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: dialogue with a choice (quests, shops, tutorials)
+#  /sk reload dialogue-choices   then   /quest
+#  Answer by clicking an option in chat or typing its number.
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:quest-offer":
+    # Timeline time stops while the choice waits, so 7 seconds leaves 4 seconds for the reply after answering.
+    duration: 7 seconds
+    timeline:
+        set {_c} to location of event-player
+        set {_npc} to a new cine actor of villager at {_c} ~ vector(0, 0, 3) named "elder"
+        make cine actor {_npc} look at event-player
+        add cine camera keyframe at {_c} ~ vector(1.5, 1.8, 1) at 0 seconds looking at {_c} ~ vector(0, 1.6, 3)
+
+        at 10 ticks:
+            show cine dialogue "The mines have gone quiet..." from "<gold>Elder" with typewriter for 2 seconds
+        at 3 seconds:
+            show cine dialogue "Will you investigate them for me?" from "<gold>Elder" with typewriter until advanced
+            present cine choice "<yellow>Your answer:" to cine viewers with options "<green>I will help" and "<red>Not now" with timeout 30 seconds defaulting to "Not now" pausing the scene:
+                clear cine dialogue of event-player
+                set cine variable "answer" to cine choice
+                if cine choice is "I will help":
+                    show cine dialogue "Thank you, brave one!" from "<gold>Elder" with typewriter for 2 seconds
+                else:
+                    show cine dialogue "Perhaps another time." from "<gold>Elder" with typewriter for 2 seconds
+    on end:
+        questAnswered(event-player, cine variable "answer")
+
+function questAnswered(p: player, answer: text):
+    if {_answer} is "I will help":
+        send "&aQuest accepted: The Silent Mines" to {_p}
+    else:
+        send "&7Come back when you are ready." to {_p}
+
+command /quest:
+    trigger:
+        play cine scene "examples:quest-offer" for player

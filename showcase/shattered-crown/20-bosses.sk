@@ -1,0 +1,703 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   20-bosses.sk  —  the five shard guardians
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Each guardian is a vanilla mob with a lot of health, a name, equipment and
+#   scripted abilities. Every ability is TELEGRAPHED with SkCine particles
+#   (a red ring on the ground, a pillar of sparks...) for 1.5 seconds before it
+#   lands, so players can always dodge it.
+#
+#   Three cinematics frame every fight, all played for the whole party:
+#     crown:boss-intro   the guardian rises, its name, a taunt     (~9 s)
+#     crown:boss-rage    at half health it changes                 (~6 s)
+#     crown:boss-fall    the guardian falls and releases its shard (~6 s)
+#   During intro and rage the guardian is frozen and cannot be hurt.
+#
+#   Guardians:
+#     ember  The Ember Warden       blaze           flame nova, cinder rain, thralls
+#     tide   The Drowned Matriarch  drowned         tidal slam, whirlpool, the faithful
+#     gale   The Storm Sovereign    breeze          updraft, thunder, gust
+#     stone  The Colossus           ravager         quake, rockfall, stone skin
+#     void   The Hollow King        wither skeleton void step, hollow nova, shades
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Definitions
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownBossName(id: text) :: text:
+    if {_id} is "ember":
+        return "The Ember Warden"
+    if {_id} is "tide":
+        return "The Drowned Matriarch"
+    if {_id} is "gale":
+        return "The Storm Sovereign"
+    if {_id} is "stone":
+        return "The Colossus"
+    if {_id} is "void":
+        return "The Hollow King"
+    return "The Guardian"
+
+function crownBossEpithet(id: text) :: text:
+    if {_id} is "ember":
+        return "Keeper of the Last Forge"
+    if {_id} is "tide":
+        return "She Who Sings the Drowned to Sleep"
+    if {_id} is "gale":
+        return "Crowned in Thunder"
+    if {_id} is "stone":
+        return "The Mountain That Walks"
+    if {_id} is "void":
+        return "Breaker of the Crown"
+    return ""
+
+function crownBossTag(id: text) :: text:
+    if {_id} is "ember":
+        return "<gradient:gold:red><bold>THE EMBER WARDEN</bold></gradient>"
+    if {_id} is "tide":
+        return "<gradient:dark_aqua:aqua><bold>THE DROWNED MATRIARCH</bold></gradient>"
+    if {_id} is "gale":
+        return "<gradient:white:aqua><bold>THE STORM SOVEREIGN</bold></gradient>"
+    if {_id} is "stone":
+        return "<gradient:gray:white><bold>THE COLOSSUS</bold></gradient>"
+    if {_id} is "void":
+        return "<gradient:dark_purple:light_purple><bold>THE HOLLOW KING</bold></gradient>"
+    return "<red><bold>THE GUARDIAN"
+
+function crownBossLegacy(id: text) :: text:
+    if {_id} is "ember":
+        return "&6&l"
+    if {_id} is "tide":
+        return "&3&l"
+    if {_id} is "gale":
+        return "&b&l"
+    if {_id} is "stone":
+        return "&7&l"
+    if {_id} is "void":
+        return "&5&l"
+    return "&c&l"
+
+function crownBossSpeaker(id: text) :: text:
+    if {_id} is "ember":
+        return "warden"
+    if {_id} is "tide":
+        return "matriarch"
+    if {_id} is "gale":
+        return "kestrel"
+    if {_id} is "stone":
+        return "colossus"
+    if {_id} is "void":
+        return "king"
+    return "narrator"
+
+function crownBossType(id: text) :: entity type:
+    if {_id} is "ember":
+        return blaze
+    if {_id} is "tide":
+        return drowned
+    if {_id} is "gale":
+        return breeze
+    if {_id} is "stone":
+        return ravager
+    if {_id} is "void":
+        return wither skeleton
+    return zombie
+
+# Base hearts (scaled by party size).
+function crownBossHealth(id: text) :: number:
+    if {_id} is "ember":
+        return 110
+    if {_id} is "tide":
+        return 130
+    if {_id} is "gale":
+        return 120
+    if {_id} is "stone":
+        return 170
+    if {_id} is "void":
+        return 190
+    return 100
+
+function crownBossTaunt(id: text) :: text:
+    if {_id} is "ember":
+        return "You come for the Ember? Then BURN for it."
+    if {_id} is "tide":
+        return "Hush now, little one. The deep is so very quiet."
+    if {_id} is "gale":
+        return "The storm crowned me. Kneel, or be carried away."
+    if {_id} is "stone":
+        return "...SMALL... THING... WHY... DO... YOU... WAKE... ME..."
+    if {_id} is "void":
+        return "I broke it once. I will break YOU twice."
+    return "..."
+
+function crownBossRageLine(id: text) :: text:
+    if {_id} is "ember":
+        return "ENOUGH! Let the forge consume us both!"
+    if {_id} is "tide":
+        return "Then sink. SINK with all the others!"
+    if {_id} is "gale":
+        return "You think you've weathered the storm? THIS is the storm!"
+    if {_id} is "stone":
+        return "...THE... MOUNTAIN... REMEMBERS... HOW... TO... FALL..."
+    if {_id} is "void":
+        return "Look closer. The crown was never whole. NEITHER ARE YOU."
+    return "!"
+
+function crownBossColor(id: text) :: color:
+    return crownShardColor({_id})
+
+function crownBossAccent(id: text) :: color:
+    if {_id} is "ember":
+        return red
+    if {_id} is "tide":
+        return blue
+    if {_id} is "gale":
+        return white
+    if {_id} is "stone":
+        return brown
+    if {_id} is "void":
+        return dark grey
+    return dark grey
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Spawning and state
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownSpawnBoss(k: text, id: text):
+    set {_stage} to {-crown::trial::%{_k}%::stage}
+    set {_at} to {_stage} ~ vector(0, 0.2, 6)
+    spawn crownBossType({_id}) at {_at}
+    set {_b} to last spawned entity
+    set {_hp} to crownBossHealth({_id}) * crownTrialScale({_k})
+    set display name of {_b} to "%crownBossLegacy({_id})%%crownBossName({_id})%"
+    set max health of {_b} to {_hp}
+    heal {_b}
+    if {_id} is "tide":
+        equip {_b} with trident
+    else if {_id} is "void":
+        equip {_b} with netherite sword
+        equip {_b} with netherite helmet
+    set {-crown::mob::%uuid of {_b}%} to {_k}
+    set {-crown::trial::%{_k}%::boss} to {_b}
+    set {-crown::bosses::%{_k}%} to {_k}
+    set {-crown::boss::%{_k}%::entity} to {_b}
+    set {-crown::boss::%{_k}%::id} to {_id}
+    set {-crown::boss::%{_k}%::max} to {_hp}
+    set {-crown::boss::%{_k}%::raged} to false
+    set {-crown::boss::%{_k}%::tick} to 0
+    set {-crown::boss::%{_k}%::busy} to false
+    set {-crown::bossof::%uuid of {_b}%} to {_k}
+    crownBossFreeze({_k})
+    crownBossIntro({_k})
+
+# Frozen bosses do not move or take damage (during cinematics).
+function crownBossFreeze(k: text):
+    set {-crown::boss::%{_k}%::frozen} to true
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    if {_b} is alive:
+        set artificial intelligence of {_b} to false
+
+function crownBossUnfreeze(k: text):
+    if {-crown::bosses::%{_k}%} is not set:
+        stop
+    set {-crown::boss::%{_k}%::frozen} to false
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    if {_b} is alive:
+        set artificial intelligence of {_b} to true
+        set {_ps::*} to crownTrialPlayers({_k})
+        if size of {_ps::*} > 0:
+            set target of {_b} to random element out of {_ps::*}
+
+function crownBossForget(k: text):
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    if {_b} is set:
+        delete {-crown::bossof::%uuid of {_b}%}
+    delete {-crown::boss::%{_k}%::*}
+    delete {-crown::bosses::%{_k}%}
+
+function crownBossHealthPercent(k: text) :: number:
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    if {_b} is not alive:
+        return 0
+    return (health of {_b} / {-crown::boss::%{_k}%::max}) * 100
+
+on damage:
+    set {_k} to {-crown::bossof::%uuid of victim%}
+    {_k} is set
+    if {-crown::boss::%{_k}%::frozen} is true:
+        cancel event
+        stop
+    # Stone skin halves damage while active.
+    if {-crown::boss::%{_k}%::skin} is true:
+        set damage to damage / 2
+        draw a cine sphere of "dust" at victim with radius 1.4 and 16 points with colour light grey
+    # Rage at half health (once).
+    if {-crown::boss::%{_k}%::raged} is false:
+        if health of victim - damage <= {-crown::boss::%{_k}%::max} / 2:
+            set {-crown::boss::%{_k}%::raged} to true
+            crownBossRage({_k})
+
+on death:
+    set {_k} to {-crown::bossof::%uuid of victim%}
+    {_k} is set
+    clear drops
+    set {_at} to location of victim
+    set {_id} to {-crown::boss::%{_k}%::id}
+    loop crownTrialPlayers({_k}):
+        crownBumpStat(loop-value, "bosses")
+        crownSetFlag(loop-value, "boss::%{_id}%")
+    delete {-crown::bossof::%uuid of victim%}
+    set {-crown::trial::%{_k}%::phase} to "ending"
+    crownBossFallScene({_k}, {_id}, {_at})
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  The boss clock: HUD and abilities
+# ─────────────────────────────────────────────────────────────────────────────
+
+every 1 second:
+    loop {-crown::bosses::*}:
+        crownBossTick(loop-value)
+
+function crownBossTick(k: text):
+    if {-crown::bosses::%{_k}%} is not set:
+        stop
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    if {_b} is not alive:
+        stop
+    set {_id} to {-crown::boss::%{_k}%::id}
+    set {_players::*} to crownTrialPlayers({_k})
+    if size of {_players::*} is 0:
+        stop
+    set {_pct} to crownBossHealthPercent({_k})
+    set {_bar} to crownBar({_pct}, 100, 30, "&c", "&8")
+    loop {_players::*}:
+        send action bar "%crownBossLegacy({_id})%%crownBossName({_id})% &r%{_bar}% &f%round({_pct})%%%" to loop-value
+    if {-crown::boss::%{_k}%::frozen} is true:
+        stop
+    # Leash the guardian to its arena.
+    set {_stage} to {-crown::trial::%{_k}%::stage}
+    if distance between {_b} and {_stage} > 24:
+        teleport {_b} to {_stage} ~ vector(0, 0.2, 6)
+        draw a cine sphere of "portal" at {_b} with radius 1 and 20 points to {_players::*}
+    add 1 to {-crown::boss::%{_k}%::tick}
+    set {_t} to {-crown::boss::%{_k}%::tick}
+    if {-crown::boss::%{_k}%::busy} is true:
+        stop
+    # Abilities come faster once the guardian has raged.
+    set {_every} to 7
+    if {-crown::boss::%{_k}%::raged} is true:
+        set {_every} to 5
+    if mod({_t}, {_every}) is not 0:
+        stop
+    set {_roll} to random integer between 1 and 3
+    set {-crown::boss::%{_k}%::busy} to true
+    if {_id} is "ember":
+        if {_roll} is 1:
+            crownAbilityFlameNova({_k})
+        else if {_roll} is 2:
+            crownAbilityCinderRain({_k})
+        else:
+            crownAbilitySummon({_k}, "husk", 2, "&6Cinder Thrall")
+    else if {_id} is "tide":
+        if {_roll} is 1:
+            crownAbilityTidalSlam({_k})
+        else if {_roll} is 2:
+            crownAbilityWhirlpool({_k})
+        else:
+            crownAbilitySummon({_k}, "drowned", 2, "&3Drowned Faithful")
+    else if {_id} is "gale":
+        if {_roll} is 1:
+            crownAbilityUpdraft({_k})
+        else if {_roll} is 2:
+            crownAbilityThunder({_k})
+        else:
+            crownAbilityGust({_k})
+    else if {_id} is "stone":
+        if {_roll} is 1:
+            crownAbilityQuake({_k})
+        else if {_roll} is 2:
+            crownAbilityRockfall({_k})
+        else:
+            crownAbilityStoneSkin({_k})
+    else if {_id} is "void":
+        if {_roll} is 1:
+            crownAbilityVoidStep({_k})
+        else if {_roll} is 2:
+            crownAbilityHollowNova({_k})
+        else:
+            crownAbilitySummon({_k}, "vex", 2, "&5Shade")
+
+function crownBossDone(k: text):
+    set {-crown::boss::%{_k}%::busy} to false
+
+# Damages every trial player within `radius` of `center`.
+function crownBossHit(k: text, center: location, radius: number, hearts: number):
+    loop crownTrialPlayers({_k}):
+        if world of loop-value is world of {_center}:
+            if distance between loop-value and {_center} <= {_radius}:
+                damage loop-value by {_hearts}
+                draw a cine sphere of "crit" at loop-value ~ vector(0, 1, 0) with radius 0.6 and 12 points
+
+# A warning ring on the ground at `at`, visible to the trial's players.
+function crownTelegraph(k: text, at: location, radius: number, c: color):
+    set {_ps::*} to crownTrialPlayers({_k})
+    start a cine emitter drawing a ring of "dust" at {_at} ~ vector(0, 0.1, 0) with radius {_radius} and 40 points every 2 ticks lasting 1.5 seconds to {_ps::*} with colour {_c}
+    start a cine emitter drawing a ring of "dust" at {_at} ~ vector(0, 0.1, 0) with radius 0.2 and 30 points expanding by {_radius} / 30 per tick lasting 1.5 seconds to {_ps::*} with colour {_c}
+    play cine sound "block.note_block.pling" at {_at} with volume 1 and pitch 0.5 to {_ps::*}
+
+# ── Shared ───────────────────────────────────────────────────────────────────
+
+function crownAbilitySummon(k: text, type: text, count: number, name: text):
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    set {_id} to {-crown::boss::%{_k}%::id}
+    set {_ps::*} to crownTrialPlayers({_k})
+    crownBarkAll({_ps::*}, crownBossSpeaker({_id}), "Rise, and serve!")
+    set {_et} to {_type} parsed as entity type
+    loop {_count} times:
+        set {_spot} to location of {_b} ~ vector(random number between -4 and 4, 0.2, random number between -4 and 4)
+        draw a cine cylinder of "portal" at {_spot} with radius 0.6 and height 2 and 20 points to {_ps::*}
+        crownTrialSpawnMob({_k}, {_et}, {_spot}, 12 * crownTrialScale({_k}))
+        set display name of last spawned entity to {_name}
+    play cine sound "entity.evoker.cast_spell" at {_b} with volume 1 and pitch 0.8 to {_ps::*}
+    crownBossDone({_k})
+
+# ── Ember Warden ─────────────────────────────────────────────────────────────
+
+function crownAbilityFlameNova(k: text):
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    set {_at} to location of {_b}
+    set {_ground} to {-crown::trial::%{_k}%::stage} ~ vector(0, 0, 0)
+    set y-coordinate of {_at} to y-coordinate of {_ground}
+    crownTelegraph({_k}, {_at}, 6, orange)
+    crownBarkAll(crownTrialPlayers({_k}), "warden", "The forge breathes!")
+    wait 1.5 seconds
+    if {_b} is not alive:
+        stop
+    set {_ps::*} to crownTrialPlayers({_k})
+    draw a cine cylinder of "flame" at {_at} with radius 6 and height 1.5 and 80 points to {_ps::*}
+    play cine preset "fire-burst" at {_at} to {_ps::*} with colour orange and accent red
+    play cine sound "entity.blaze.shoot" at {_at} with volume 1 and pitch 0.5 to {_ps::*}
+    loop {_ps::*}:
+        if distance between loop-value and {_at} <= 6:
+            damage loop-value by 3
+            ignite loop-value for 3 seconds
+    crownBossDone({_k})
+
+function crownAbilityCinderRain(k: text):
+    set {_ps::*} to crownTrialPlayers({_k})
+    loop {_ps::*}:
+        set {_spot::%loop-index%} to location of loop-value
+        crownTelegraph({_k}, location of loop-value, 2, red)
+    crownBarkAll({_ps::*}, "warden", "Ash to ash!")
+    wait 1.5 seconds
+    loop {_spot::*}:
+        draw a cine line of "flame" from loop-value ~ vector(0, 12, 0) to loop-value with spacing 0.4 to {_ps::*}
+        draw a cine line of "lava" from loop-value ~ vector(0, 12, 0) to loop-value with spacing 1 to {_ps::*}
+        play cine sound "entity.generic.explode" at loop-value with volume 0.5 and pitch 1.5 to {_ps::*}
+        crownBossHit({_k}, loop-value, 2, 3)
+    crownBossDone({_k})
+
+# ── Drowned Matriarch ────────────────────────────────────────────────────────
+
+function crownAbilityTidalSlam(k: text):
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    set {_at} to location of {_b}
+    crownTelegraph({_k}, {_at}, 7, cyan)
+    crownBarkAll(crownTrialPlayers({_k}), "matriarch", "Feel the weight of the sea.")
+    wait 1.5 seconds
+    if {_b} is not alive:
+        stop
+    set {_ps::*} to crownTrialPlayers({_k})
+    draw a cine wave of "splash" at {_at} with radius 7 and height 1 and 80 points to {_ps::*}
+    play cine preset "shockwave" at {_at} to {_ps::*} with colour cyan
+    play cine sound "item.trident.thunder" at {_at} with volume 0.8 and pitch 0.8 to {_ps::*}
+    loop {_ps::*}:
+        if distance between loop-value and {_at} <= 7:
+            damage loop-value by 3
+            set {_v} to vector from {_at} to location of loop-value
+            set {_len} to vector length of {_v}
+            if {_len} > 0.1:
+                set velocity of loop-value to vector(x of {_v} / {_len} * 1.3, 0.6, z of {_v} / {_len} * 1.3)
+    crownBossDone({_k})
+
+function crownAbilityWhirlpool(k: text):
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    set {_at} to location of {_b}
+    set {_ps::*} to crownTrialPlayers({_k})
+    crownBarkAll({_ps::*}, "matriarch", "Come closer... closer...")
+    start a cine emitter drawing a vortex of "bubble_pop" at {_at} with radius 6 and height 2 and 40 points spinning at 12 degrees per tick expanding by -0.05 per tick lasting 3 seconds to {_ps::*}
+    play cine sound "block.bubble_column.whirlpool_inside" at {_at} with volume 1 to {_ps::*}
+    loop 6 times:
+        wait 10 ticks
+        if {_b} is not alive:
+            stop
+        loop crownTrialPlayers({_k}):
+            if distance between loop-value-2 and {_at} <= 10:
+                set {_v} to vector from location of loop-value-2 to {_at}
+                set {_len} to vector length of {_v}
+                if {_len} > 1:
+                    set velocity of loop-value-2 to vector(x of {_v} / {_len} * 0.45, 0.05, z of {_v} / {_len} * 0.45)
+    crownBossHit({_k}, {_at}, 2.5, 4)
+    crownBossDone({_k})
+
+# ── Storm Sovereign ──────────────────────────────────────────────────────────
+
+function crownAbilityUpdraft(k: text):
+    set {_ps::*} to crownTrialPlayers({_k})
+    loop {_ps::*}:
+        set {_spot::%loop-index%} to location of loop-value
+        crownTelegraph({_k}, location of loop-value, 2.2, white)
+    crownBarkAll({_ps::*}, "kestrel", "Up you go, little bird!")
+    wait 1.5 seconds
+    loop {_ps::*}:
+        if distance between loop-value and {_spot::%loop-index%} <= 2.2:
+            set velocity of loop-value to vector(0, 1.6, 0)
+            damage loop-value by 1
+        draw a cine helix of "cloud" at {_spot::%loop-index%} with radius 1 and height 5 and 30 points to {_ps::*}
+    loop {_ps::*}:
+        play cine sound "entity.breeze.wind_burst" with volume 1 and pitch 0.9 to loop-value
+    crownBossDone({_k})
+
+function crownAbilityThunder(k: text):
+    set {_ps::*} to crownTrialPlayers({_k})
+    set {_stage} to {-crown::trial::%{_k}%::stage}
+    loop 4 times:
+        set {_spot::%loop-number%} to {_stage} ~ vector(random number between -9 and 9, 0, random number between -9 and 9)
+        crownTelegraph({_k}, {_spot::%loop-number%}, 2.5, yellow)
+    loop {_ps::*}:
+        add location of loop-value to {_spot::*}
+        crownTelegraph({_k}, location of loop-value, 2.5, yellow)
+    crownBarkAll({_ps::*}, "kestrel", "The sky answers ME!")
+    wait 1.5 seconds
+    loop {_spot::*}:
+        strike lightning effect at loop-value
+        draw a cine lightning bolt of "electric_spark" from loop-value ~ vector(1, 16, -1) to loop-value to {_ps::*}
+        crownBossHit({_k}, loop-value, 2.5, 4)
+    crownBossDone({_k})
+
+function crownAbilityGust(k: text):
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    set {_at} to location of {_b}
+    set {_ps::*} to crownTrialPlayers({_k})
+    crownTelegraph({_k}, {_at}, 5, light blue)
+    wait 1 second
+    if {_b} is not alive:
+        stop
+    draw a cine ring of "gust" at {_at} ~ vector(0, 1, 0) with radius 3 and 12 points to {_ps::*}
+    play cine sound "entity.breeze.shoot" at {_at} with volume 1 and pitch 0.7 to {_ps::*}
+    loop {_ps::*}:
+        if distance between loop-value and {_at} <= 8:
+            set {_v} to vector from {_at} to location of loop-value
+            set {_len} to vector length of {_v}
+            if {_len} > 0.1:
+                set velocity of loop-value to vector(x of {_v} / {_len} * 2, 0.5, z of {_v} / {_len} * 2)
+    crownBossDone({_k})
+
+# ── The Colossus ─────────────────────────────────────────────────────────────
+
+function crownAbilityQuake(k: text):
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    set {_at} to location of {_b}
+    set {_ps::*} to crownTrialPlayers({_k})
+    crownTelegraph({_k}, {_at}, 4, light grey)
+    crownBarkAll({_ps::*}, "colossus", "...FALL...")
+    wait 1.5 seconds
+    if {_b} is not alive:
+        stop
+    loop 3 times:
+        set {_r} to loop-number * 3
+        draw a cine ring of "campfire_cosmic_smoke" at {_at} with radius {_r} and 40 points to {_ps::*}
+        play cine sound "block.anvil.land" at {_at} with volume 0.7 and pitch 0.5 to {_ps::*}
+        loop crownTrialPlayers({_k}):
+            set {_d} to distance between loop-value-2 and {_at}
+            if {_d} <= {_r}:
+                if {_d} > {_r} - 3:
+                    damage loop-value-2 by 2.5
+                    set velocity of loop-value-2 to vector(0, 0.7, 0)
+        wait 8 ticks
+    crownBossDone({_k})
+
+function crownAbilityRockfall(k: text):
+    set {_ps::*} to crownTrialPlayers({_k})
+    set {_stage} to {-crown::trial::%{_k}%::stage}
+    loop 6 times:
+        set {_spot::%loop-number%} to {_stage} ~ vector(random number between -10 and 10, 0, random number between -10 and 10)
+    loop {_ps::*}:
+        add location of loop-value to {_spot::*}
+    loop {_spot::*}:
+        crownTelegraph({_k}, loop-value, 2, brown)
+    crownBarkAll({_ps::*}, "colossus", "...THE... SKY... IS... STONE...")
+    wait 1.5 seconds
+    loop {_spot::*}:
+        draw a cine line of "campfire_cosmic_smoke" from loop-value ~ vector(0, 14, 0) to loop-value with spacing 0.7 to {_ps::*}
+        draw a cine sphere of "poof" at loop-value with radius 1.5 and 20 points to {_ps::*}
+        play cine sound "block.stone.break" at loop-value with volume 1 and pitch 0.5 to {_ps::*}
+        crownBossHit({_k}, loop-value, 2, 4)
+    crownBossDone({_k})
+
+function crownAbilityStoneSkin(k: text):
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    set {_ps::*} to crownTrialPlayers({_k})
+    set {-crown::boss::%{_k}%::skin} to true
+    crownBarkAll({_ps::*}, "colossus", "...HARDEN...")
+    start a cine emitter drawing a sphere of "dust" at {_b} with radius 2.2 and 30 points every 3 ticks lasting 8 seconds to {_ps::*} with colour light grey
+    play cine sound "block.stone.place" at {_b} with volume 1 and pitch 0.5 to {_ps::*}
+    crownMsgAll({_ps::*}, "&7The Colossus hardens: &fit takes half damage for 8 seconds.")
+    crownBossDone({_k})
+    wait 8 seconds
+    set {-crown::boss::%{_k}%::skin} to false
+
+# ── The Hollow King ──────────────────────────────────────────────────────────
+
+function crownAbilityVoidStep(k: text):
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    set {_ps::*} to crownTrialPlayers({_k})
+    set {_victim} to random element out of {_ps::*}
+    set {_from} to location of {_b}
+    draw a cine sphere of "reverse_portal" at {_b} with radius 1.2 and 30 points to {_ps::*}
+    play cine sound "entity.enderman.teleport" at {_from} with volume 1 and pitch 0.5 to {_ps::*}
+    crownBark({_victim}, "king", "Behind you.")
+    wait 1 second
+    if {_b} is not alive:
+        stop
+    if {_victim} is not online:
+        crownBossDone({_k})
+        stop
+    set {_behind} to location of {_victim} ~ vector(0, 0.2, 0)
+    teleport {_b} to {_behind}
+    draw a cine sphere of "reverse_portal" at {_b} with radius 1.2 and 30 points to {_ps::*}
+    set target of {_b} to {_victim}
+    crownBossHit({_k}, {_behind}, 2, 3)
+    crownBossDone({_k})
+
+function crownAbilityHollowNova(k: text):
+    set {_b} to {-crown::boss::%{_k}%::entity}
+    set {_at} to location of {_b}
+    set {_ps::*} to crownTrialPlayers({_k})
+    crownTelegraph({_k}, {_at}, 8, purple)
+    crownBarkAll({_ps::*}, "king", "Be NOTHING with me.")
+    start a cine emitter drawing a sphere of "squid_ink" at {_at} ~ vector(0, 1, 0) with radius 1 and 30 points expanding by 0.05 per tick lasting 1.5 seconds to {_ps::*}
+    wait 1.5 seconds
+    if {_b} is not alive:
+        stop
+    draw a cine sphere of "reverse_portal" at {_at} ~ vector(0, 1, 0) with radius 8 and 120 points to {_ps::*}
+    play cine sound "entity.warden.sonic_boom" at {_at} with volume 1 and pitch 0.6 to {_ps::*}
+    crownBossHit({_k}, {_at}, 8, 4)
+    crownBossDone({_k})
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Boss cinematics
+# ─────────────────────────────────────────────────────────────────────────────
+
+function crownBossIntro(k: text):
+    set {_boss} to {-crown::boss::%{_k}%::entity}
+    set {_bossid} to {-crown::boss::%{_k}%::id}
+    set {_players::*} to crownAvailable(crownTrialPlayers({_k}))
+    if size of {_players::*} is 0:
+        crownBossUnfreeze({_k})
+        stop
+    play cine scene "crown:boss-intro" for {_players::*} together
+
+function crownBossRage(k: text):
+    crownBossFreeze({_k})
+    set {_boss} to {-crown::boss::%{_k}%::entity}
+    set {_bossid} to {-crown::boss::%{_k}%::id}
+    set {_players::*} to crownAvailable(crownTrialPlayers({_k}))
+    if size of {_players::*} is 0:
+        crownBossUnfreeze({_k})
+        stop
+    play cine scene "crown:boss-rage" for {_players::*} together
+
+function crownBossFallScene(k: text, id: text, at: location):
+    set {_bossid} to {_id}
+    set {_players::*} to crownAvailable(crownTrialPlayers({_k}))
+    if size of {_players::*} is 0:
+        crownTrialVictory({_k})
+        stop
+    play cine scene "crown:boss-fall" for {_players::*} together
+
+# Caller locals: {_k}, {_boss}, {_bossid}
+cine scene "crown:boss-intro":
+    duration: 10 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "k" to {_k}
+        set {_base} to location of {_boss}
+        set {_focus} to {_base} ~ vector(0, 1.5, 0)
+        set {_at} to {_base}
+        set {_colour} to crownBossColor({_bossid})
+        set {_accent} to crownBossAccent({_bossid})
+        add cine camera keyframe at {_base} ~ vector(-6, 8, -10) at 0 seconds looking at {_focus}
+        add cine camera keyframe at {_base} ~ vector(-3, 3, -7) at 3 seconds with easing "ease-in-out-sine" looking at {_focus}
+        play cine sequence "cam:hero-low" at 4 seconds
+        make the cine camera watch {_boss} from {_base} ~ vector(2.5, 1.2, -4.5) between 7 seconds and 10 seconds blending over 15 ticks
+        play cine sequence "fx:boss-arrival" at 0 seconds
+        at 4 seconds:
+            set {_title} to crownBossTag({_bossid})
+            set {_subtitle} to "<gray>%crownBossEpithet({_bossid})%"
+            set {_tone} to 0.6
+            play cine sequence "fx:title-card"
+        at 7 seconds:
+            set {_who} to crownBossSpeaker({_bossid})
+            set {_line} to crownBossTaunt({_bossid})
+            set {_hold} to 2 seconds
+            play cine sequence "shout"
+        at 9.5 seconds even if skipped:
+            crownBossUnfreeze(cine variable "k")
+
+# Caller locals: {_k}, {_boss}, {_bossid}
+cine scene "crown:boss-rage":
+    duration: 6 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "k" to {_k}
+        set {_base} to location of {_boss}
+        set {_focus} to {_base} ~ vector(0, 1.5, 0)
+        set {_r} to 5
+        play cine sequence "cam:orbit-fast" at 0 seconds
+        make the cine camera watch {_boss} from {_base} ~ vector(0, 1, -3.5) between 3 seconds and 6 seconds blending over 10 ticks
+        at 0 seconds:
+            play cine preset "power-up" at {_boss} with colour crownBossColor({_bossid}) and accent crownBossAccent({_bossid})
+            play cine sound "entity.ravager.roar" at {_boss} with volume 1 and pitch 0.7
+            shake the cine camera with intensity 1 for 1.5 seconds
+        at 1 second:
+            set {_who} to crownBossSpeaker({_bossid})
+            set {_line} to crownBossRageLine({_bossid})
+            play cine sequence "shout"
+        at 3 seconds:
+            zoom the cine camera in by 1.5 blocks over 2 seconds with easing "ease-in-quad"
+            set {_at} to {_base}
+            set {_colour} to crownBossColor({_bossid})
+            play cine sequence "fx:ring-wave"
+        at 5.5 seconds even if skipped:
+            crownBossUnfreeze(cine variable "k")
+
+# Caller locals: {_k}, {_at}, {_bossid}
+cine scene "crown:boss-fall":
+    duration: 7 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set cine variable "k" to {_k}
+        set {_focus} to {_at} ~ vector(0, 1, 0)
+        set {_colour} to crownBossColor({_bossid})
+        set {_r} to 6
+        play cine sequence "cam:orbit-slow" at 0 seconds
+        play cine sequence "fx:boss-fall" at 0 seconds
+        at 2.5 seconds:
+            set {_at} to {_focus}
+            play cine sequence "fx:shard-release"
+            set {_at} to {_focus} ~ vector(0, -1, 0)
+            play cine sequence "fx:shard-call"
+        at 3 seconds:
+            set {_title} to "<white><bold>GUARDIAN FALLEN"
+            set {_subtitle} to "<gray>%crownBossName({_bossid})% is at rest"
+            set {_tone} to 1.2
+            play cine sequence "fx:title-card"
+        at 5 seconds:
+            fade the cine screen out over 2 seconds
+        at 6.5 seconds even if skipped:
+            crownTrialVictory(cine variable "k")

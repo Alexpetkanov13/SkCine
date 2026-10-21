@@ -1,0 +1,213 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine showcase: The Starforge
+#  /sk reload showcase/starforge   then   /starforge   or   /starforge group
+#
+#  A 40-second interactive cinematic that uses most of SkCine at once:
+#    • fade from black, crane shot, orbit and tracking shots, zoom and shake
+#    • a player-looking "echo" of the viewer, wearing their skin (1.21.9+)
+#    • a floating blade with a parented label, keyframed bobbing and a spin
+#    • four shards orbiting the forge as a rigid group
+#    • word-by-word and typewriter dialogue with typing sounds
+#    • a menu choice (voted on when watched as a group) that branches the
+#      timeline through markers
+#    • reusable, parameterized sequences for the effects
+#    • a reward that is granted exactly once, even if the scene is skipped
+#
+#  Requires Minecraft 1.21.9+ for the player actor. Stand somewhere open:
+#  the forge appears 8 blocks in front of you (+z).
+# ─────────────────────────────────────────────────────────────────────────────
+
+options:
+    title: <gradient:gold:red><bold>THE STARFORGE</bold></gradient>
+    echo: <aqua>Your Echo
+
+# ── Reusable effects ────────────────────────────────────────────────────────
+
+# Parameters: {_at} (location), {_colour} (color)
+cine sequence "starforge:rune-pulse":
+    at 0 seconds:
+        play cine sound "block.beacon.power_select" at {_at} with pitch 1.4
+        start a cine emitter drawing a ring of "dust" at {_at} with radius 0.5 and 40 points expanding by 0.12 per tick lasting 1 second with colour {_colour}
+    at 10 ticks:
+        draw a cine star of "electric_spark" at {_at} ~ vector(0, 0.1, 0) with radius 2.5 and 60 points
+
+# Parameters: {_from} (location), {_to} (location)
+cine sequence "starforge:strike":
+    at 0 seconds:
+        draw a cine lightning bolt of "electric_spark" from {_from} to {_to}
+        play cine sound "entity.lightning_bolt.thunder" at {_to} with volume 0.7 and pitch 1.3
+        flash the cine screen with colour white over 6 ticks
+    at 2 ticks:
+        play cine preset "lightning-burst" at {_to} with colour light blue
+
+# ── The scene ───────────────────────────────────────────────────────────────
+
+cine scene "starforge:awakening":
+    duration: 40 seconds
+    skippable: true
+    skip mode: vote
+    timeline:
+        set {_c} to location of event-player
+        set {_forge} to {_c} ~ vector(0, 0, 8)
+        set {_core} to {_forge} ~ vector(0, 1.6, 0)
+
+        # Branch points. 0–20 s intro → choice │ 22–30 s "claim" │ 32–40 s "seal"
+        add cine marker "claim" at 22 seconds
+        add cine marker "seal" at 32 seconds
+
+        # ── Cast ──
+        set {_anvil} to a new cine block display of anvil at {_forge} ~ vector(-0.5, 0, -0.5)
+        set {_plinth} to a new cine block display of crying obsidian at {_forge} ~ vector(-0.5, -1, -0.5)
+        set {_blade} to a new cine item display of netherite sword at {_core} named "starblade"
+        set {_label} to a new cine text display with text "<gradient:light_purple:aqua>✦ Starblade ✦</gradient>" at {_core} ~ vector(0, 1, 0)
+        attach cine actor {_label} to {_blade} with offset vector(0, 0.9, 0)
+
+        set {_shards::1} to a new cine item display of amethyst shard at {_core} ~ vector(2.2, 0, 0)
+        set {_shards::2} to a new cine item display of echo shard at {_core} ~ vector(-2.2, 0, 0)
+        set {_shards::3} to a new cine item display of prismarine crystals at {_core} ~ vector(0, 0, 2.2)
+        set {_shards::4} to a new cine item display of nether star at {_core} ~ vector(0, 0, -2.2)
+
+        set {_echo} to a new cine player actor at {_forge} ~ vector(-7, 0, -3) named "echo" with skin of event-player with name tag "{@echo}"
+        hide cine actor {_echo}
+
+        # The blade bobs above the anvil on the scene clock (stays in sync when paused).
+        add cine actor keyframe for {_blade} at {_core} at 0 seconds
+        add cine actor keyframe for {_blade} at {_core} ~ vector(0, 0.6, 0) at 6 seconds with easing "ease-in-out-sine"
+        add cine actor keyframe for {_blade} at {_core} ~ vector(0, 0.1, 0) at 12 seconds with easing "ease-in-out-sine"
+        add cine actor keyframe for {_blade} at {_core} ~ vector(0, 0.9, 0) at 19 seconds with easing "ease-in-out-sine"
+
+        # ── Camera ──
+        add cine camera keyframe at {_forge} ~ vector(0, 16, -18) at 0 seconds looking at {_forge}
+        add cine camera keyframe at {_forge} ~ vector(5, 5, -8) at 5 seconds with easing "ease-in-out-cubic" looking at {_core}
+        make the cine camera orbit around {_core} between 5 seconds and 11 seconds with radius 8 and height 2.5 sweeping 140 degrees blending over 1 second
+        make the cine camera watch {_echo} from {_forge} ~ vector(-3, 2.2, -6) between 11 seconds and 15 seconds blending over 1 second
+        make the cine camera watch {_blade} from {_forge} ~ vector(0, 2.2, -5) between 15 seconds and 20 seconds blending over 1 second
+
+        # ── Act I: the forge wakes ──
+        at 0 seconds:
+            fade the cine screen out over 1 tick
+            play cine sound "ambient.soul_sand_valley.mood" with volume 0.8
+        at 5 ticks:
+            fade the cine screen in over 2 seconds
+        at 1 second:
+            show cine title "{@title}" with subtitle "<gray>an ancient fire stirs" for 3 seconds with fade 15 ticks
+        at 2 seconds:
+            start a cine emitter drawing a vortex of "dust" at {_forge} with radius 1.5 and height 4 and 50 points spinning at 4 degrees per tick lasting 18 seconds with colour purple
+            spin cine display {_blade} around vector(0, 1, 0) continuously at 60 degrees per second
+        repeat every 15 ticks from 2 seconds until 20 seconds:
+            draw a cine ring of "end_rod" at {_forge} ~ vector(0, 0.05, 0) with radius 3 and 36 points
+        at 3 seconds:
+            set {_at} to {_forge} ~ vector(0, 0.05, 0)
+            set {_colour} to purple
+            play cine sequence "starforge:rune-pulse"
+            play cine preset "summoning-circle" at {_forge} with colour purple and accent cyan lasting 4 seconds
+
+        # ── Act II: the echo ──
+        at 6 seconds:
+            show cine actor {_echo}
+            play cine preset "teleport" at {_echo} with colour cyan
+            play cine sound "entity.illusioner.mirror_move" at {_echo}
+        at 7 seconds:
+            move cine actor {_echo} to {_forge} ~ vector(-2.5, 0, -1.5) over 4 seconds with easing "ease-in-out-sine" facing the movement
+        at 11 seconds:
+            make cine actor {_echo} look at {_core}
+            show cine dialogue "The forge remembers every hand that shaped it." from "{@echo}" word by word at 4 words per second for 2 seconds
+            rotate cine actors {_shards::*} around {_core} by 720 degrees over 8 seconds with easing "ease-in-out-cubic"
+        at 14 seconds:
+            make cine actor {_echo} look at event-player
+            show cine dialogue "It is awake again... and it is asking for you." from "{@echo}" with typewriter at 28 characters per second for 2 seconds with typing sound "block.note_block.hat"
+        at 16 seconds:
+            zoom the cine camera in by 2 blocks over 3 seconds with easing "ease-in-out-sine"
+        at 18 seconds:
+            set {_from} to {_core} ~ vector(0, 14, 0)
+            set {_to} to {_core}
+            play cine sequence "starforge:strike"
+            shake the cine camera with intensity 1.2 for 1 second
+            play cine preset "legendary-reveal" at {_blade} with colour gold and accent purple lasting 2 seconds
+
+        # ── The choice ──
+        at 20 seconds:
+            present cine choice "<gold>What will you do with the Starblade?" to cine viewers with options "Claim it" and "Seal it away" with timeout 20 seconds defaulting to "Seal it away" as a vote using a menu pausing the scene:
+                set cine variable "fate" to cine choice
+                if cine choice is "Claim it":
+                    set cine duration to 30 seconds
+                    jump the cine scene to marker "claim"
+                else:
+                    jump the cine scene to marker "seal"
+
+        # ── Branch A: claim ──
+        at marker "claim":
+            stop animating cine actor {_blade}
+            make the cine camera orbit around {_core} between 22 seconds and 30 seconds with radius 4.5 and height 1.5 sweeping 200 degrees blending over 1 second
+            show cine dialogue "Then carry its fire. Do not let it go out." from "{@echo}" in title word by word at 5 words per second for 2 seconds fading in over 10 ticks
+            rotate cine actors {_shards::*} around {_core} by 1080 degrees over 6 seconds with easing "ease-in-cubic"
+            play cine preset "golden-aura" at {_blade} with colour gold lasting 6 seconds
+        at 23 seconds:
+            animate cine display {_blade} to translation vector(0, 0.8, 0) and scale 1.6 over 3 seconds with easing "ease-out-back"
+        at 26 seconds:
+            set {_at} to {_forge} ~ vector(0, 0.05, 0)
+            set {_colour} to orange
+            play cine sequence "starforge:rune-pulse"
+            play cine preset "power-up" at {_core} with colour gold and accent orange
+            play cine sound "ui.toast.challenge_complete"
+            scale cine actors {_shards::*} to 0.05 over 1 second with easing "ease-in-back"
+        at 27 seconds:
+            flash the cine screen with colour gold over 10 ticks
+            show cine title "<gold><bold>STARBLADE CLAIMED" with subtitle "<gray>its fire is yours now" for 2 seconds
+        at 28 seconds:
+            fade the cine screen out over 2 seconds
+        at 29 seconds even if skipped:
+            if cine variable "fate" is "Claim it":
+                loop cine viewers:
+                    give loop-player 1 netherite sword named "&d&lStarblade"
+                    send "&d✦ &7The Starblade hums in your hands." to loop-player
+
+        # ── Branch B: seal ──
+        at marker "seal":
+            stop animating cine actor {_blade}
+            make the cine camera watch {_forge} from {_forge} ~ vector(0, 8, -9) between 32 seconds and 40 seconds blending over 1 second
+            show cine dialogue "Then let it sleep. Some fires are better left unlit." from "{@echo}" with typewriter at 30 characters per second for 2 seconds with typing sound "block.note_block.hat"
+            play cine preset "ice-storm" at {_forge} with colour light blue lasting 4 seconds
+        at 33 seconds:
+            animate cine display {_blade} to translation vector(0, -1.4, 0) and scale 0.4 over 3 seconds with easing "ease-in-cubic"
+            scale cine actors {_shards::*} to 0.05 over 3 seconds with easing "ease-in-sine"
+        at 36 seconds:
+            set {_from} to {_forge} ~ vector(4, 14, 4)
+            set {_to} to {_forge}
+            play cine sequence "starforge:strike"
+            play cine preset "smoke-cloud" at {_echo} lasting 1 second
+            hide cine actor {_echo}
+            hide cine actor {_label}
+        at 37 seconds:
+            show cine title "<aqua>THE FORGE SLEEPS" with subtitle "<gray>for now" for 2 seconds
+        at 38 seconds:
+            fade the cine screen out over 2 seconds
+        at 39 seconds even if skipped:
+            if cine variable "fate" is not "Claim it":
+                loop cine viewers:
+                    send "&b❄ &7The forge falls silent. Perhaps another day." to loop-player
+
+# ── Hooks ───────────────────────────────────────────────────────────────────
+
+on cine scene skip of "starforge:awakening":
+    loop cine viewers of event-cineplayback:
+        send "&8(You skipped the Starforge. Its decision was made for you.)" to loop-player
+
+# ── Entry point ─────────────────────────────────────────────────────────────
+
+command /starforge [<text>]:
+    description: Watch the Starforge awaken. Add "group" to watch with everyone within 30 blocks.
+    cooldown: 5 seconds
+    trigger:
+        if player is watching a cine scene:
+            send "&cYou're already watching a scene." to player
+            stop
+        if arg-1 is "group":
+            set {_viewers::*} to all players in radius 30 around player
+            loop {_viewers::*}:
+                if loop-value is watching a cine scene:
+                    remove loop-value from {_viewers::*}
+            play cine scene "starforge:awakening" for {_viewers::*} together
+            send "&dThe Starforge awakens for %size of {_viewers::*}% player(s)..." to {_viewers::*}
+        else:
+            play cine scene "starforge:awakening" for player

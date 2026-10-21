@@ -1,0 +1,66 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: interactive branching story (Example 5)
+#  /sk reload branching-story   then   /story
+#
+#  An NPC walks up to the player and offers a quest. The player chooses
+#  Accept or Decline; the scene jumps to the matching branch on the SAME
+#  timeline (one NPC, one camera rig), stores the answer in a scene
+#  variable, and calls a completion function. The player's state is restored
+#  automatically, whatever the outcome.
+#
+#  Timeline layout:   0-8s intro → choice │ 10-18s "accept" │ 20-28s "decline"
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:story":
+    duration: 28 seconds
+    timeline:
+        set {_c} to location of event-player
+        set {_npc} to a new cine actor of wandering trader at {_c} ~ vector(10, 0, 0) named "trader"
+        add cine marker "accept" at 10 seconds
+        add cine marker "decline" at 20 seconds
+
+        # Intro: the camera frames the NPC approaching the player.
+        add cine camera keyframe at {_c} ~ vector(-3, 2.5, -3) at 0 seconds looking at {_c} ~ vector(5, 1.5, 0)
+        add cine camera keyframe at {_c} ~ vector(1, 2, -3) at 6 seconds with easing "ease-in-out-sine" looking at {_c} ~ vector(2, 1.6, 0)
+        at 10 ticks:
+            make cine actor {_npc} walk to {_c} ~ vector(2, 0, 0) at speed 0.8
+        at 5 seconds:
+            make cine actor {_npc} look at event-player
+            show cine dialogue "Psst... I have a job for you." from "<green>Trader" with typewriter for 2.5 seconds
+        at 8 seconds:
+            present cine choice "<yellow>Help the trader?" to cine viewers with options "Accept" and "Decline" with timeout 20 seconds defaulting to "Decline" pausing the scene:
+                set cine variable "path" to cine choice
+                if cine choice is "Accept":
+                    # The accept branch ends at 18 seconds.
+                    set cine duration to 18 seconds
+                    jump the cine scene to marker "accept"
+                else:
+                    jump the cine scene to marker "decline"
+
+        # ── Accept branch ──
+        at marker "accept":
+            show cine dialogue "Splendid! Meet me by the old mill." from "<green>Trader" with typewriter for 3 seconds
+            play cine preset "level-up" at event-player lasting 2 seconds
+            make the cine camera orbit around {_c} between 10 seconds and 18 seconds with radius 5 and height 2 sweeping 120 degrees blending over 1 second
+        at 14 seconds:
+            move cine actor {_npc} to {_c} ~ vector(14, 0, 6) over 4 seconds facing the movement
+
+        # ── Decline branch ──
+        at marker "decline":
+            show cine dialogue "Suit yourself, stranger." from "<green>Trader" with typewriter for 3 seconds
+            make the cine camera watch {_npc} from {_c} ~ vector(-2, 3, -2) between 20 seconds and 28 seconds blending over 1 second
+        at 24 seconds:
+            play cine preset "smoke-cloud" at {_npc} lasting 1 second
+            hide cine actor {_npc}
+    on end:
+        storyFinished(event-player, cine variable "path")
+
+function storyFinished(p: player, path: text):
+    if {_path} is "Accept":
+        send "&aNew quest: The Old Mill" to {_p}
+    else:
+        send "&7The trader vanished into the smoke." to {_p}
+
+command /story:
+    trigger:
+        play cine scene "examples:story" for player

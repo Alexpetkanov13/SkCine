@@ -1,0 +1,251 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   07-achievements.sk  —  achievements and the toast that announces them
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Two kinds:
+#     • granted directly at a moment (swift, untouchable, credits, night-sky…)
+#       with crownGrantAchievement(player, id)
+#     • derived from the profile (shards, endings, mercy…), re-checked by
+#       crownCheckAchievements(player) after chapters, endings and so on.
+#
+#   A new achievement shows a toast: a title, a chime and a chat line. If the
+#   player is watching a scene, the toast waits until the scene has ended so
+#   it never covers a cinematic.
+# ═════════════════════════════════════════════════════════════════════════════
+
+function crownAchievementIds() :: texts:
+    add "first-light", "ember", "tide", "gale", "stone" and "void" to {_a::*}
+    add "reforged", "radiant", "tyrant", "sacrifice", "echo-ending" and "all-endings" to {_a::*}
+    add "merciful", "ruthless", "swift", "untouchable" and "slayer" to {_a::*}
+    add "guardian-bane", "scholar", "fellowship", "cinephile" and "night-sky" to {_a::*}
+    add "skipper", "credits", "gauntlet", "storyteller" and "completionist" to {_a::*}
+    return {_a::*}
+
+function crownAchievementTitle(id: text) :: text:
+    if {_id} is "first-light":
+        return "First Light"
+    if {_id} is "ember":
+        return "Kindled"
+    if {_id} is "tide":
+        return "Undertow"
+    if {_id} is "gale":
+        return "Weathered"
+    if {_id} is "stone":
+        return "Unmoved"
+    if {_id} is "void":
+        return "Hollowed Out"
+    if {_id} is "reforged":
+        return "Whole Again"
+    if {_id} is "radiant":
+        return "Radiant Dawn"
+    if {_id} is "tyrant":
+        return "Heavy Is the Head"
+    if {_id} is "sacrifice":
+        return "Shards of Mercy"
+    if {_id} is "echo-ending":
+        return "Two Who Were One"
+    if {_id} is "all-endings":
+        return "Every Version Is True"
+    if {_id} is "merciful":
+        return "Five Mercies"
+    if {_id} is "ruthless":
+        return "No Mercy"
+    if {_id} is "swift":
+        return "Swift"
+    if {_id} is "untouchable":
+        return "Untouchable"
+    if {_id} is "slayer":
+        return "Hundred Foes"
+    if {_id} is "guardian-bane":
+        return "Guardian-Bane"
+    if {_id} is "scholar":
+        return "Scholar of Aurelion"
+    if {_id} is "fellowship":
+        return "Fellowship"
+    if {_id} is "cinephile":
+        return "Cinephile"
+    if {_id} is "night-sky":
+        return "Night Sky"
+    if {_id} is "skipper":
+        return "I've Seen This One"
+    if {_id} is "credits":
+        return "Roll Credits"
+    if {_id} is "gauntlet":
+        return "Echo of Every Guardian"
+    if {_id} is "storyteller":
+        return "Storyteller"
+    if {_id} is "completionist":
+        return "The Whole Crown"
+    return {_id}
+
+function crownAchievementHint(id: text) :: text:
+    if {_id} is "first-light":
+        return "Finish the prologue."
+    if {_id} is "ember":
+        return "Recover the Ember Shard."
+    if {_id} is "tide":
+        return "Recover the Tide Shard."
+    if {_id} is "gale":
+        return "Recover the Gale Shard."
+    if {_id} is "stone":
+        return "Recover the Stone Shard."
+    if {_id} is "void":
+        return "Recover the Void Shard."
+    if {_id} is "reforged":
+        return "Reforge the crown."
+    if {_id} is "radiant":
+        return "Reach the Radiant ending."
+    if {_id} is "tyrant":
+        return "Reach the Tyrant ending."
+    if {_id} is "sacrifice":
+        return "Reach the Sacrifice ending."
+    if {_id} is "echo-ending":
+        return "Reach the secret ending."
+    if {_id} is "all-endings":
+        return "See all four endings."
+    if {_id} is "merciful":
+        return "Choose mercy in all five chapters."
+    if {_id} is "ruthless":
+        return "Show no mercy in any of the five chapters."
+    if {_id} is "swift":
+        return "Finish a trial under its par time."
+    if {_id} is "untouchable":
+        return "Finish a trial without being downed."
+    if {_id} is "slayer":
+        return "Defeat 100 trial foes."
+    if {_id} is "guardian-bane":
+        return "Defeat all five guardians."
+    if {_id} is "scholar":
+        return "Unlock every codex entry."
+    if {_id} is "fellowship":
+        return "Finish a chapter in a party."
+    if {_id} is "cinephile":
+        return "Replay 10 scenes from the gallery."
+    if {_id} is "night-sky":
+        return "Watch the Crown Comet."
+    if {_id} is "skipper":
+        return "Skip 10 scenes. We won't judge. Much."
+    if {_id} is "credits":
+        return "Watch the credits."
+    if {_id} is "gauntlet":
+        return "Finish the Trial of Echoes."
+    if {_id} is "storyteller":
+        return "Watch all six tales."
+    if {_id} is "completionist":
+        return "Earn every other achievement."
+    return ""
+
+function crownHasAchievement(p: player, id: text) :: boolean:
+    return crownFlag({_p}, "ach::%{_id}%")
+
+function crownAchievementCount(p: player) :: number:
+    set {_n} to 0
+    loop crownAchievementIds():
+        if crownHasAchievement({_p}, loop-value) is true:
+            add 1 to {_n}
+    return {_n}
+
+function crownGrantAchievement(p: player, id: text):
+    if crownHasAchievement({_p}, {_id}) is true:
+        stop
+    crownSetFlag({_p}, "ach::%{_id}%")
+    crownSet({_p}, "achat::%{_id}%", now)
+    crownHookAchievement({_p}, {_id})
+    if {_p} is watching a cine scene:
+        add {_id} to {-crown::toasts::%crownId({_p})%::*}
+    else:
+        crownToast({_p}, {_id})
+    if {_id} is not "completionist":
+        if crownAchievementCount({_p}) >= size of crownAchievementIds() - 1:
+            crownGrantAchievement({_p}, "completionist")
+
+function crownToast(p: player, id: text):
+    show cine title "<gold>★ <yellow>Achievement" with subtitle "<white>%crownAchievementTitle({_id})%" to {_p} for 2.5 seconds with fade 6 ticks
+    crownChime({_p}, "achievement")
+    crownMsg({_p}, "&6★ &eAchievement: &f%crownAchievementTitle({_id})% &8— &7%crownAchievementHint({_id})%")
+    draw a cine star of "firework" at {_p} ~ vector(0, 2.5, 0) with radius 1 and 20 points to {_p}
+
+# Toasts that were held back during a scene appear when it ends.
+on cine scene end:
+    set {_p} to event-player
+    {_p} is set
+    wait 1 second
+    {_p} is online
+    {_p} is not watching a cine scene
+    loop {-crown::toasts::%crownId({_p})%::*}:
+        crownToast({_p}, loop-value)
+        wait 2 seconds
+    delete {-crown::toasts::%crownId({_p})%::*}
+
+# Re-derives profile-based achievements.
+function crownCheckAchievements(p: player):
+    if crownNum({_p}, "chapter") >= 1:
+        crownGrantAchievement({_p}, "first-light")
+    loop crownShardNames():
+        if crownHasShard({_p}, loop-value) is true:
+            crownGrantAchievement({_p}, loop-value)
+    if crownChoice({_p}, "final") is not "none":
+        crownGrantAchievement({_p}, "reforged")
+    if crownFlag({_p}, "ending::radiant") is true:
+        crownGrantAchievement({_p}, "radiant")
+    if crownFlag({_p}, "ending::tyrant") is true:
+        crownGrantAchievement({_p}, "tyrant")
+    if crownFlag({_p}, "ending::sacrifice") is true:
+        crownGrantAchievement({_p}, "sacrifice")
+    if crownFlag({_p}, "ending::echo") is true:
+        crownGrantAchievement({_p}, "echo-ending")
+    if crownEndingCount({_p}) >= 4:
+        crownGrantAchievement({_p}, "all-endings")
+    if crownMercyCount({_p}) >= 5:
+        crownGrantAchievement({_p}, "merciful")
+    if crownNum({_p}, "chapter") >= 6:
+        if crownMercyCount({_p}) is 0:
+            crownGrantAchievement({_p}, "ruthless")
+    if crownStat({_p}, "kills") >= 100:
+        crownGrantAchievement({_p}, "slayer")
+    set {_bosses} to 0
+    loop crownShardNames():
+        if crownFlag({_p}, "boss::%loop-value%") is true:
+            add 1 to {_bosses}
+    if {_bosses} >= 5:
+        crownGrantAchievement({_p}, "guardian-bane")
+    if crownStat({_p}, "replays") >= 10:
+        crownGrantAchievement({_p}, "cinephile")
+    if crownStat({_p}, "skips") >= 10:
+        crownGrantAchievement({_p}, "skipper")
+    if crownCodexCount({_p}) >= crownCodexTotal():
+        crownGrantAchievement({_p}, "scholar")
+    set {_tales} to 0
+    loop crownTaleIds():
+        if crownFlag({_p}, "tale::%loop-value%") is true:
+            add 1 to {_tales}
+    if {_tales} >= 6:
+        crownGrantAchievement({_p}, "storyteller")
+
+# A chapter finished together counts towards "Fellowship".
+on cine scene finish:
+    set {_p} to event-player
+    {_p} is set
+    event-text contains "crown:"
+    if size of crownPartyMembers({_p}) >= 2:
+        crownGrantAchievement({_p}, "fellowship")
+
+# Skipping a campaign scene counts towards "I've Seen This One".
+on cine scene skip:
+    set {_p} to event-player
+    {_p} is set
+    event-text contains "crown:"
+    crownBumpStat({_p}, "skips")
+    if crownStat({_p}, "skips") >= 10:
+        crownGrantAchievement({_p}, "skipper")
+
+function crownAchievementList(p: player):
+    crownRule({_p}, "Achievements %crownAchievementCount({_p})%/%size of crownAchievementIds()%")
+    loop crownAchievementIds():
+        if crownHasAchievement({_p}, loop-value) is true:
+            send " &6★ &f%crownAchievementTitle(loop-value)% &8— &7%crownAchievementHint(loop-value)%" to {_p}
+        else if loop-value is "echo-ending":
+            send " &8☆ ??? &8— &8a secret" to {_p}
+        else:
+            send " &8☆ %crownAchievementTitle(loop-value)% &8— &8%crownAchievementHint(loop-value)%" to {_p}

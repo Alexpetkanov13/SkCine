@@ -1,0 +1,273 @@
+# SkCine integration test: every public syntax pattern in a valid context, plus runtime assertions.
+# Loaded by the integration harness; results are printed as "SKCINE-TEST PASS|FAIL <name>".
+
+function cineAssert(name: text, ok: boolean):
+    if {_ok} is true:
+        send "SKCINE-TEST PASS %{_name}%" to console
+    else:
+        send "SKCINE-TEST FAIL %{_name}%" to console
+cine sequence "test:sparkle":
+    at 0 seconds:
+        draw a cine circle of end rod particle at event-player with radius 1.5 and 20 points
+    set cine variable "sequence-ran" to true
+
+cine scene "test:all-syntax":
+    duration: 6 seconds
+    skippable: true
+    lock input: true
+    freeze: false
+    invulnerable: true
+    restore location: true
+    speed: 1
+    loops: 0
+    skip mode: vote
+    timeline:
+        set {_c} to location of event-player
+        set cine variable "built" to true
+        set cine camera interpolation to "catmull-rom"
+        set cine camera rotation interpolation to "quaternion"
+        add cine camera keyframe at {_c} ~ vector(0, 8, -8) at 0 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(8, 6, 0) at 2 seconds with easing "ease-in-out-sine" looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(0, 4, 8) at 3 seconds with easing "smoothstep"
+        make the cine camera orbit around {_c} between 3 seconds and 4 seconds with radius 6 and height 3 sweeping 180 degrees blending over 10 ticks
+        make the cine camera follow event-player between 4 seconds and 4.5 seconds with offset vector(0, 2, -4)
+        make the cine camera watch event-player from {_c} ~ vector(5, 5, 5) between 4.5 seconds and 5 seconds
+        make the cine camera hold at {_c} ~ vector(0, 10, 0) between 5 seconds and 6 seconds blending over 5 ticks
+        add cine marker "middle" at 3 seconds
+        play cine sequence "test:sparkle" at 1 second
+        set {_npc} to a new cine actor of villager at {_c} ~ vector(2, 0, 2) named "npc"
+        set {_item} to a new cine item display of diamond at {_c} ~ vector(0, 2, 0)
+        set {_block} to a new cine block display of stone at {_c} ~ vector(-2, 0, 0)
+        set {_label} to a new public cine text display with text "<gold>Test" at {_c} ~ vector(0, 3, 0)
+        set cine variable "npc" to {_npc}
+        add cine actor keyframe for {_item} at {_c} ~ vector(0, 2, 0) at 0 seconds
+        add cine actor keyframe for {_item} at {_c} ~ vector(0, 4, 0) at 2 seconds with easing "ease-out-back"
+        at 0 seconds:
+            show cine title "<gold>Test" with subtitle "sub" for 1 second with fade 5 ticks
+            play cine sound "entity.player.levelup" with volume 0.5 and pitch 1.2
+            play cine sound "block.note_block.pling" at event-player in category "master"
+            fade cine screen in over 10 ticks
+        at 10 ticks even if skipped:
+            set cine variable "guaranteed" to true
+        at 15 ticks cosmetically:
+            flash cine screen with colour white over 5 ticks
+        after 1 second:
+            set {_n} to cine variable "npc"
+            move cine actor {_n} to (location of event-player) ~ vector(3, 0, 0) over 1 second with easing "ease-in-out-quad" facing the movement
+            make cine actor {_n} look at event-player for 1 second
+            rotate cine actor {_n} to yaw 90 and pitch 0 over 10 ticks
+            show cine dialogue "Hello there!" from "<aqua>NPC" in action bar with typewriter at 40 characters per second for 1 second with typing sound "block.note_block.hat"
+            show cine dialogue "Boss bar line" in boss bar for 1 second
+            show cine dialogue "Chat line" via chat
+            show cine dialogue "Words appear one by one" in title word by word at 6 words per second for 10 ticks fading in over 8 ticks
+            play cine preset "magic-reveal" at event-player with colour gold and accent white with scale 1 lasting 1 second
+            start a cine emitter drawing a helix of "end_rod" at event-player with radius 1 and height 2 and 16 points spinning at 6 degrees per tick expanding by 0.01 per tick pulsing every 2 ticks lasting 1 second
+            draw a cine star of flame particle at event-player with radius 2 and 30 points rotated by 45 degrees
+            draw a cine double helix of "end rod" at event-player with radius 1
+            draw a cine beam of end rod particle from location of event-player to (location of event-player) ~ vector(0, 5, 0) with spacing 0.5
+            draw a cine lightning bolt of "electric_spark" from (location of event-player) ~ vector(0, 8, 0) to location of event-player
+            shake the cine camera with intensity 0.5 for 10 ticks
+            zoom the cine camera by 2 blocks over 10 ticks with easing "ease-out-cubic"
+        at marker "middle":
+            set cine variable "marker-hit" to true
+        repeat every 10 ticks from 0 seconds until 2 seconds:
+            add 1 to {_unused}
+        at 2 seconds:
+            set {_n} to cine variable "npc"
+            make cine actor {_n} walk to (location of event-player) ~ vector(-3, 0, 0) at speed 1
+            scale cine actor {_n} to 1.2 over 10 ticks
+            hide cine actor {_n}
+            show cine actor {_n}
+            set {_d} to cine actor named "npc"
+            animate cine display cine actors to scale 1.5 over 10 ticks
+            spin cine display cine actors around vector(0, 1, 0) by 360 degrees over 1 second with easing "linear"
+            stop animating cine actor {_n}
+            set {_e} to cine actor entity of {_n}
+            set {_nm} to cine actor name of {_n}
+    on start:
+        set cine variable "started" to true
+    on finish:
+        send "SKCINE-TEST EVENT on-finish %cine id of cine playback%" to console
+    on skip:
+        send "SKCINE-TEST EVENT on-skip" to console
+    on cancel:
+        send "SKCINE-TEST EVENT on-cancel %cine end reason of cine playback%" to console
+    on end:
+        send "SKCINE-TEST EVENT on-end" to console
+# Runtime-built scene with a section body and imperative additions.
+command /skcinetest-dynamic [<player>]:
+    trigger:
+        set {_p} to arg-1 ? player
+        set {_loc} to location of {_p}
+        set {_scene} to a new cine scene named "test:dynamic":
+            add cine camera keyframe at {_loc} ~ vector(0, 6, 0) at 0 seconds looking at {_loc}
+            add cine camera keyframe at {_loc} ~ vector(4, 6, 4) at 1 second looking at {_loc}
+        add cine marker "late" at 10 ticks in {_scene}
+        at 5 ticks in {_scene}:
+            send "SKCINE-TEST EVENT dynamic-at" to console
+        add cine camera keyframe at {_loc} ~ vector(0, 3, 0) to {_scene} at 2 seconds
+        make cine scene {_scene} not skippable
+        set cine skip mode of cine scene {_scene} to "anyone"
+        play cine scene {_scene} for {_p}
+
+command /skcinetest-control [<text>] [<player>]:
+    trigger:
+        set {_p} to arg-2 ? player
+        if arg-1 is "pause":
+            pause cine scene of {_p}
+        else if arg-1 is "resume":
+            resume cine scene of {_p}
+        else if arg-1 is "stop":
+            stop cine scene of {_p}
+        else if arg-1 is "skip":
+            skip cine scene of {_p}
+        else if arg-1 is "restart":
+            restart cine scene of {_p}
+        else if arg-1 is "seek":
+            seek cine scene of {_p} to 3 seconds
+        else if arg-1 is "marker":
+            jump cine scene of {_p} to marker "middle"
+        else if arg-1 is "request-skip":
+            request a cine skip for {_p}
+        else if arg-1 is "stopall":
+            stop all cine scenes
+        else if arg-1 is "restore":
+            restore the camera of {_p}
+
+command /skcinetest-status <player> [<text>]:
+    trigger:
+        set {_p} to arg-1
+        set {_tok} to arg-2 ? "-"
+        set {_pb} to cine playback of {_p}
+        if {_p} is watching a cine scene:
+            set {_built} to cine variable "built" of {_pb}
+            set {_seq} to cine variable "sequence-ran" of {_pb}
+            set {_started} to cine variable "started" of {_pb}
+            send "SKCINE-STATUS tok=%{_tok}% watching=true id=%cine id of {_pb}% state=%cine state of {_pb}% elapsed=%cine elapsed time of {_pb}% progress=%cine progress of {_pb}% speed=%cine speed of {_pb}% camera=%whether {_p} has an active cine camera% gamemode=%gamemode of {_p}% actors=%size of cine actors of {_pb}% built=%{_built}% seq=%{_seq}% started=%{_started}%" to console
+        else:
+            send "SKCINE-STATUS tok=%{_tok}% watching=false gamemode=%gamemode of {_p}% camera=%whether {_p} has an active cine camera%" to console
+command /skcinetest-group:
+    trigger:
+        play cine scene "test:all-syntax" for all players together
+
+on cine scene start of "test:all-syntax":
+    send "SKCINE-TEST EVENT start %event-player% %event-string%" to console
+on cine scene finish:
+    send "SKCINE-TEST EVENT global-finish %event-string%" to console
+on cine scene skip:
+    send "SKCINE-TEST EVENT global-skip %event-string%" to console
+on cine scene cancel:
+    send "SKCINE-TEST EVENT global-cancel %event-string%" to console
+on cine scene end:
+    send "SKCINE-TEST EVENT global-end %event-string%" to console
+on cine scene pause:
+    send "SKCINE-TEST EVENT pause" to console
+on cine scene resume:
+    send "SKCINE-TEST EVENT resume" to console
+on cine scene prepare:
+    send "SKCINE-TEST EVENT prepare %event-string%" to console
+on cine marker "middle":
+    send "SKCINE-TEST EVENT marker %event-string%" to console
+on cine camera attach:
+    send "SKCINE-TEST EVENT camera-attach %event-player%" to console
+on cine camera detach:
+    send "SKCINE-TEST EVENT camera-detach %event-player%" to console
+on cine actor spawn:
+    send "SKCINE-TEST EVENT actor-spawn %event-string%" to console
+on cine actor despawn:
+    send "SKCINE-TEST EVENT actor-despawn %event-string%" to console
+on cine actor animation finish:
+    send "SKCINE-TEST EVENT actor-anim-finish %event-string%" to console
+on cine dialogue start:
+    send "SKCINE-TEST EVENT dialogue-start %event-string%" to console
+on cine dialogue finish:
+    send "SKCINE-TEST EVENT dialogue-finish %event-string%" to console
+on cine choice:
+    send "SKCINE-TEST EVENT choice %event-string%" to console
+on cine choice timeout:
+    send "SKCINE-TEST EVENT choice-timeout" to console
+# Assertions that need no player.
+on load:
+    cineAssert("scene-registered", whether cine scene "test:all-syntax" exists)
+    cineAssert("scene-missing", whether cine scene "test:nope" doesn't exist)
+    cineAssert("sequence-registered", whether cine sequence "test:sparkle" exists)
+    set {_s} to cine scene "test:all-syntax"
+    cineAssert("scene-lookup", whether {_s} is set)
+    cineAssert("scene-id", whether cine id of {_s} is "test:all-syntax")
+    set {_e} to cine ease 0.5 using "ease-in-out-quad"
+    cineAssert("ease-half", whether {_e} is 0.5)
+    set {_e2} to cine ease 1 using "ease-out-bounce"
+    cineAssert("ease-end", whether {_e2} is 1)
+    set {_l} to cine lerp from 10 to 20 at 0.25
+    cineAssert("lerp", whether {_l} is 12.5)
+    set {_l2} to cine lerp from 0 to 100 at 0.5 using "smoothstep"
+    cineAssert("lerp-eased", whether {_l2} is 50)
+    cineAssert("easing-valid", whether cine easing "ease-in-out-cubic" is valid)
+    cineAssert("easing-invalid", whether cine easing "wobble" is not valid)
+    cineAssert("preset-valid", whether cine preset "legendary-reveal" is valid)
+    cineAssert("shape-valid", whether cine shape "double-helix" is valid)
+    cineAssert("interp-valid", whether cine interpolation "hermite" is valid)
+    cineAssert("capability", whether cine capability "spectator-camera" is available)
+    cineAssert("easings-list", whether size of cine easings > 30)
+    cineAssert("presets-list", whether size of cine presets >= 20)
+    cineAssert("version", whether skcine version is set)
+    cineAssert("backend", whether cine camera backend is "spectator-display")
+    cineAssert("active-count", whether number of active cine playbacks is 0)
+    set {_dyn} to a new cine scene named "test:registered-at-runtime"
+    register cine scene {_dyn}
+    cineAssert("runtime-register", whether cine scene "test:registered-at-runtime" exists)
+    register cine scene {_dyn} as "test:copied"
+    cineAssert("runtime-copy", whether cine scene "test:copied" exists)
+    unregister cine scene "test:registered-at-runtime"
+    cineAssert("runtime-unregister", whether cine scene "test:registered-at-runtime" doesn't exist)
+    cineAssert("ids-list", whether cine scene ids contains "test:all-syntax")
+    send "SKCINE-TEST DONE load" to console
+cine scene "test:choice":
+    timeline:
+        set {_c} to location of event-player
+        add cine camera keyframe at {_c} ~ vector(0, 6, -6) at 0 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(6, 6, 0) at 2 seconds looking at {_c}
+        at 5 ticks:
+            present cine choice "Pick one" to cine viewers with options "Accept" and "Decline" with timeout 15 seconds defaulting to "Decline" pausing the scene:
+                set {_timed} to whether cine choice timed out
+                send "SKCINE-TEST EVENT choice-section %cine choice% %event-player% timedout=%{_timed}%" to console
+                set cine variable "picked" to cine choice
+    on end:
+        set {_picked} to cine variable "picked"
+        send "SKCINE-TEST EVENT choice-scene-end picked=%{_picked}%" to console
+command /skcinetest-choice [<player>]:
+    trigger:
+        play cine scene "test:choice" for (arg-1 ? player)
+
+command /skcinetest-entities:
+    trigger:
+        set {_n} to 0
+        loop all entities:
+            if loop-entity is a villager or an item display or a block display or a text display:
+                add 1 to {_n}
+        send "SKCINE-ENTITIES %{_n}%" to console
+command /skcinetest-join <player> <player>:
+    trigger:
+        add arg-1 to cine playback (cine playback of arg-2)
+
+command /skcinetest-groupof <player>:
+    trigger:
+        play cine scene "test:all-syntax" for arg-1 together
+
+# Separate command: Skript 2.17's Brigadier commands parse a lone word in "[<text>] [<player>]" as the player.
+command /skcinetest-stopall:
+    trigger:
+        stop all cine scenes
+
+cine scene "test:menu-choice":
+    timeline:
+        set {_c} to location of event-player
+        add cine camera keyframe at {_c} ~ vector(0, 6, -6) at 0 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(6, 6, 0) at 2 seconds looking at {_c}
+        at 5 ticks:
+            present cine choice "Menu pick" to cine viewers with options "Accept" and "Decline" with timeout 20 seconds using a menu pausing the scene:
+                send "SKCINE-TEST EVENT menu-choice %cine choice% %event-player%" to console
+
+command /skcinetest-menuchoice <player>:
+    trigger:
+        play cine scene "test:menu-choice" for arg-1

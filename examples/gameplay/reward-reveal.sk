@@ -1,0 +1,44 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  SkCine example: advanced item reveal (crates, quests, loot, rank rewards)
+#  /sk reload reward-reveal   then   /testreveal
+#
+#  Everything is a parameter: item, rarity text, colour, preset and sound.
+#  The REWARD stays in your own code: revealReward() gives the item itself,
+#  before the cinematic, so skipping or disconnecting can never lose or dupe it.
+# ─────────────────────────────────────────────────────────────────────────────
+
+cine scene "examples:reward-reveal":
+    skippable: true
+    timeline:
+        # Parameters arrive as the caller's local variables.
+        set {_c} to (location of event-player) ~ vector(0, 1.2, 3)
+        add cine camera keyframe at {_c} ~ vector(0, 1, -5) at 0 seconds looking at {_c}
+        add cine camera keyframe at {_c} ~ vector(2, 0.5, -3) at 3 seconds with easing "ease-in-out-sine" looking at {_c}
+
+        set {_item} to a new cine item display of {_reward} at {_c} ~ vector(0, -1, 0)
+        set {_label} to a new cine text display with text {_rarity} at {_c} ~ vector(0, 0.9, 0)
+        hide cine actor {_label}
+
+        at 0 seconds:
+            play cine sound {_buildup} with volume 0.8
+            move cine actor {_item} to {_c} over 2 seconds with easing "ease-out-cubic"
+            spin cine display {_item} around vector(0, 1, 0) by 1080 degrees over 3 seconds with easing "ease-in-cubic"
+            start a cine emitter drawing a vortex of "dust" at {_c} ~ vector(0, -1, 0) with radius 1.2 and height 2.2 and 40 points spinning at 10 degrees per tick lasting 3 seconds with colour {_colour}
+        at 3 seconds:
+            # Zoom toward the item, then the final burst.
+            zoom the cine camera by 2 blocks over 10 ticks with easing "ease-out-quad"
+            flash cine screen with colour {_colour} over 10 ticks
+            play cine preset {_preset} at {_c} with colour {_colour} lasting 2 seconds
+            play cine sound "entity.player.levelup"
+            show cine actor {_label}
+            animate cine display {_item} to scale 1.6 over 10 ticks with easing "ease-out-back"
+        at 5.5 seconds:
+            show cine title "" with subtitle {_rarity} for 2 seconds
+
+function revealReward(p: player, reward: item, rarity: text, colour: color, preset: text, buildup: text):
+    give {_reward} to {_p}
+    play cine scene "examples:reward-reveal" for {_p}
+
+command /testreveal:
+    trigger:
+        revealReward(player, 1 netherite sword, "<gradient:#ffcc33:#ff6600><bold>LEGENDARY</bold></gradient>", orange, "legendary-reveal", "block.beacon.activate")

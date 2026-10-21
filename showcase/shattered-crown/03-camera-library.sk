@@ -1,0 +1,162 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#   ECHOES OF THE SHATTERED CROWN
+#   03-camera-library.sk  —  reusable camera moves (cine sequences)
+# ═════════════════════════════════════════════════════════════════════════════
+#
+#   Camera moves are sequences too. Keyframes and shots inside a sequence are
+#   offset by the time the sequence is played at, so moves can be chained:
+#
+#       set {_focus} to {_stage} ~ vector(0, 1.5, 6)
+#       play cine sequence "cam:crane-down" at 0 seconds      # 0 – 6 s
+#       play cine sequence "cam:orbit-slow" at 6 seconds      # 6 – 14 s
+#
+#   All keyframes of a scene form ONE spline, so the camera glides from the
+#   end of one move into the start of the next. Shots (orbit, watch, follow,
+#   hold) override the spline while they are active and blend in and out.
+#
+#   Parameters (caller locals):
+#     {_focus}    location   what the camera looks at            (required)
+#     {_from}     location   start position (some moves)
+#     {_to}       location   end position (some moves)
+#     {_subject}  entity     a moving subject (follow / watch moves)
+#     {_r}        number     radius for orbits (default 7)
+#     {_path::*}  locations  waypoints for "cam:fly-path"
+#
+#   Directions are world axes: +z is "in front of the stage", +x is its right.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Openers
+# ─────────────────────────────────────────────────────────────────────────────
+
+# From high above, descending to eye level in front of {_focus}. 6 s.
+cine sequence "cam:crane-down":
+    add cine camera keyframe at {_focus} ~ vector(0, 18, -14) at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(3, 9, -10) at 3 seconds with easing "ease-in-out-sine" looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(1, 1.2, -6) at 6 seconds with easing "ease-out-cubic" looking at {_focus}
+
+# A wide establishing sweep across the scene. 8 s.
+cine sequence "cam:establish":
+    add cine camera keyframe at {_focus} ~ vector(-22, 12, -16) at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(-8, 10, -20) at 3 seconds with easing "ease-in-out-sine" looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(10, 9, -18) at 6 seconds with easing "ease-in-out-sine" looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(16, 7, -10) at 8 seconds with easing "ease-out-sine" looking at {_focus}
+
+# Rising out of the ground to reveal {_focus}. 5 s.
+cine sequence "cam:rise-reveal":
+    add cine camera keyframe at {_focus} ~ vector(0, -0.5, -5) at 0 seconds looking at {_focus} ~ vector(0, -0.5, 0)
+    add cine camera keyframe at {_focus} ~ vector(0, 2, -7) at 3 seconds with easing "ease-in-out-cubic" looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(0, 5, -9) at 5 seconds with easing "ease-out-sine" looking at {_focus}
+
+# Looking up at the sky, then tilting down onto {_focus}. 5 s.
+cine sequence "cam:sky-down":
+    add cine camera keyframe at {_focus} ~ vector(0, 2, -8) at 0 seconds looking at {_focus} ~ vector(0, 40, 10)
+    add cine camera keyframe at {_focus} ~ vector(0, 2.5, -8) at 3 seconds with easing "ease-in-out-sine" looking at {_focus} ~ vector(0, 8, 0)
+    add cine camera keyframe at {_focus} ~ vector(0, 2, -7) at 5 seconds with easing "ease-out-cubic" looking at {_focus}
+
+# The opposite: from {_focus} up into the sky. 5 s.
+cine sequence "cam:sky-up":
+    add cine camera keyframe at {_focus} ~ vector(0, 2, -7) at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(0, 3, -8) at 3 seconds with easing "ease-in-out-sine" looking at {_focus} ~ vector(0, 10, 0)
+    add cine camera keyframe at {_focus} ~ vector(0, 4, -9) at 5 seconds with easing "ease-in-sine" looking at {_focus} ~ vector(0, 40, 12)
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Moves around a subject
+# ─────────────────────────────────────────────────────────────────────────────
+
+# A slow, wide orbit around {_focus}. 8 s.
+cine sequence "cam:orbit-slow":
+    make the cine camera orbit around {_focus} between 0 seconds and 8 seconds with radius {_r} ? 7 and height 3 sweeping 120 degrees blending over 1 second
+
+# A fast half circle for moments of tension. 3 s.
+cine sequence "cam:orbit-fast":
+    make the cine camera orbit around {_focus} between 0 seconds and 3 seconds with radius {_r} ? 5 and height 1.5 sweeping 180 degrees blending over 10 ticks
+
+# A full revolution, rising as it goes (keyframed, so it can be eased). 8 s.
+cine sequence "cam:spiral-rise":
+    add cine camera keyframe at {_focus} ~ vector(0, 1, -6) at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(6, 2.5, 0) at 2 seconds with easing "linear" looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(0, 4, 6) at 4 seconds with easing "linear" looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(-6, 5.5, 0) at 6 seconds with easing "linear" looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(0, 7, -6) at 8 seconds with easing "ease-out-sine" looking at {_focus}
+
+# Low angle, looking up at {_focus}: makes anything look heroic. 4 s.
+cine sequence "cam:hero-low":
+    add cine camera keyframe at {_focus} ~ vector(-2, -1.2, -4) at 0 seconds looking at {_focus} ~ vector(0, 1, 0)
+    add cine camera keyframe at {_focus} ~ vector(2, -1, -3.5) at 4 seconds with easing "ease-in-out-sine" looking at {_focus} ~ vector(0, 1.2, 0)
+
+# High angle, looking down: makes anything look small. 4 s.
+cine sequence "cam:high-down":
+    add cine camera keyframe at {_focus} ~ vector(-3, 9, -3) at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(3, 10, -3) at 4 seconds with easing "ease-in-out-sine" looking at {_focus}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Pushes and pulls
+# ─────────────────────────────────────────────────────────────────────────────
+
+# From {_from} to a close-up of {_focus}. 4 s.
+cine sequence "cam:dolly-in":
+    add cine camera keyframe at {_from} at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(0, 0.3, -2.5) at 4 seconds with easing "ease-in-out-cubic" looking at {_focus}
+
+# A short dramatic push towards {_focus}. 2 s.
+cine sequence "cam:push":
+    add cine camera keyframe at {_focus} ~ vector(0, 0.6, -6) at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(0, 0.3, -3) at 2 seconds with easing "ease-in-quart" looking at {_focus}
+
+# Pulling back and up to show how big the place is. 6 s.
+cine sequence "cam:pull-back":
+    add cine camera keyframe at {_focus} ~ vector(0, 1, -3) at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(0, 6, -12) at 4 seconds with easing "ease-in-out-sine" looking at {_focus}
+    add cine camera keyframe at {_focus} ~ vector(0, 14, -22) at 6 seconds with easing "ease-out-sine" looking at {_focus}
+
+# From {_from} to {_to}, always looking at {_focus}. 4 s.
+cine sequence "cam:track":
+    add cine camera keyframe at {_from} at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_to} at 4 seconds with easing "ease-in-out-sine" looking at {_focus}
+
+# A whip pan: a very fast move from {_from} to {_to}. 15 ticks.
+cine sequence "cam:whip":
+    add cine camera keyframe at {_from} at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_to} at 15 ticks with easing "ease-in-out-expo" looking at {_focus}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Shots that follow people
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Over the shoulder of {_from}, watching {_subject}. 5 s.
+cine sequence "cam:over-shoulder":
+    make the cine camera watch {_subject} from {_from} between 0 seconds and 5 seconds blending over 15 ticks
+
+# Following {_subject} from behind. 6 s.
+cine sequence "cam:chase":
+    make the cine camera follow {_subject} between 0 seconds and 6 seconds with offset vector(0, 2.2, -5) blending over 1 second
+
+# Holding still at {_from}, looking at {_focus}. 4 s.
+cine sequence "cam:hold":
+    make the cine camera hold at {_from} between 0 seconds and 4 seconds blending over 15 ticks
+
+# A conversation: alternating close shots of {_a} and {_b}, 3 s each. 12 s.
+cine sequence "cam:dialogue":
+    make the cine camera watch {_a} from {_b} ~ vector(0.8, 2.2, -1.5) between 0 seconds and 3 seconds blending over 10 ticks
+    make the cine camera watch {_b} from {_a} ~ vector(-0.8, 2.2, 1.5) between 3 seconds and 6 seconds blending over 10 ticks
+    make the cine camera watch {_a} from {_b} ~ vector(0.8, 2.2, -1.5) between 6 seconds and 9 seconds blending over 10 ticks
+    make the cine camera watch {_b} from {_a} ~ vector(-0.8, 2.2, 1.5) between 9 seconds and 12 seconds blending over 10 ticks
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Paths
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Flies through {_path::*}, 2.5 s per waypoint, looking at {_focus}.
+cine sequence "cam:fly-path":
+    set {_t} to 0
+    loop {_path::*}:
+        set {_ts} to "%{_t}% seconds" parsed as timespan
+        add cine camera keyframe at loop-value at {_ts} with easing "ease-in-out-sine" looking at {_focus}
+        add 2.5 to {_t}
+
+# A drifting idle shot: tiny movements so a long dialogue never looks frozen. 10 s.
+cine sequence "cam:breathe":
+    add cine camera keyframe at {_from} at 0 seconds looking at {_focus}
+    add cine camera keyframe at {_from} ~ vector(0.4, 0.15, 0.2) at 5 seconds with easing "ease-in-out-sine" looking at {_focus}
+    add cine camera keyframe at {_from} ~ vector(-0.2, 0.05, 0.4) at 10 seconds with easing "ease-in-out-sine" looking at {_focus}
