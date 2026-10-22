@@ -16,6 +16,7 @@ plugins {
 dependencies {
     implementation(project(":skcine-skript"))
     implementation(project(":skcine-platform"))
+    implementation("org.bstats:bstats-bukkit:3.2.1")
     compileOnly(libs.paper.api)
     compileOnly(libs.skript) {
         isTransitive = false
