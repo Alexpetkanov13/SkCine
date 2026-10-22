@@ -16,6 +16,7 @@ plugins {
 dependencies {
     implementation(project(":skcine-skript"))
     implementation(project(":skcine-platform"))
+    // bStats is shaded into SkCine's distributed plugin JAR.
     implementation("org.bstats:bstats-bukkit:3.2.1")
     compileOnly(libs.paper.api)
     compileOnly(libs.skript) {
@@ -31,7 +32,7 @@ tasks.processResources {
     }
 }
 
-// Step 1: one jar with SkCine and its private, relocated Kotlin runtime.
+// Step 1: one jar with SkCine and its private, relocated dependencies.
 tasks.shadowJar {
     archiveBaseName.set("SkCine")
     archiveClassifier.set("full")
@@ -41,12 +42,14 @@ tasks.shadowJar {
     relocate("kotlinx", "dev.dheaven.skcine.libs.kotlinx")
     relocate("org.intellij.lang.annotations", "dev.dheaven.skcine.libs.annotations.intellij")
     relocate("org.jetbrains.annotations", "dev.dheaven.skcine.libs.annotations.jetbrains")
+    // bStats must also be private to prevent clashes with other plugins using it.
+    relocate("org.bstats", "dev.dheaven.skcine.libs.bstats")
     exclude("META-INF/*.kotlin_module", "META-INF/versions/*/module-info.class", "module-info.class")
     exclude("META-INF/maven/**", "META-INF/proguard/**", "META-INF/com.android.tools/**", "DebugProbesKt.bin")
     mergeServiceFiles()
 }
 
-// Step 2: remove the parts of the bundled Kotlin runtime that SkCine never uses. Shrinking only:
+// Step 2: remove the parts of the bundled runtime that SkCine never uses. Shrinking only:
 // nothing is renamed or optimized, and every SkCine class is kept exactly as compiled.
 val toolchainHome =
     javaToolchains
@@ -76,6 +79,8 @@ val shrinkJar = tasks.register<ProGuardTask>("shrinkJar") {
     dontnote()
     keepattributes("Signature,InnerClasses,EnclosingMethod,*Annotation*,SourceFile,LineNumberTable,Exceptions")
     keep("class !dev.dheaven.skcine.libs.**,dev.dheaven.skcine.** { *; }")
+    // Keep bStats' relocated implementation intact through the shrinking pass.
+    keep("class dev.dheaven.skcine.libs.bstats.** { *; }")
     keepclassmembers("enum * { public static **[] values(); public static ** valueOf(java.lang.String); }")
 }
 
