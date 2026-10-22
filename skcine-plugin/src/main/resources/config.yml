@@ -3,6 +3,14 @@
 
 debug: false
 
+# Anonymous bStats statistics: number of servers, players and version adoption.
+# Register SkCine at https://bstats.org/add-plugin and enter the assigned numeric ID.
+# Leave plugin-id at 0 to keep reporting disabled until you register SkCine.
+# Server owners can opt out here or via plugins/bStats/config.yml.
+metrics:
+  enabled: true
+  plugin-id: 0
+
 performance:
   # LOW, MEDIUM, HIGH, CINEMATIC or AUTO (adapts particle density to server tick time).
   # Quality only affects cosmetic particles; gameplay events are never skipped.
