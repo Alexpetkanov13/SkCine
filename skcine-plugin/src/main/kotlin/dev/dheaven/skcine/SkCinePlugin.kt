@@ -5,6 +5,7 @@ import dev.dheaven.skcine.config.ConfigLoader
 import dev.dheaven.skcine.listeners.CineListeners
 import dev.dheaven.skcine.platform.SkCineRuntime
 import dev.dheaven.skcine.skript.SkCineSkriptIntegration
+import org.bstats.bukkit.Metrics
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -62,11 +63,35 @@ class SkCinePlugin : JavaPlugin() {
             },
         )
 
+        // bStats is optional and must never prevent SkCine from starting.
+        initializeMetrics()
+
         val caps = rt.capabilities
         logger.info(
             "SkCine ${rt.version} by DHeaven enabled — Minecraft ${caps.serverVersion}, Skript ${caps.skriptVersion}, Java ${caps.javaVersion}, " +
                 "camera backend: ${if (rt.camera.isAvailable()) rt.camera.id else "none"}.",
         )
+    }
+
+    private fun initializeMetrics() {
+        if (!config.getBoolean("metrics.enabled", true)) {
+            logger.info("bStats metrics are disabled in SkCine's configuration.")
+            return
+        }
+
+        val pluginId = config.getInt("metrics.plugin-id", 0)
+        if (pluginId <= 0) {
+            logger.info("bStats not started: set metrics.plugin-id to your SkCine bStats ID in config.yml.")
+            return
+        }
+
+        runCatching {
+            Metrics(this, pluginId)
+        }.onSuccess {
+            logger.info("bStats metrics initialized for SkCine (plugin ID $pluginId).")
+        }.onFailure { error ->
+            logger.warning("Could not initialize bStats metrics: ${error.message}")
+        }
     }
 
     override fun onDisable() {
