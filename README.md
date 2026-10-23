@@ -109,7 +109,7 @@ For something smaller, [`examples/`](examples) has 20 focused scripts, from a fi
 
 ## Installation
 
-1. Download `SkCine-1.0.0.jar` from the Releases page.
+1. Download `SkCine-1.0.1.jar` from the Releases page.
 2. Put it in `plugins/` next to Skript and restart the server.
 3. Copy an example into `plugins/Skript/scripts/`, run `/sk reload <name>` and try it.
 
@@ -143,7 +143,7 @@ Permission: `skcine.admin` (op by default).
 
 Linux and macOS use `./gradlew clean build`.
 
-The plugin JAR is written to `build/libs/SkCine-1.0.0.jar`. A build compiles Java 21 bytecode, runs ktlint and the unit tests, and bundles a private, relocated Kotlin runtime. ProGuard then strips the Kotlin classes SkCine never uses (shrinking only, no renaming or optimisation), which keeps the JAR at about 1.2 MB without needing any downloads at runtime. Paper, Skript and Adventure are never bundled.
+The plugin JAR is written to `build/libs/SkCine-1.0.1.jar`. A build compiles Java 21 bytecode, runs ktlint and the unit tests, and bundles a private, relocated Kotlin runtime. ProGuard then strips the Kotlin classes SkCine never uses (shrinking only, no renaming or optimisation), which keeps the JAR at about 1.2 MB without needing any downloads at runtime. Paper, Skript and Adventure are never bundled.
 
 | Module | |
 |---|---|
