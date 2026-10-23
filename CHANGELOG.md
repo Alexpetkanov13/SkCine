@@ -2,6 +2,19 @@
 
 All notable changes to SkCine are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [semantic versioning](https://semver.org/).
 
+## [1.0.1] — 2026-10-23
+
+### Added
+- Optional anonymous bStats metrics for server, player, Minecraft version, and plugin-version statistics.
+- `metrics.enabled` and `metrics.plugin-id` configuration with graceful handling of missing IDs and initialization failures.
+
+### Build
+- Bundle and relocate bStats privately with Gradle Shadow.
+- Preserve bStats classes through the ProGuard shrinking step; distribute the optimized `build/libs/SkCine-1.0.1.jar`, not the larger `-full.jar` intermediate.
+- Update project version to `1.0.1`.
+
+**For maintainers:** Set the registered SkCine bStats plugin ID in the distributed default configuration before release. An ID of `0` disables metrics reporting.
+
 ## [1.0.0] — 2026-10-20
 
 First release.
